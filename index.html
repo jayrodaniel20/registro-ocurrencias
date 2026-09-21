@@ -25,6 +25,8 @@
     .notice{background:#fff8e7;border:1px solid #f5df9c;padding:12px;border-radius:13px;font-size:13px}.footer-note{font-size:12px;color:var(--muted);margin-top:16px}.subtle{background:#f8fbff;border:1px dashed #cfe0f5;border-radius:14px;padding:12px}.split-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
     dialog{border:0;border-radius:20px;padding:0;max-width:520px;width:92%;box-shadow:0 24px 80px #0004}dialog::backdrop{background:#0b183766;backdrop-filter:blur(2px)}.modal{padding:18px}
     .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);background:#172033;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:50;box-shadow:0 12px 30px #0003}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .voice-tools{display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap}.voice-btn{border:1px solid #cfe0f5;background:#eef5ff;color:var(--pri2);border-radius:12px;padding:8px 11px;font-weight:850;cursor:pointer}.voice-btn.listening{background:#ffe8e8;color:#a11;border-color:#ffc7c7;box-shadow:0 0 0 3px #ff00000d}.voice-status{font-size:12px;color:var(--muted)}.voice-note{background:#eef7ff;border:1px solid #cfe5ff;padding:10px 12px;border-radius:13px;font-size:12px;color:#40506a;margin-bottom:12px}
+
     @media(min-width:760px){nav{left:50%;right:auto;transform:translateX(-50%);width:min(720px,94%);bottom:14px;border:1px solid var(--line);border-radius:20px;padding:7px;box-shadow:0 12px 35px #1e375a22}main{padding-bottom:110px}.quick{grid-template-columns:1fr 1fr}.headtxt h1{font-size:22px}}
     @media(max-width:640px){.row{grid-template-columns:1fr}.quick{grid-template-columns:1fr 1fr}.head-badge{display:none}.card{border-radius:17px;padding:14px}.hero h2{font-size:20px}.quick button{min-height:76px;padding:12px}.grid{grid-template-columns:repeat(2,1fr)}}
   </style>
@@ -32,8 +34,8 @@
 <body>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.2</small></div></div>
-    <div class="head-badge">V1.2 · ícono oficial</div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.3</small></div></div>
+    <div class="head-badge">V1.3 · dictado por voz</div>
   </div>
 </header>
 <nav>
@@ -88,13 +90,14 @@
 
   <section id="ocurrencia" class="view">
     <h2>Nueva ocurrencia</h2>
+    <div class="voice-note">🎙️ <b>Dictado por voz:</b> toca “Dictar” debajo de un campo, autoriza el micrófono y habla con naturalidad. Funciona mejor en Chrome de Android con conexión segura (HTTPS).</div>
     <div class="card">
       <label>Estudiante</label><select id="ocStudent"></select>
       <div class="row"><div><label>Fecha</label><input type="date" id="ocDate"></div><div><label>Hora</label><input type="time" id="ocTime"></div></div>
       <div class="row"><div><label>Lugar</label><select id="ocPlace"><option>Aula</option><option>Patio</option><option>Recreo</option><option>Educación Física</option><option>Servicios higiénicos</option><option>Entrada o salida</option><option>Otro</option></select></div><div><label>Tipo</label><select id="ocType"><option>Convivencia</option><option>Conducta</option><option>Aprendizaje</option><option>Participación</option><option>Responsabilidad</option><option>Situación positiva</option><option>Incidente</option><option>Comunicación con familia</option><option>Otro</option></select></div></div>
-      <label>Descripción objetiva de la ocurrencia</label><textarea id="ocDesc" placeholder="Describe hechos observables, sin etiquetas ni juicios."></textarea>
-      <label>Acciones realizadas</label><textarea id="ocActions" placeholder="¿Qué hizo el docente?"></textarea>
-      <label>Acuerdos o seguimiento</label><textarea id="ocFollowText" placeholder="Acuerdos, acciones posteriores o seguimiento."></textarea>
+      <label>Descripción objetiva de la ocurrencia</label><textarea id="ocDesc" placeholder="Describe hechos observables, sin etiquetas ni juicios."></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocDesc',this)">🎙️ Dictar</button><span class="voice-status" id="voiceStatus-ocDesc">Listo para dictar</span></div>
+      <label>Acciones realizadas</label><textarea id="ocActions" placeholder="¿Qué hizo el docente?"></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocActions',this)">🎙️ Dictar</button><span class="voice-status" id="voiceStatus-ocActions">Listo para dictar</span></div>
+      <label>Acuerdos o seguimiento</label><textarea id="ocFollowText" placeholder="Acuerdos, acciones posteriores o seguimiento."></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocFollowText',this)">🎙️ Dictar</button><span class="voice-status" id="voiceStatus-ocFollowText">Listo para dictar</span></div>
       <label><input type="checkbox" id="ocFollow" style="width:auto"> Requiere seguimiento</label>
       <div class="actions"><button class="btn success" onclick="saveOccurrence()">Guardar ocurrencia</button></div>
     </div>
@@ -147,6 +150,42 @@ function closeStudentEdit(){let d=$('studentEditDialog');if(typeof d.close==='fu
 function saveStudentEdit(){let id=$('studentEditId').value;let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');let name=$('studentEditName').value.trim();let grade=$('studentEditGrade').value.trim();let section=$('studentEditSection').value.trim();if(!name)return alert('El nombre no puede quedar vacío');let dup=db.students.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()&&(x.grade||'').toLowerCase()===grade.toLowerCase()&&(x.section||'').toLowerCase()===section.toLowerCase());if(dup&&!confirm('Ya existe otro estudiante con el mismo nombre, grado y sección. ¿Guardar de todos modos?'))return;s.name=name;s.grade=grade;s.section=section;db.occurrences.forEach(o=>{if(o.studentId===id){o.studentName=name;o.grade=grade;o.section=section}});closeStudentEdit();persist();toast('Estudiante actualizado')}
 function importPasted(){let names=$('pasteNames').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),grade=$('bulkGrade').value.trim(),section=$('bulkSection').value.trim();if(!names.length)return alert('Pega uno o más nombres');names.forEach(name=>db.students.push({id:crypto.randomUUID(),name,grade,section}));$('pasteNames').value='';persist()}
 function importCSV(){let f=$('csvFile').files[0];if(!f)return alert('Selecciona un archivo CSV');let r=new FileReader();r.onload=()=>{let lines=r.result.split(/\r?\n/).filter(Boolean);if(!lines.length)return;let sep=lines[0].includes(';')?';':',';let headers=lines[0].split(sep).map(x=>x.trim().toLowerCase());let start=headers.some(h=>h.includes('nombre'))?1:0;for(let i=start;i<lines.length;i++){let p=lines[i].split(sep).map(x=>x.trim().replace(/^"|"$/g,''));if(!p[0])continue;let name,grade='',section='';if(start){name=p[headers.findIndex(h=>h.includes('nombre'))]||'';let gi=headers.findIndex(h=>h.includes('grado'));let si=headers.findIndex(h=>h.includes('secci'));grade=gi>=0?p[gi]||'':'';section=si>=0?p[si]||'':''}else{name=p[0];grade=p[1]||'';section=p[2]||''}db.students.push({id:crypto.randomUUID(),name,grade,section})}persist();toast('Lista importada')};r.readAsText(f,'utf-8')}
+
+let voiceRecognition=null;
+let voiceButton=null;
+let voiceTargetId=null;
+function toggleDictation(targetId,btn){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('El dictado por voz no está disponible en este navegador. Prueba con Google Chrome en Android.');return;}
+  if(voiceRecognition){voiceRecognition.stop();return;}
+  const target=$(targetId);
+  const status=$('voiceStatus-'+targetId);
+  const base=target.value.trim();
+  const rec=new SR();
+  voiceRecognition=rec; voiceButton=btn; voiceTargetId=targetId;
+  rec.lang='es-PE';
+  rec.interimResults=true;
+  rec.continuous=true;
+  btn.classList.add('listening'); btn.textContent='⏹️ Detener';
+  status.textContent='Escuchando… habla con naturalidad';
+  rec.onresult=(event)=>{
+    let spoken='';
+    for(let i=0;i<event.results.length;i++) spoken+=event.results[i][0].transcript+' ';
+    spoken=spoken.trim();
+    target.value=(base?(base+' '):'')+spoken;
+  };
+  rec.onerror=(event)=>{
+    if(event.error==='not-allowed'||event.error==='service-not-allowed') alert('No se pudo usar el micrófono. Revisa que hayas permitido el acceso al micrófono para esta app.');
+    else if(event.error!=='aborted') toast('Error de dictado: '+event.error);
+  };
+  rec.onend=()=>{
+    if(voiceButton){voiceButton.classList.remove('listening');voiceButton.textContent='🎙️ Dictar';}
+    if(voiceTargetId){let s=$('voiceStatus-'+voiceTargetId);if(s)s.textContent='Dictado finalizado';}
+    voiceRecognition=null; voiceButton=null; voiceTargetId=null;
+  };
+  try{rec.start()}catch(e){voiceRecognition=null;btn.classList.remove('listening');btn.textContent='🎙️ Dictar';status.textContent='No se pudo iniciar';}
+}
+
 function saveOccurrence(){let sid=$('ocStudent').value;if(!sid)return alert('Selecciona un estudiante');let s=db.students.find(x=>x.id===sid);let desc=$('ocDesc').value.trim();if(!desc)return alert('Escribe la descripción');db.occurrences.push({id:crypto.randomUUID(),studentId:sid,studentName:s.name,grade:s.grade,section:s.section,date:$('ocDate').value,time:$('ocTime').value,place:$('ocPlace').value,type:$('ocType').value,description:desc,actions:$('ocActions').value.trim(),followText:$('ocFollowText').value.trim(),requiresFollow:$('ocFollow').checked,createdAt:new Date().toISOString()});['ocDesc','ocActions','ocFollowText'].forEach(id=>$(id).value='');$('ocFollow').checked=false;setNow();persist();toast('Ocurrencia guardada correctamente')}
 function getFiltered(prefix){let sid=$(prefix+'Student').value,from=$(prefix+'From').value,to=$(prefix+'To').value;return db.occurrences.filter(o=>(!sid||o.studentId===sid)&&(!from||o.date>=from)&&(!to||o.date<=to)).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time))}
 function renderHistory(){let sid=$('filterStudent').value,type=$('filterType').value,from=$('filterFrom').value,to=$('filterTo').value;let arr=db.occurrences.filter(o=>(!sid||o.studentId===sid)&&(!type||o.type===type)&&(!from||o.date>=from)&&(!to||o.date<=to)).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));$('historyList').innerHTML=arr.length?arr.map(o=>`<div class="item"><strong>${esc(o.studentName)} <span class="pill">${esc(o.type)}</span></strong><div class="small muted">${o.date||''} ${o.time||''} · ${esc(o.grade||'')} ${esc(o.section||'')} · ${esc(o.place||'')}</div><p>${esc(o.description)}</p>${o.actions?`<p><b>Acciones:</b> ${esc(o.actions)}</p>`:''}${o.followText?`<p><b>Seguimiento:</b> ${esc(o.followText)}</p>`:''}<div class="actions"><button class="btn secondary" onclick="openEdit('${o.id}')">Editar</button><button class="btn danger" onclick="deleteOcc('${o.id}')">Eliminar</button></div></div>`).join(''):'<div class="card empty">No hay ocurrencias con esos filtros.</div>'}
@@ -160,7 +199,7 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.1.1';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let opts=db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.grade||'')} ${esc(s.section||'')}</option>`).join('');$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+opts;['filterStudent','repStudent'].forEach(id=>$(id).innerHTML='<option value="">Todos</option>'+opts);$('studentList').innerHTML=db.students.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Grado</th><th>Sección</th><th></th></tr></thead><tbody>${db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(s.grade||'')}</td><td>${esc(s.section||'')}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay estudiantes registrados.</div>';renderHistory()}
+function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.3';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let opts=db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.grade||'')} ${esc(s.section||'')}</option>`).join('');$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+opts;['filterStudent','repStudent'].forEach(id=>$(id).innerHTML='<option value="">Todos</option>'+opts);$('studentList').innerHTML=db.students.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Grado</th><th>Sección</th><th></th></tr></thead><tbody>${db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(s.grade||'')}</td><td>${esc(s.section||'')}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay estudiantes registrados.</div>';renderHistory()}
 setNow();refreshAll();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body></html>
