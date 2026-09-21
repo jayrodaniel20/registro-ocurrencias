@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#1769e0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <title>Registro de Ocurrencias Escolar</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <style>
+    :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
+    header{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#1769e0,#0e4ea7);color:#fff;padding:18px 18px 16px;box-shadow:0 4px 18px rgba(14,78,167,.25)}
+    .headwrap{max-width:980px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:#fff2;display:grid;place-items:center;font-size:23px;border:1px solid #ffffff35}.headtxt h1{font-size:20px;margin:0}.headtxt small{opacity:.92}.head-badge{background:#ffffff20;border:1px solid #ffffff35;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+    nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fffffff2;backdrop-filter:blur(14px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:7px max(8px,env(safe-area-inset-left)) calc(7px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px #1e375a12}
+    nav button{border:0;background:transparent;color:#718096;padding:7px 3px;border-radius:12px;font-size:10px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}nav button .ico{font-size:20px;line-height:1}nav button.active{color:var(--pri);background:#eaf2ff}
+    main{max-width:980px;margin:auto;padding:16px 14px 96px}.view{display:none}.view.active{display:block;animation:fade .18s ease}@keyframes fade{from{opacity:.35;transform:translateY(3px)}to{opacity:1;transform:none}}
+    .section-title{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:4px 2px 14px}.section-title h2{margin:0}.section-title p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.card{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--shadow);border:1px solid #edf1f6}.stat-card{position:relative;overflow:hidden}.stat-card:after{content:"";position:absolute;width:76px;height:76px;border-radius:50%;right:-22px;top:-22px;background:#1769e00d}.stat-label{font-size:12px;color:var(--muted);font-weight:700}.stat{font-size:30px;font-weight:900;color:var(--pri);margin-top:3px}.muted{color:var(--muted)} h2{margin:8px 0 14px} h3{margin:0 0 12px;font-size:16px}
+    label{font-weight:800;font-size:12px;display:block;margin:11px 0 6px;color:#38445a} input,select,textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:13px;background:#fbfdff;font:inherit;outline:none;transition:.15s}input:focus,select:focus,textarea:focus{border-color:#8db9f4;background:#fff;box-shadow:0 0 0 3px #1769e015}textarea{min-height:98px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.btn{border:0;border-radius:13px;padding:11px 14px;font-weight:850;cursor:pointer;transition:.15s}.btn:active{transform:scale(.985)}.btn.primary{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;box-shadow:0 6px 16px #1769e028}.btn.secondary{background:#eaf2ff;color:var(--pri2)}.btn.success{background:var(--ok);color:#fff}.btn.warn{background:#fff5df;color:#8b5a00}.btn.danger{background:#ffe9e9;color:var(--danger)}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f8fafc;color:#536079}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#edf3ff;color:var(--pri2);font-size:11px;font-weight:800}.list{display:grid;gap:8px}.item{background:#fff;border:1px solid var(--line);padding:14px;border-radius:16px;box-shadow:0 5px 18px #1e375a0b}.item strong{display:block}.small{font-size:12px}.empty{text-align:center;padding:26px;color:var(--muted)}
+    .hero{background:linear-gradient(135deg,#e9f2ff 0,#fff 62%);border:1px solid #dce8ff;position:relative;overflow:hidden}.hero:after{content:"📝";position:absolute;right:12px;top:3px;font-size:82px;opacity:.075;transform:rotate(-8deg)}.hero h2{margin-top:0;font-size:22px}.hero p{max-width:650px}.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:540px}.quick button{min-height:80px;font-size:14px;text-align:left;padding:14px 16px}.quick .qico{display:block;font-size:24px;margin-bottom:5px}
+    .notice{background:#fff8e7;border:1px solid #f5df9c;padding:12px;border-radius:13px;font-size:13px}.footer-note{font-size:12px;color:var(--muted);margin-top:16px}.subtle{background:#f8fbff;border:1px dashed #cfe0f5;border-radius:14px;padding:12px}.split-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+    dialog{border:0;border-radius:20px;padding:0;max-width:520px;width:92%;box-shadow:0 24px 80px #0004}dialog::backdrop{background:#0b183766;backdrop-filter:blur(2px)}.modal{padding:18px}
+    .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);background:#172033;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:50;box-shadow:0 12px 30px #0003}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media(min-width:760px){nav{left:50%;right:auto;transform:translateX(-50%);width:min(720px,94%);bottom:14px;border:1px solid var(--line);border-radius:20px;padding:7px;box-shadow:0 12px 35px #1e375a22}main{padding-bottom:110px}.quick{grid-template-columns:1fr 1fr}.headtxt h1{font-size:22px}}
+    @media(max-width:640px){.row{grid-template-columns:1fr}.quick{grid-template-columns:1fr 1fr}.head-badge{display:none}.card{border-radius:17px;padding:14px}.hero h2{font-size:20px}.quick button{min-height:76px;padding:12px}.grid{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="headwrap">
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.2</small></div></div>
+    <div class="head-badge">V1.2 · ícono oficial</div>
+  </div>
+</header>
+<nav>
+  <button data-view="inicio" class="active"><span class="ico">🏠</span>Inicio</button>
+  <button data-view="estudiantes"><span class="ico">👥</span>Estudiantes</button>
+  <button data-view="ocurrencia"><span class="ico">➕</span>Registrar</button>
+  <button data-view="historial"><span class="ico">🗂️</span>Historial</button>
+  <button data-view="reportes"><span class="ico">📄</span>Reportes</button>
+</nav>
+<main>
+  <section id="inicio" class="view active">
+    <div class="card hero">
+      <h2>Registro rápido y ordenado</h2>
+      <p class="muted">Guarda estudiantes y ocurrencias en este dispositivo. Genera reportes imprimibles y respaldos.</p>
+      <div class="quick">
+        <button class="btn primary" onclick="go('ocurrencia')"><span class="qico">➕</span>Nueva ocurrencia</button>
+        <button class="btn secondary" onclick="go('estudiantes')"><span class="qico">👥</span>Mis estudiantes</button>
+      </div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div class="card stat-card"><div class="stat-label">👥 Estudiantes</div><div class="stat" id="statStudents">0</div></div>
+      <div class="card stat-card"><div class="stat-label">🗂️ Ocurrencias</div><div class="stat" id="statOcc">0</div></div>
+      <div class="card stat-card"><div class="stat-label">📅 Hoy</div><div class="stat" id="statToday">0</div></div>
+      <div class="card stat-card"><div class="stat-label">🔔 Seguimiento</div><div class="stat" id="statFollow">0</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Configuración básica</h3>
+      <div class="row"><div><label>Institución educativa</label><input id="cfgSchool" placeholder="I.E. ..."></div><div><label>Docente</label><input id="cfgTeacher" placeholder="Nombre del docente"></div></div>
+      <div class="row"><div><label>Nivel</label><select id="cfgLevel"><option>Primaria</option><option>Inicial</option><option>Secundaria</option></select></div><div><label>Nombre del aula (opcional)</label><input id="cfgClass" placeholder="5.º Única"></div></div>
+      <div class="actions"><button class="btn primary" onclick="saveConfig()">Guardar configuración</button></div>
+    </div>
+  </section>
+
+  <section id="estudiantes" class="view">
+    <h2>Mis estudiantes</h2>
+    <div class="card">
+      <h3>Agregar estudiante</h3>
+      <label>Apellidos y nombres</label><input id="stName" placeholder="Ej. María Quispe Huamán">
+      <div class="row"><div><label>Grado</label><input id="stGrade" placeholder="Ej. 5.º"></div><div><label>Sección</label><input id="stSection" placeholder="Ej. A, Única, Abejitas"></div></div>
+      <div class="actions"><button class="btn primary" onclick="addStudent(false)">Guardar</button><button class="btn secondary" onclick="addStudent(true)">Guardar y agregar otro</button></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Importar lista</h3>
+      <p class="muted small">Importa CSV con columnas <b>nombre, grado, seccion</b>. También puedes pegar una lista de nombres, uno por línea.</p>
+      <input type="file" id="csvFile" accept=".csv,text/csv">
+      <label>Pegar nombres (opcional)</label><textarea id="pasteNames" placeholder="Jhon\nAdrián\nHeidy"></textarea>
+      <div class="row"><div><label>Grado para la lista pegada</label><input id="bulkGrade" placeholder="5.º"></div><div><label>Sección</label><input id="bulkSection" placeholder="Única"></div></div>
+      <div class="actions"><button class="btn secondary" onclick="importCSV()">Importar CSV</button><button class="btn secondary" onclick="importPasted()">Agregar lista pegada</button></div>
+    </div>
+    <div class="card" style="margin-top:12px"><h3>Lista de estudiantes</h3><div id="studentList"></div></div>
+  </section>
+
+  <section id="ocurrencia" class="view">
+    <h2>Nueva ocurrencia</h2>
+    <div class="card">
+      <label>Estudiante</label><select id="ocStudent"></select>
+      <div class="row"><div><label>Fecha</label><input type="date" id="ocDate"></div><div><label>Hora</label><input type="time" id="ocTime"></div></div>
+      <div class="row"><div><label>Lugar</label><select id="ocPlace"><option>Aula</option><option>Patio</option><option>Recreo</option><option>Educación Física</option><option>Servicios higiénicos</option><option>Entrada o salida</option><option>Otro</option></select></div><div><label>Tipo</label><select id="ocType"><option>Convivencia</option><option>Conducta</option><option>Aprendizaje</option><option>Participación</option><option>Responsabilidad</option><option>Situación positiva</option><option>Incidente</option><option>Comunicación con familia</option><option>Otro</option></select></div></div>
+      <label>Descripción objetiva de la ocurrencia</label><textarea id="ocDesc" placeholder="Describe hechos observables, sin etiquetas ni juicios."></textarea>
+      <label>Acciones realizadas</label><textarea id="ocActions" placeholder="¿Qué hizo el docente?"></textarea>
+      <label>Acuerdos o seguimiento</label><textarea id="ocFollowText" placeholder="Acuerdos, acciones posteriores o seguimiento."></textarea>
+      <label><input type="checkbox" id="ocFollow" style="width:auto"> Requiere seguimiento</label>
+      <div class="actions"><button class="btn success" onclick="saveOccurrence()">Guardar ocurrencia</button></div>
+    </div>
+  </section>
+
+  <section id="historial" class="view">
+    <h2>Historial</h2>
+    <div class="card">
+      <div class="row"><div><label>Estudiante</label><select id="filterStudent"><option value="">Todos</option></select></div><div><label>Tipo</label><select id="filterType"><option value="">Todos</option><option>Convivencia</option><option>Conducta</option><option>Aprendizaje</option><option>Participación</option><option>Responsabilidad</option><option>Situación positiva</option><option>Incidente</option><option>Comunicación con familia</option><option>Otro</option></select></div></div>
+      <div class="row"><div><label>Desde</label><input type="date" id="filterFrom"></div><div><label>Hasta</label><input type="date" id="filterTo"></div></div>
+      <div class="actions"><button class="btn primary" onclick="renderHistory()">Aplicar filtros</button><button class="btn secondary" onclick="clearFilters()">Limpiar</button></div>
+    </div>
+    <div id="historyList" style="margin-top:12px"></div>
+  </section>
+
+  <section id="reportes" class="view">
+    <h2>Reportes y respaldo</h2>
+    <div class="card">
+      <h3>Generar reporte</h3>
+      <div class="row"><div><label>Estudiante</label><select id="repStudent"><option value="">Todos</option></select></div><div><label>Tipo de salida</label><select id="repMode"><option value="print">PDF / imprimir</option><option value="word">Word compatible (.doc)</option></select></div></div>
+      <div class="row"><div><label>Desde</label><input type="date" id="repFrom"></div><div><label>Hasta</label><input type="date" id="repTo"></div></div>
+      <div class="actions"><button class="btn primary" onclick="generateReport()">Generar documento</button></div>
+      <div class="notice" style="margin-top:12px">Para PDF, la app abre una versión imprimible. En Android o PC puedes elegir <b>Guardar como PDF</b> desde la ventana de impresión.</div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Copia de seguridad</h3>
+      <div class="actions"><button class="btn secondary" onclick="backupData()">Descargar respaldo</button><label class="btn secondary" style="display:inline-block">Restaurar respaldo<input id="restoreFile" type="file" accept="application/json" style="display:none" onchange="restoreData(event)"></label></div>
+      <div class="footer-note">Los datos se guardan en este navegador/dispositivo. Haz respaldos frecuentes.</div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast">Listo</div>
+<dialog id="studentEditDialog"><div class="modal"><h3>Editar estudiante</h3><input type="hidden" id="studentEditId"><label>Apellidos y nombres</label><input id="studentEditName"><div class="row"><div><label>Grado</label><input id="studentEditGrade"></div><div><label>Sección</label><input id="studentEditSection"></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveStudentEdit()">Guardar cambios</button><button type="button" class="btn secondary" onclick="closeStudentEdit()">Cancelar</button></div></div></dialog>
+<dialog id="editDialog"><div class="modal"><h3>Editar ocurrencia</h3><input type="hidden" id="editId"><label>Descripción</label><textarea id="editDesc"></textarea><label>Acciones</label><textarea id="editActions"></textarea><label>Seguimiento</label><textarea id="editFollow"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()">Guardar cambios</button><button class="btn secondary" onclick="document.getElementById('editDialog').close()">Cancelar</button></div></div></dialog>
+
+<script>
+const DBKEY='registro_ocurrencias_v1';
+let db=JSON.parse(localStorage.getItem(DBKEY)||'{"config":{},"students":[],"occurrences":[]}');
+const $=id=>document.getElementById(id);
+function persist(){localStorage.setItem(DBKEY,JSON.stringify(db));refreshAll()}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1800)}
+function go(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='historial')renderHistory()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
+function saveConfig(){db.config={school:$('cfgSchool').value.trim(),teacher:$('cfgTeacher').value.trim(),level:$('cfgLevel').value,className:$('cfgClass').value.trim()};persist();toast('Configuración guardada')}
+function addStudent(again){let name=$('stName').value.trim(),grade=$('stGrade').value.trim(),section=$('stSection').value.trim();if(!name)return alert('Escribe el nombre del estudiante');let dup=db.students.some(s=>s.name.toLowerCase()===name.toLowerCase()&&s.grade.toLowerCase()===grade.toLowerCase()&&s.section.toLowerCase()===section.toLowerCase());if(dup&&!confirm('Ya existe un estudiante con el mismo nombre, grado y sección. ¿Agregar de todos modos?'))return;db.students.push({id:crypto.randomUUID(),name,grade,section});persist();toast('Estudiante guardado');$('stName').value='';if(!again){$('stGrade').value='';$('stSection').value=''}$('stName').focus()}
+function delStudent(id){if(!confirm('¿Eliminar estudiante? Sus ocurrencias conservarán el nombre registrado.'))return;db.students=db.students.filter(s=>s.id!==id);persist();toast('Estudiante eliminado')}
+function editStudent(id){let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');$('studentEditId').value=id;$('studentEditName').value=s.name||'';$('studentEditGrade').value=s.grade||'';$('studentEditSection').value=s.section||'';let d=$('studentEditDialog');if(typeof d.showModal==='function'){d.showModal()}else{d.setAttribute('open','open')}}
+function closeStudentEdit(){let d=$('studentEditDialog');if(typeof d.close==='function'&&d.open)d.close();else d.removeAttribute('open')}
+function saveStudentEdit(){let id=$('studentEditId').value;let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');let name=$('studentEditName').value.trim();let grade=$('studentEditGrade').value.trim();let section=$('studentEditSection').value.trim();if(!name)return alert('El nombre no puede quedar vacío');let dup=db.students.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()&&(x.grade||'').toLowerCase()===grade.toLowerCase()&&(x.section||'').toLowerCase()===section.toLowerCase());if(dup&&!confirm('Ya existe otro estudiante con el mismo nombre, grado y sección. ¿Guardar de todos modos?'))return;s.name=name;s.grade=grade;s.section=section;db.occurrences.forEach(o=>{if(o.studentId===id){o.studentName=name;o.grade=grade;o.section=section}});closeStudentEdit();persist();toast('Estudiante actualizado')}
+function importPasted(){let names=$('pasteNames').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),grade=$('bulkGrade').value.trim(),section=$('bulkSection').value.trim();if(!names.length)return alert('Pega uno o más nombres');names.forEach(name=>db.students.push({id:crypto.randomUUID(),name,grade,section}));$('pasteNames').value='';persist()}
+function importCSV(){let f=$('csvFile').files[0];if(!f)return alert('Selecciona un archivo CSV');let r=new FileReader();r.onload=()=>{let lines=r.result.split(/\r?\n/).filter(Boolean);if(!lines.length)return;let sep=lines[0].includes(';')?';':',';let headers=lines[0].split(sep).map(x=>x.trim().toLowerCase());let start=headers.some(h=>h.includes('nombre'))?1:0;for(let i=start;i<lines.length;i++){let p=lines[i].split(sep).map(x=>x.trim().replace(/^"|"$/g,''));if(!p[0])continue;let name,grade='',section='';if(start){name=p[headers.findIndex(h=>h.includes('nombre'))]||'';let gi=headers.findIndex(h=>h.includes('grado'));let si=headers.findIndex(h=>h.includes('secci'));grade=gi>=0?p[gi]||'':'';section=si>=0?p[si]||'':''}else{name=p[0];grade=p[1]||'';section=p[2]||''}db.students.push({id:crypto.randomUUID(),name,grade,section})}persist();toast('Lista importada')};r.readAsText(f,'utf-8')}
+function saveOccurrence(){let sid=$('ocStudent').value;if(!sid)return alert('Selecciona un estudiante');let s=db.students.find(x=>x.id===sid);let desc=$('ocDesc').value.trim();if(!desc)return alert('Escribe la descripción');db.occurrences.push({id:crypto.randomUUID(),studentId:sid,studentName:s.name,grade:s.grade,section:s.section,date:$('ocDate').value,time:$('ocTime').value,place:$('ocPlace').value,type:$('ocType').value,description:desc,actions:$('ocActions').value.trim(),followText:$('ocFollowText').value.trim(),requiresFollow:$('ocFollow').checked,createdAt:new Date().toISOString()});['ocDesc','ocActions','ocFollowText'].forEach(id=>$(id).value='');$('ocFollow').checked=false;setNow();persist();toast('Ocurrencia guardada correctamente')}
+function getFiltered(prefix){let sid=$(prefix+'Student').value,from=$(prefix+'From').value,to=$(prefix+'To').value;return db.occurrences.filter(o=>(!sid||o.studentId===sid)&&(!from||o.date>=from)&&(!to||o.date<=to)).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time))}
+function renderHistory(){let sid=$('filterStudent').value,type=$('filterType').value,from=$('filterFrom').value,to=$('filterTo').value;let arr=db.occurrences.filter(o=>(!sid||o.studentId===sid)&&(!type||o.type===type)&&(!from||o.date>=from)&&(!to||o.date<=to)).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));$('historyList').innerHTML=arr.length?arr.map(o=>`<div class="item"><strong>${esc(o.studentName)} <span class="pill">${esc(o.type)}</span></strong><div class="small muted">${o.date||''} ${o.time||''} · ${esc(o.grade||'')} ${esc(o.section||'')} · ${esc(o.place||'')}</div><p>${esc(o.description)}</p>${o.actions?`<p><b>Acciones:</b> ${esc(o.actions)}</p>`:''}${o.followText?`<p><b>Seguimiento:</b> ${esc(o.followText)}</p>`:''}<div class="actions"><button class="btn secondary" onclick="openEdit('${o.id}')">Editar</button><button class="btn danger" onclick="deleteOcc('${o.id}')">Eliminar</button></div></div>`).join(''):'<div class="card empty">No hay ocurrencias con esos filtros.</div>'}
+function clearFilters(){['filterStudent','filterType','filterFrom','filterTo'].forEach(id=>$(id).value='');renderHistory()}
+function openEdit(id){let o=db.occurrences.find(x=>x.id===id);$('editId').value=id;$('editDesc').value=o.description;$('editActions').value=o.actions;$('editFollow').value=o.followText;$('editDialog').showModal()}
+function saveEdit(){let o=db.occurrences.find(x=>x.id===$('editId').value);o.description=$('editDesc').value.trim();o.actions=$('editActions').value.trim();o.followText=$('editFollow').value.trim();$('editDialog').close();persist();renderHistory()}
+function deleteOcc(id){if(!confirm('¿Eliminar esta ocurrencia?'))return;db.occurrences=db.occurrences.filter(o=>o.id!==id);persist();renderHistory()}
+function generateReport(){let arr=getFiltered('rep');if(!arr.length)return alert('No hay registros para generar el documento');let cfg=db.config||{};let body=arr.map((o,i)=>`<section><h2>REGISTRO DE OCURRENCIA ${arr.length>1?i+1:''}</h2><table><tr><td><b>Estudiante:</b> ${esc(o.studentName)}</td><td><b>Grado:</b> ${esc(o.grade||'')}</td><td><b>Sección:</b> ${esc(o.section||'')}</td></tr><tr><td><b>Fecha:</b> ${esc(o.date||'')}</td><td><b>Hora:</b> ${esc(o.time||'')}</td><td><b>Lugar:</b> ${esc(o.place||'')}</td></tr><tr><td colspan="3"><b>Tipo:</b> ${esc(o.type||'')}</td></tr></table><h3>Descripción de la ocurrencia</h3><p>${nl(o.description)}</p><h3>Acciones realizadas</h3><p>${nl(o.actions||'—')}</p><h3>Acuerdos y seguimiento</h3><p>${nl(o.followText||'—')}</p><div class="sign"><div>_________________________<br>Docente</div><div>_________________________<br>Padre/madre/apoderado</div></div></section>`).join('<div class="pagebreak"></div>');let html=`<!doctype html><html><head><meta charset="utf-8"><title>Reporte de ocurrencias</title><style>body{font-family:Arial,sans-serif;color:#111;margin:32px}h1,h2{text-align:center}h1{font-size:18px;margin-bottom:2px}h2{font-size:17px;margin-top:24px}h3{font-size:14px;margin-top:20px}table{width:100%;border-collapse:collapse}td{border:1px solid #999;padding:8px}p{line-height:1.45}.sign{display:flex;justify-content:space-between;text-align:center;margin-top:70px;gap:30px}.pagebreak{page-break-after:always}@media print{button{display:none}.pagebreak{page-break-after:always}} </style></head><body><h1>${esc(cfg.school||'INSTITUCIÓN EDUCATIVA')}</h1><div style="text-align:center">${esc(cfg.teacher?('Docente: '+cfg.teacher):'')}</div>${body}</body></html>`;if($('repMode').value==='word'){let blob=new Blob(['\ufeff',html],{type:'application/msword'});downloadBlob(blob,'reporte_ocurrencias.doc')}else{let w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),300)}}
+function backupData(){downloadBlob(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),'respaldo_ocurrencias.json')}
+function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.students||!x.occurrences)throw 0;if(confirm('Esto reemplazará los datos actuales. ¿Continuar?')){db=x;persist();toast('Respaldo restaurado')}}catch{alert('Archivo de respaldo no válido')}};r.readAsText(f)}
+function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
+function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.1.1';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let opts=db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.grade||'')} ${esc(s.section||'')}</option>`).join('');$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+opts;['filterStudent','repStudent'].forEach(id=>$(id).innerHTML='<option value="">Todos</option>'+opts);$('studentList').innerHTML=db.students.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Grado</th><th>Sección</th><th></th></tr></thead><tbody>${db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(s.grade||'')}</td><td>${esc(s.section||'')}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay estudiantes registrados.</div>';renderHistory()}
+setNow();refreshAll();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body></html>
