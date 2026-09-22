@@ -1,7 +1,7 @@
 {
   "name": "Registro de Ocurrencias Escolar",
   "short_name": "Registro Escolar",
-  "description": "Registro local de estudiantes y ocurrencias escolares con reportes, dictado por voz y respaldo.",
+  "description": "Registro escolar preparado para futura sincronización en la nube, con reportes y respaldo.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

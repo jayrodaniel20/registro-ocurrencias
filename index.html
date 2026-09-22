@@ -34,8 +34,8 @@
 <body>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.4.3</small></div></div>
-    <div class="head-badge">V1.4.3 · redacción mejorada</div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.5.1</small></div></div>
+    <div class="head-badge">V1.5.1 · redacción mejorada</div>
   </div>
 </header>
 <nav>
@@ -66,6 +66,20 @@
       <div class="row"><div><label>Institución educativa</label><input id="cfgSchool" placeholder="I.E. ..."></div><div><label>Docente</label><input id="cfgTeacher" placeholder="Nombre del docente"></div></div>
       <div class="row"><div><label>Nivel</label><select id="cfgLevel"><option>Primaria</option><option>Inicial</option><option>Secundaria</option></select></div><div><label>Nombre del aula (opcional)</label><input id="cfgClass" placeholder="5.º Única"></div></div>
       <div class="actions"><button class="btn primary" onclick="saveConfig()">Guardar configuración</button></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <details>
+        <summary style="cursor:pointer;font-weight:850;color:#38445a">⚙️ Configuración avanzada</summary>
+        <div style="margin-top:12px">
+          <p class="muted small">Información técnica de esta instalación. No necesitas modificar estos datos para usar la app.</p>
+          <div class="subtle small">
+            <div><b>Estado de preparación:</b> <span id="cloudPrepStatus">Preparando…</span></div>
+            <div style="margin-top:5px"><b>Versión de datos:</b> <span id="schemaVersionLabel">—</span></div>
+            <div style="margin-top:5px"><b>Modo:</b> <span id="storageModeLabel">Local</span></div>
+            <div style="margin-top:5px"><b>ID de instalación:</b> <span id="installIdLabel">—</span></div>
+          </div>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -140,20 +154,70 @@
 
 <script>
 const DBKEY='registro_ocurrencias_v1';
-let db=JSON.parse(localStorage.getItem(DBKEY)||'{"config":{},"students":[],"occurrences":[]}');
+const APP_VERSION='1.5.1';
+const SCHEMA_VERSION=2;
 const $=id=>document.getElementById(id);
-function persist(){localStorage.setItem(DBKEY,JSON.stringify(db));refreshAll()}
+function newId(){return (crypto&&crypto.randomUUID)?crypto.randomUUID():'id-'+Date.now()+'-'+Math.random().toString(16).slice(2)}
+function nowISO(){return new Date().toISOString()}
+function normalizeClassKey(level,grade,section){return [level||'',grade||'',section||''].map(x=>String(x).trim().toLowerCase()).join('|')}
+function migrateDatabase(raw){
+  const x=(raw&&typeof raw==='object')?raw:{};
+  x.config=x.config||{}; x.students=Array.isArray(x.students)?x.students:[]; x.occurrences=Array.isArray(x.occurrences)?x.occurrences:[];
+  x.meta=x.meta||{};
+  x.meta.schemaVersion=SCHEMA_VERSION;
+  x.meta.appVersion=APP_VERSION;
+  x.meta.installId=x.meta.installId||newId();
+  x.meta.createdAt=x.meta.createdAt||nowISO();
+  x.meta.updatedAt=nowISO();
+  x.profile=x.profile||{id:'local-'+x.meta.installId,mode:'local',email:null,displayName:x.config.teacher||''};
+  x.profile.mode=x.profile.mode||'local'; x.profile.displayName=x.config.teacher||x.profile.displayName||'';
+  x.classrooms=Array.isArray(x.classrooms)?x.classrooms:[];
+  const byKey=new Map(x.classrooms.map(c=>[normalizeClassKey(c.level,c.grade,c.section),c]));
+  function ensureClassroom(grade,section){
+    const level=x.config.level||'Primaria'; const key=normalizeClassKey(level,grade,section);
+    if(!grade&&!section) return null;
+    if(!byKey.has(key)){
+      const c={id:newId(),ownerId:x.profile.id,level,grade:grade||'',section:section||'',name:[grade,section].filter(Boolean).join(' '),createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'};
+      x.classrooms.push(c); byKey.set(key,c);
+    }
+    return byKey.get(key);
+  }
+  x.students.forEach(s=>{
+    s.id=s.id||newId(); const c=ensureClassroom(s.grade||'',s.section||'');
+    s.ownerId=s.ownerId||x.profile.id; s.classroomId=s.classroomId||(c?c.id:null);
+    s.createdAt=s.createdAt||nowISO(); s.updatedAt=s.updatedAt||s.createdAt; s.syncState=s.syncState||'local';
+  });
+  x.occurrences.forEach(o=>{
+    o.id=o.id||newId(); const st=x.students.find(s=>s.id===o.studentId); const c=st?x.classrooms.find(c=>c.id===st.classroomId):ensureClassroom(o.grade||'',o.section||'');
+    o.ownerId=o.ownerId||x.profile.id; o.classroomId=o.classroomId||(c?c.id:null);
+    o.createdAt=o.createdAt||nowISO(); o.updatedAt=o.updatedAt||o.createdAt; o.syncState=o.syncState||'local';
+  });
+  return x;
+}
+let db;
+try{db=migrateDatabase(JSON.parse(localStorage.getItem(DBKEY)||'{}'))}catch(e){db=migrateDatabase({})}
+function persist(){db.meta=db.meta||{};db.meta.updatedAt=nowISO();db.meta.appVersion=APP_VERSION;db.meta.schemaVersion=SCHEMA_VERSION;localStorage.setItem(DBKEY,JSON.stringify(db));refreshAll()}
+// Guarda la migración inmediatamente sin borrar ni reemplazar los datos existentes.
+localStorage.setItem(DBKEY,JSON.stringify(db));
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1800)}
 function go(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='historial')renderHistory()}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
-function saveConfig(){db.config={school:$('cfgSchool').value.trim(),teacher:$('cfgTeacher').value.trim(),level:$('cfgLevel').value,className:$('cfgClass').value.trim()};persist();toast('Configuración guardada')}
-function addStudent(again){let name=$('stName').value.trim(),grade=$('stGrade').value.trim(),section=$('stSection').value.trim();if(!name)return alert('Escribe el nombre del estudiante');let dup=db.students.some(s=>s.name.toLowerCase()===name.toLowerCase()&&s.grade.toLowerCase()===grade.toLowerCase()&&s.section.toLowerCase()===section.toLowerCase());if(dup&&!confirm('Ya existe un estudiante con el mismo nombre, grado y sección. ¿Agregar de todos modos?'))return;db.students.push({id:crypto.randomUUID(),name,grade,section});persist();toast('Estudiante guardado');$('stName').value='';if(!again){$('stGrade').value='';$('stSection').value=''}$('stName').focus()}
+function saveConfig(){db.config={school:$('cfgSchool').value.trim(),teacher:$('cfgTeacher').value.trim(),level:$('cfgLevel').value,className:$('cfgClass').value.trim()};db.profile=db.profile||{};db.profile.displayName=db.config.teacher||'';persist();toast('Configuración guardada')}
+function ensureLocalClassroom(grade,section){
+  db.classrooms=Array.isArray(db.classrooms)?db.classrooms:[];
+  const level=(db.config&&db.config.level)||'Primaria';
+  const key=normalizeClassKey(level,grade,section);
+  let c=db.classrooms.find(x=>normalizeClassKey(x.level,x.grade,x.section)===key);
+  if(!c&&(grade||section)){c={id:newId(),ownerId:db.profile.id,level,grade:grade||'',section:section||'',name:[grade,section].filter(Boolean).join(' '),createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'};db.classrooms.push(c)}
+  return c||null;
+}
+function addStudent(again){let name=$('stName').value.trim(),grade=$('stGrade').value.trim(),section=$('stSection').value.trim();if(!name)return alert('Escribe el nombre del estudiante');let dup=db.students.some(s=>s.name.toLowerCase()===name.toLowerCase()&&s.grade.toLowerCase()===grade.toLowerCase()&&s.section.toLowerCase()===section.toLowerCase());if(dup&&!confirm('Ya existe un estudiante con el mismo nombre, grado y sección. ¿Agregar de todos modos?'))return;let c=ensureLocalClassroom(grade,section);db.students.push({id:newId(),ownerId:db.profile.id,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'});persist();toast('Estudiante guardado');$('stName').value='';if(!again){$('stGrade').value='';$('stSection').value=''}$('stName').focus()}
 function delStudent(id){if(!confirm('¿Eliminar estudiante? Sus ocurrencias conservarán el nombre registrado.'))return;db.students=db.students.filter(s=>s.id!==id);persist();toast('Estudiante eliminado')}
 function editStudent(id){let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');$('studentEditId').value=id;$('studentEditName').value=s.name||'';$('studentEditGrade').value=s.grade||'';$('studentEditSection').value=s.section||'';let d=$('studentEditDialog');if(typeof d.showModal==='function'){d.showModal()}else{d.setAttribute('open','open')}}
 function closeStudentEdit(){let d=$('studentEditDialog');if(typeof d.close==='function'&&d.open)d.close();else d.removeAttribute('open')}
-function saveStudentEdit(){let id=$('studentEditId').value;let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');let name=$('studentEditName').value.trim();let grade=$('studentEditGrade').value.trim();let section=$('studentEditSection').value.trim();if(!name)return alert('El nombre no puede quedar vacío');let dup=db.students.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()&&(x.grade||'').toLowerCase()===grade.toLowerCase()&&(x.section||'').toLowerCase()===section.toLowerCase());if(dup&&!confirm('Ya existe otro estudiante con el mismo nombre, grado y sección. ¿Guardar de todos modos?'))return;s.name=name;s.grade=grade;s.section=section;db.occurrences.forEach(o=>{if(o.studentId===id){o.studentName=name;o.grade=grade;o.section=section}});closeStudentEdit();persist();toast('Estudiante actualizado')}
-function importPasted(){let names=$('pasteNames').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),grade=$('bulkGrade').value.trim(),section=$('bulkSection').value.trim();if(!names.length)return alert('Pega uno o más nombres');names.forEach(name=>db.students.push({id:crypto.randomUUID(),name,grade,section}));$('pasteNames').value='';persist()}
-function importCSV(){let f=$('csvFile').files[0];if(!f)return alert('Selecciona un archivo CSV');let r=new FileReader();r.onload=()=>{let lines=r.result.split(/\r?\n/).filter(Boolean);if(!lines.length)return;let sep=lines[0].includes(';')?';':',';let headers=lines[0].split(sep).map(x=>x.trim().toLowerCase());let start=headers.some(h=>h.includes('nombre'))?1:0;for(let i=start;i<lines.length;i++){let p=lines[i].split(sep).map(x=>x.trim().replace(/^"|"$/g,''));if(!p[0])continue;let name,grade='',section='';if(start){name=p[headers.findIndex(h=>h.includes('nombre'))]||'';let gi=headers.findIndex(h=>h.includes('grado'));let si=headers.findIndex(h=>h.includes('secci'));grade=gi>=0?p[gi]||'':'';section=si>=0?p[si]||'':''}else{name=p[0];grade=p[1]||'';section=p[2]||''}db.students.push({id:crypto.randomUUID(),name,grade,section})}persist();toast('Lista importada')};r.readAsText(f,'utf-8')}
+function saveStudentEdit(){let id=$('studentEditId').value;let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');let name=$('studentEditName').value.trim();let grade=$('studentEditGrade').value.trim();let section=$('studentEditSection').value.trim();if(!name)return alert('El nombre no puede quedar vacío');let dup=db.students.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()&&(x.grade||'').toLowerCase()===grade.toLowerCase()&&(x.section||'').toLowerCase()===section.toLowerCase());if(dup&&!confirm('Ya existe otro estudiante con el mismo nombre, grado y sección. ¿Guardar de todos modos?'))return;s.name=name;s.grade=grade;s.section=section;let c=ensureLocalClassroom(grade,section);s.classroomId=c?c.id:null;s.updatedAt=nowISO();s.syncState='local';db.occurrences.forEach(o=>{if(o.studentId===id){o.studentName=name;o.grade=grade;o.section=section;o.classroomId=s.classroomId;o.updatedAt=nowISO();o.syncState='local'}});closeStudentEdit();persist();toast('Estudiante actualizado')}
+function importPasted(){let names=$('pasteNames').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),grade=$('bulkGrade').value.trim(),section=$('bulkSection').value.trim();if(!names.length)return alert('Pega uno o más nombres');let c=ensureLocalClassroom(grade,section);names.forEach(name=>db.students.push({id:newId(),ownerId:db.profile.id,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'}));$('pasteNames').value='';persist()}
+function importCSV(){let f=$('csvFile').files[0];if(!f)return alert('Selecciona un archivo CSV');let r=new FileReader();r.onload=()=>{let lines=r.result.split(/\r?\n/).filter(Boolean);if(!lines.length)return;let sep=lines[0].includes(';')?';':',';let headers=lines[0].split(sep).map(x=>x.trim().toLowerCase());let start=headers.some(h=>h.includes('nombre'))?1:0;for(let i=start;i<lines.length;i++){let p=lines[i].split(sep).map(x=>x.trim().replace(/^"|"$/g,''));if(!p[0])continue;let name,grade='',section='';if(start){name=p[headers.findIndex(h=>h.includes('nombre'))]||'';let gi=headers.findIndex(h=>h.includes('grado'));let si=headers.findIndex(h=>h.includes('secci'));grade=gi>=0?p[gi]||'':'';section=si>=0?p[si]||'':''}else{name=p[0];grade=p[1]||'';section=p[2]||''}let c=ensureLocalClassroom(grade,section);db.students.push({id:newId(),ownerId:db.profile.id,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'})}persist();toast('Lista importada')};r.readAsText(f,'utf-8')}
 
 let studentMode='one';
 function setStudentMode(mode){
@@ -403,10 +467,10 @@ function saveOccurrence(){
   let ids=getSelectedStudentIds();
   if(!ids.length)return alert(studentMode==='many'?'Selecciona uno o más estudiantes':'Selecciona un estudiante');
   let desc=$('ocDesc').value.trim();if(!desc)return alert('Escribe la descripción');
-  const groupId=ids.length>1?crypto.randomUUID():null;
+  const groupId=ids.length>1?newId():null;
   const common={date:$('ocDate').value,time:$('ocTime').value,place:$('ocPlace').value,type:$('ocType').value,description:desc,actions:$('ocActions').value.trim(),followText:$('ocFollowText').value.trim(),requiresFollow:$('ocFollow').checked,groupId,createdAt:new Date().toISOString()};
   let saved=0;
-  ids.forEach(sid=>{let s=db.students.find(x=>x.id===sid);if(!s)return;db.occurrences.push({id:crypto.randomUUID(),studentId:sid,studentName:s.name,grade:s.grade,section:s.section,...common});saved++});
+  ids.forEach(sid=>{let s=db.students.find(x=>x.id===sid);if(!s)return;db.occurrences.push({id:newId(),ownerId:db.profile.id,classroomId:s.classroomId||null,studentId:sid,studentName:s.name,grade:s.grade,section:s.section,updatedAt:common.createdAt,syncState:'local',...common});saved++});
   ['ocDesc','ocActions','ocFollowText'].forEach(id=>$(id).value='');$('ocFollow').checked=false;
   document.querySelectorAll('#ocStudentMulti input[type="checkbox"]').forEach(x=>x.checked=false);updateMultiCount();
   setNow();persist();toast(saved>1?'Ocurrencia registrada para '+saved+' estudiantes':'Ocurrencia guardada correctamente')
@@ -415,15 +479,15 @@ function getFiltered(prefix){let sid=$(prefix+'Student').value,from=$(prefix+'Fr
 function renderHistory(){let sid=$('filterStudent').value,type=$('filterType').value,from=$('filterFrom').value,to=$('filterTo').value;let arr=db.occurrences.filter(o=>(!sid||o.studentId===sid)&&(!type||o.type===type)&&(!from||o.date>=from)&&(!to||o.date<=to)).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));$('historyList').innerHTML=arr.length?arr.map(o=>`<div class="item"><strong>${esc(o.studentName)} <span class="pill">${esc(o.type)}</span>${o.groupId?' <span class="pill">Registro grupal</span>':''}</strong><div class="small muted">${o.date||''} ${o.time||''} · ${esc(o.grade||'')} ${esc(o.section||'')} · ${esc(o.place||'')}</div><p>${esc(o.description)}</p>${o.actions?`<p><b>Acciones:</b> ${esc(o.actions)}</p>`:''}${o.followText?`<p><b>Seguimiento:</b> ${esc(o.followText)}</p>`:''}<div class="actions"><button class="btn secondary" onclick="openEdit('${o.id}')">Editar</button><button class="btn danger" onclick="deleteOcc('${o.id}')">Eliminar</button></div></div>`).join(''):'<div class="card empty">No hay ocurrencias con esos filtros.</div>'}
 function clearFilters(){['filterStudent','filterType','filterFrom','filterTo'].forEach(id=>$(id).value='');renderHistory()}
 function openEdit(id){let o=db.occurrences.find(x=>x.id===id);$('editId').value=id;$('editDesc').value=o.description;$('editActions').value=o.actions;$('editFollow').value=o.followText;$('editDialog').showModal()}
-function saveEdit(){let o=db.occurrences.find(x=>x.id===$('editId').value);o.description=$('editDesc').value.trim();o.actions=$('editActions').value.trim();o.followText=$('editFollow').value.trim();$('editDialog').close();persist();renderHistory()}
+function saveEdit(){let o=db.occurrences.find(x=>x.id===$('editId').value);o.description=$('editDesc').value.trim();o.actions=$('editActions').value.trim();o.followText=$('editFollow').value.trim();o.updatedAt=nowISO();o.syncState='local';$('editDialog').close();persist();renderHistory()}
 function deleteOcc(id){if(!confirm('¿Eliminar esta ocurrencia?'))return;db.occurrences=db.occurrences.filter(o=>o.id!==id);persist();renderHistory()}
 function generateReport(){let arr=getFiltered('rep');if(!arr.length)return alert('No hay registros para generar el documento');let cfg=db.config||{};let body=arr.map((o,i)=>`<section><h2>REGISTRO DE OCURRENCIA ${arr.length>1?i+1:''}</h2><table><tr><td><b>Estudiante:</b> ${esc(o.studentName)}</td><td><b>Grado:</b> ${esc(o.grade||'')}</td><td><b>Sección:</b> ${esc(o.section||'')}</td></tr><tr><td><b>Fecha:</b> ${esc(o.date||'')}</td><td><b>Hora:</b> ${esc(o.time||'')}</td><td><b>Lugar:</b> ${esc(o.place||'')}</td></tr><tr><td colspan="3"><b>Tipo:</b> ${esc(o.type||'')}</td></tr></table><h3>Descripción de la ocurrencia</h3><p>${nl(o.description)}</p><h3>Acciones realizadas</h3><p>${nl(o.actions||'—')}</p><h3>Acuerdos y seguimiento</h3><p>${nl(o.followText||'—')}</p><div class="sign"><div>_________________________<br>Docente</div><div>_________________________<br>Padre/madre/apoderado</div></div></section>`).join('<div class="pagebreak"></div>');let html=`<!doctype html><html><head><meta charset="utf-8"><title>Reporte de ocurrencias</title><style>body{font-family:Arial,sans-serif;color:#111;margin:32px}h1,h2{text-align:center}h1{font-size:18px;margin-bottom:2px}h2{font-size:17px;margin-top:24px}h3{font-size:14px;margin-top:20px}table{width:100%;border-collapse:collapse}td{border:1px solid #999;padding:8px}p{line-height:1.45}.sign{display:flex;justify-content:space-between;text-align:center;margin-top:70px;gap:30px}.pagebreak{page-break-after:always}@media print{button{display:none}.pagebreak{page-break-after:always}} </style></head><body><h1>${esc(cfg.school||'INSTITUCIÓN EDUCATIVA')}</h1><div style="text-align:center">${esc(cfg.teacher?('Docente: '+cfg.teacher):'')}</div>${body}</body></html>`;if($('repMode').value==='word'){let blob=new Blob(['\ufeff',html],{type:'application/msword'});downloadBlob(blob,'reporte_ocurrencias.doc')}else{let w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),300)}}
-function backupData(){downloadBlob(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),'respaldo_ocurrencias.json')}
-function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.students||!x.occurrences)throw 0;if(confirm('Esto reemplazará los datos actuales. ¿Continuar?')){db=x;persist();toast('Respaldo restaurado')}}catch{alert('Archivo de respaldo no válido')}};r.readAsText(f)}
+function backupData(){db.meta.updatedAt=nowISO();downloadBlob(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),'respaldo_ocurrencias_v1_5.json')}
+function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.students||!x.occurrences)throw 0;if(confirm('Esto reemplazará los datos actuales. ¿Continuar?')){db=migrateDatabase(x);persist();toast('Respaldo restaurado y actualizado')}}catch{alert('Archivo de respaldo no válido')}};r.readAsText(f)}
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.4.3';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let opts=db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.grade||'')} ${esc(s.section||'')}</option>`).join('');$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+opts;$('ocStudentMulti').innerHTML=db.students.length?db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<div class="student-check"><input type="checkbox" id="multi-${s.id}" value="${s.id}" onchange="updateMultiCount()"><label for="multi-${s.id}"><b>${esc(s.name)}</b><br><span class="small muted">${esc(s.grade||'')} ${esc(s.section||'')}</span></label></div>`).join(''):'<div class="empty">No hay estudiantes registrados.</div>';updateMultiCount();['filterStudent','repStudent'].forEach(id=>$(id).innerHTML='<option value="">Todos</option>'+opts);$('studentList').innerHTML=db.students.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Grado</th><th>Sección</th><th></th></tr></thead><tbody>${db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(s.grade||'')}</td><td>${esc(s.section||'')}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay estudiantes registrados.</div>';renderHistory()}
+function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.5.1';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent='Lista para conectar una cuenta en la siguiente etapa';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let opts=db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.grade||'')} ${esc(s.section||'')}</option>`).join('');$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+opts;$('ocStudentMulti').innerHTML=db.students.length?db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<div class="student-check"><input type="checkbox" id="multi-${s.id}" value="${s.id}" onchange="updateMultiCount()"><label for="multi-${s.id}"><b>${esc(s.name)}</b><br><span class="small muted">${esc(s.grade||'')} ${esc(s.section||'')}</span></label></div>`).join(''):'<div class="empty">No hay estudiantes registrados.</div>';updateMultiCount();['filterStudent','repStudent'].forEach(id=>$(id).innerHTML='<option value="">Todos</option>'+opts);$('studentList').innerHTML=db.students.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Grado</th><th>Sección</th><th></th></tr></thead><tbody>${db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(s.grade||'')}</td><td>${esc(s.section||'')}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay estudiantes registrados.</div>';renderHistory()}
 setNow();refreshAll();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body></html>
