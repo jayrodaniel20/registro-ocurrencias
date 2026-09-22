@@ -34,8 +34,8 @@
 <body>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.4.1</small></div></div>
-    <div class="head-badge">V1.4.1 · dictado por voz</div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.4.2</small></div></div>
+    <div class="head-badge">V1.4.2 · dictado corregido</div>
   </div>
 </header>
 <nav>
@@ -198,6 +198,52 @@ function formalizeField(id,kind){
 let voiceRecognition=null;
 let voiceButton=null;
 let voiceTargetId=null;
+
+function normalizeSpeech(text){
+  return String(text||'')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9ñü\s]/gi,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+// Une un nuevo fragmento sin repetir palabras o frases ya reconocidas.
+function mergeSpeechText(current,newChunk){
+  current=String(current||'').trim();
+  newChunk=String(newChunk||'').trim();
+  if(!newChunk) return current;
+  if(!current) return newChunk;
+
+  const a=normalizeSpeech(current);
+  const b=normalizeSpeech(newChunk);
+  if(!b) return current;
+  if(a===b) return current;
+
+  // Chrome a veces devuelve de nuevo toda la frase, pero más larga.
+  if(b.startsWith(a)) return newChunk;
+  // O devuelve una versión más corta de algo que ya confirmó.
+  if(a.startsWith(b)) return current;
+
+  const aw=a.split(' '), bw=b.split(' ');
+  const curWords=current.split(/\s+/), newWords=newChunk.split(/\s+/);
+  const max=Math.min(aw.length,bw.length,20);
+  let overlap=0;
+  for(let k=max;k>=1;k--){
+    const tail=aw.slice(-k).join(' ');
+    const head=bw.slice(0,k).join(' ');
+    if(tail===head){overlap=k;break;}
+  }
+  if(overlap>0){
+    return (current+' '+newWords.slice(overlap).join(' ')).replace(/\s+/g,' ').trim();
+  }
+
+  // Si el navegador reenvía literalmente una frase ya contenida, no la agregamos.
+  if(a.includes(b)) return current;
+
+  return (current+' '+newChunk).replace(/\s+/g,' ').trim();
+}
+
 function toggleDictation(targetId,btn){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){alert('El dictado por voz no está disponible en este navegador. Prueba con Google Chrome en Android.');return;}
@@ -207,36 +253,28 @@ function toggleDictation(targetId,btn){
   const status=$('voiceStatus-'+targetId);
   const base=target.value.trim();
   const rec=new SR();
-  let finalTranscript='';
-  let lastFinalChunk='';
+  let sessionText='';
 
   voiceRecognition=rec; voiceButton=btn; voiceTargetId=targetId;
   rec.lang='es-PE';
-  rec.interimResults=true;
+  // Solo usamos resultados definitivos. Los provisionales son la principal causa
+  // de duplicados en algunos Chrome/Android.
+  rec.interimResults=false;
   rec.continuous=true;
+  rec.maxAlternatives=1;
   btn.dataset.label=btn.textContent;
   btn.classList.add('listening');
   btn.textContent='⏹️ Detener';
   status.textContent='Escuchando… habla con naturalidad';
 
   rec.onresult=(event)=>{
-    let interimTranscript='';
     for(let i=event.resultIndex;i<event.results.length;i++){
+      if(!event.results[i].isFinal) continue;
       const chunk=(event.results[i][0].transcript||'').trim();
       if(!chunk) continue;
-      if(event.results[i].isFinal){
-        // Algunos navegadores vuelven a entregar el último fragmento final.
-        // Solo lo agregamos si realmente es nuevo.
-        if(chunk!==lastFinalChunk){
-          finalTranscript+=(finalTranscript?' ':'')+chunk;
-          lastFinalChunk=chunk;
-        }
-      }else{
-        interimTranscript+=(interimTranscript?' ':'')+chunk;
-      }
+      sessionText=mergeSpeechText(sessionText,chunk);
     }
-    const spoken=[finalTranscript,interimTranscript].filter(Boolean).join(' ').trim();
-    target.value=[base,spoken].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+    target.value=[base,sessionText].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
   };
 
   rec.onerror=(event)=>{
@@ -288,7 +326,7 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.4.1';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let opts=db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.grade||'')} ${esc(s.section||'')}</option>`).join('');$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+opts;$('ocStudentMulti').innerHTML=db.students.length?db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<div class="student-check"><input type="checkbox" id="multi-${s.id}" value="${s.id}" onchange="updateMultiCount()"><label for="multi-${s.id}"><b>${esc(s.name)}</b><br><span class="small muted">${esc(s.grade||'')} ${esc(s.section||'')}</span></label></div>`).join(''):'<div class="empty">No hay estudiantes registrados.</div>';updateMultiCount();['filterStudent','repStudent'].forEach(id=>$(id).innerHTML='<option value="">Todos</option>'+opts);$('studentList').innerHTML=db.students.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Grado</th><th>Sección</th><th></th></tr></thead><tbody>${db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(s.grade||'')}</td><td>${esc(s.section||'')}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay estudiantes registrados.</div>';renderHistory()}
+function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.4.2';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let opts=db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.grade||'')} ${esc(s.section||'')}</option>`).join('');$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+opts;$('ocStudentMulti').innerHTML=db.students.length?db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<div class="student-check"><input type="checkbox" id="multi-${s.id}" value="${s.id}" onchange="updateMultiCount()"><label for="multi-${s.id}"><b>${esc(s.name)}</b><br><span class="small muted">${esc(s.grade||'')} ${esc(s.section||'')}</span></label></div>`).join(''):'<div class="empty">No hay estudiantes registrados.</div>';updateMultiCount();['filterStudent','repStudent'].forEach(id=>$(id).innerHTML='<option value="">Todos</option>'+opts);$('studentList').innerHTML=db.students.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Grado</th><th>Sección</th><th></th></tr></thead><tbody>${db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(s.grade||'')}</td><td>${esc(s.section||'')}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay estudiantes registrados.</div>';renderHistory()}
 setNow();refreshAll();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body></html>
