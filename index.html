@@ -38,7 +38,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>Registro Escolar</h2><div class="small muted">Cuenta y acceso seguro · Versión 1.7</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>Registro Escolar</h2><div class="small muted">Cuenta y acceso seguro · Versión 1.8</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -60,7 +60,7 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.7</small></div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.8</small></div></div>
     <div class="head-badge">V1.6 · Cuenta de usuario</div>
   </div>
 </header>
@@ -119,12 +119,13 @@
             </div>
           </div>
           <div class="subtle small" style="margin-top:10px">
-            <div><b>☁️ Copia inicial en la nube</b></div>
-            <p class="muted small" style="margin:7px 0">Esta etapa solo copia tus datos locales a tu cuenta de Supabase. Todavía no activa la sincronización automática entre dispositivos.</p>
-            <div id="cloudMigrationSummary">Inicia sesión para revisar el estado.</div>
+            <div><b>☁️ Sincronización</b></div>
+            <div style="margin-top:8px"><b>Estado:</b> <span id="syncStatusLabel" class="cloud-state">Pendiente</span></div>
+            <div style="margin-top:5px"><b>Última sincronización:</b> <span id="lastSyncLabel">Nunca</span></div>
+            <div style="margin-top:5px"><b>Cambios pendientes:</b> <span id="pendingSyncLabel">0</span></div>
+            <p class="muted small" style="margin:8px 0 0">La app conserva una copia local y sincroniza con tu cuenta cuando tú lo indicas.</p>
             <div class="actions">
-              <button id="cloudUploadBtn" type="button" class="btn primary" onclick="uploadLocalDataToCloud()" style="display:none">Subir mis datos a la nube</button>
-              <button id="cloudCheckBtn" type="button" class="btn secondary" onclick="refreshCloudMigrationStatus()" style="display:none">Actualizar estado</button>
+              <button id="syncNowBtn" type="button" class="btn primary" onclick="syncNow()" style="display:none">Sincronizar ahora</button>
             </div>
           </div>
         </div>
@@ -228,7 +229,7 @@ const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHA
 let cloudUser=null;
 let localBypass=false;
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='1.7';
+const APP_VERSION='1.8';
 const SCHEMA_VERSION=3;
 const $=id=>document.getElementById(id);
 function showAuthMessage(msg,type='ok'){const el=$('authMessage');el.textContent=msg;el.className='auth-message show '+(type==='err'?'err':'ok')}
@@ -241,12 +242,10 @@ function updateAccountUi(){
   if($('accountStateLabel')){$('accountStateLabel').textContent=cloudUser?'Cuenta conectada':'Modo local';$('accountStateLabel').style.background=cloudUser?'#eaf8ef':'#edf3ff';$('accountStateLabel').style.color=cloudUser?'#17653a':'#0e4ea7'}
   if($('logoutBtn'))$('logoutBtn').style.display=cloudUser?'inline-block':'none';
   if($('loginBtn'))$('loginBtn').style.display=cloudUser?'none':'inline-block';
-  if($('storageModeLabel'))$('storageModeLabel').textContent=cloudUser?'Cuenta conectada · datos aún locales':'Local';
+  if($('storageModeLabel'))$('storageModeLabel').textContent=cloudUser?'Nube + local':'Local';
   if(db&&db.profile){db.profile.cloudUserId=cloudUser?.id||null;db.profile.email=email||null;db.profile.mode=cloudUser?'authenticated':'local';localStorage.setItem(DBKEY,JSON.stringify(db));}
-  if($('cloudUploadBtn'))$('cloudUploadBtn').style.display=cloudUser?'inline-block':'none';
-  if($('cloudCheckBtn'))$('cloudCheckBtn').style.display=cloudUser?'inline-block':'none';
-  if($('cloudMigrationSummary')&&!cloudUser)$('cloudMigrationSummary').textContent='Inicia sesión para revisar el estado.';
-  if(cloudUser)setTimeout(()=>refreshCloudMigrationStatus(),0);
+  if($('syncNowBtn'))$('syncNowBtn').style.display=cloudUser?'inline-block':'none';
+  updateSyncUi();
 }
 function openLoginGate(){
   localBypass=false;
@@ -319,6 +318,126 @@ async function uploadLocalDataToCloud(){
   finally{btn.disabled=false;btn.textContent=old}
 }
 
+
+function ensureDeletionQueue(){
+  db.meta=db.meta||{};
+  db.meta.deleted=db.meta.deleted||{classrooms:[],students:[],occurrences:[]};
+  for(const k of ['classrooms','students','occurrences'])db.meta.deleted[k]=Array.isArray(db.meta.deleted[k])?db.meta.deleted[k]:[];
+  return db.meta.deleted;
+}
+function queueCloudDelete(kind,localId){
+  if(!cloudUser||!localId)return;
+  const cloudId=mappedUuid(kind,localId);
+  const q=ensureDeletionQueue()[kind];
+  if(!q.some(x=>x.id===cloudId))q.push({id:cloudId,deletedAt:nowISO()});
+}
+function pendingSyncCount(){
+  const dirty=[...db.classrooms,...db.students,...db.occurrences].filter(x=>x.syncState==='local').length;
+  const q=ensureDeletionQueue();
+  return dirty+q.classrooms.length+q.students.length+q.occurrences.length;
+}
+function updateSyncUi(){
+  const status=$('syncStatusLabel'),last=$('lastSyncLabel'),pending=$('pendingSyncLabel');
+  const count=pendingSyncCount();
+  if(pending)pending.textContent=count;
+  if(last)last.textContent=db.meta?.lastSyncAt?new Date(db.meta.lastSyncAt).toLocaleString():'Nunca';
+  if(status){
+    let txt='Sin conexión',bg='#fff5df',fg='#8b5a00';
+    if(cloudUser){txt=count?'Pendiente':'Sincronizado';bg=count?'#fff5df':'#eaf8ef';fg=count?'#8b5a00':'#17653a'}
+    status.textContent=txt;status.style.background=bg;status.style.color=fg;
+  }
+}
+function dateMs(v){const n=Date.parse(v||'');return Number.isFinite(n)?n:0}
+function findLocalByCloudId(kind,cloudId){
+  const arr=kind==='classrooms'?db.classrooms:kind==='students'?db.students:db.occurrences;
+  const map=ensureCloudMap()[kind];
+  for(const item of arr){
+    if(item.id===cloudId||map[item.id]===cloudId)return item;
+  }
+  return null;
+}
+function cloudToLocal(kind,row){
+  if(kind==='classrooms')return {id:row.id,ownerId:db.profile.id,level:row.level||'Primaria',grade:row.grade||'',section:row.section||'',name:row.name||'Salón',createdAt:row.created_at||nowISO(),updatedAt:row.updated_at||row.created_at||nowISO(),syncState:'synced'};
+  if(kind==='students')return {id:row.id,ownerId:db.profile.id,classroomId:row.classroom_id||null,name:row.name||'',grade:row.grade||'',section:row.section||'',createdAt:row.created_at||nowISO(),updatedAt:row.updated_at||row.created_at||nowISO(),syncState:'synced'};
+  return {id:row.id,ownerId:db.profile.id,classroomId:row.classroom_id||null,studentId:row.student_id||null,studentName:row.student_name||'Estudiante',grade:row.grade||'',section:row.section||'',date:row.occurrence_date||'',time:row.occurrence_time||'',place:row.place||'',type:row.type||'',description:row.description||'',actions:row.actions||'',followText:row.follow_text||'',requiresFollow:!!row.requires_follow,groupId:row.group_id||null,createdAt:row.created_at||nowISO(),updatedAt:row.updated_at||row.created_at||nowISO(),syncState:'synced'};
+}
+function applyCloudRow(kind,row){
+  const local=findLocalByCloudId(kind,row.id);
+  const incoming=cloudToLocal(kind,row);
+  const arr=kind==='classrooms'?db.classrooms:kind==='students'?db.students:db.occurrences;
+  if(!local){arr.push(incoming);ensureCloudMap()[kind][incoming.id]=row.id;return}
+  if(dateMs(row.updated_at)>dateMs(local.updatedAt)){
+    const oldId=local.id;
+    Object.assign(local,incoming,{id:oldId,syncState:'synced'});
+    ensureCloudMap()[kind][oldId]=row.id;
+  }
+}
+async function fetchCloudRows(){
+  const out={};
+  for(const t of ['classrooms','students','occurrences']){
+    const {data,error}=await supabaseClient.from(t).select('*');
+    if(error)throw error;out[t]=data||[];
+  }
+  return out;
+}
+
+function reconcileRemoteDeletions(remote){
+  const specs=[['classrooms','classrooms'],['students','students'],['occurrences','occurrences']];
+  for(const [kind,key] of specs){
+    const ids=new Set((remote[key]||[]).map(r=>r.id));
+    const arr=kind==='classrooms'?db.classrooms:kind==='students'?db.students:db.occurrences;
+    const kept=arr.filter(item=>{
+      if(item.syncState==='local')return true;
+      const cid=ensureCloudMap()[kind][item.id]||(isUuid(item.id)?item.id:null);
+      return !cid||ids.has(cid);
+    });
+    if(kind==='classrooms')db.classrooms=kept;
+    else if(kind==='students')db.students=kept;
+    else db.occurrences=kept;
+  }
+}
+async function applyPendingDeletes(){
+  const q=ensureDeletionQueue();
+  for(const [kind,table] of [['occurrences','occurrences'],['students','students'],['classrooms','classrooms']]){
+    for(const item of [...q[kind]]){
+      const {error}=await supabaseClient.from(table).delete().eq('id',item.id);
+      if(error)throw error;
+      q[kind]=q[kind].filter(x=>x.id!==item.id);
+    }
+  }
+}
+async function uploadMergedLocal(){
+  let {error}=await supabaseClient.from('profiles').upsert({id:cloudUser.id,email:cloudUser.email||null,display_name:db.config?.teacher||db.profile?.displayName||null,updated_at:nowISO()},{onConflict:'id'}); if(error)throw error;
+  ({error}=await supabaseClient.from('user_settings').upsert({user_id:cloudUser.id,school_name:db.config?.school||null,teacher_name:db.config?.teacher||null,default_level:db.config?.level||null,default_class_name:db.config?.className||null,updated_at:nowISO()},{onConflict:'user_id'})); if(error)throw error;
+  const rows=cloudRows();
+  if(rows.classrooms.length){({error}=await supabaseClient.from('classrooms').upsert(rows.classrooms,{onConflict:'id'}));if(error)throw error}
+  if(rows.students.length){({error}=await supabaseClient.from('students').upsert(rows.students,{onConflict:'id'}));if(error)throw error}
+  if(rows.occurrences.length){({error}=await supabaseClient.from('occurrences').upsert(rows.occurrences,{onConflict:'id'}));if(error)throw error}
+}
+async function syncNow(){
+  if(!cloudUser)return alert('Primero inicia sesión.');
+  if(!navigator.onLine){updateSyncUi();return alert('No hay conexión a internet. Tus cambios siguen guardados en este dispositivo.');}
+  const btn=$('syncNowBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='Sincronizando…';
+  try{
+    // 1) Propaga primero las eliminaciones locales pendientes.
+    await applyPendingDeletes();
+    // 2) Descarga la nube y conserva la versión más reciente de cada registro.
+    const remote=await fetchCloudRows();
+    reconcileRemoteDeletions(remote);
+    remote.classrooms.forEach(r=>applyCloudRow('classrooms',r));
+    remote.students.forEach(r=>applyCloudRow('students',r));
+    remote.occurrences.forEach(r=>applyCloudRow('occurrences',r));
+    // 3) Sube la versión combinada.
+    await uploadMergedLocal();
+    db.classrooms.forEach(x=>x.syncState='synced');db.students.forEach(x=>x.syncState='synced');db.occurrences.forEach(x=>x.syncState='synced');
+    db.meta.lastSyncAt=nowISO();db.meta.cloudMigratedAt=db.meta.cloudMigratedAt||db.meta.lastSyncAt;
+    localStorage.setItem(DBKEY,JSON.stringify(db));refreshAll();updateSyncUi();toast('Sincronización completada');
+  }catch(e){updateSyncUi();alert('No se pudo completar la sincronización. Tus datos locales siguen guardados.\n\nDetalle: '+(e.message||e));}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+window.addEventListener('online',()=>{updateSyncUi();toast('Conexión recuperada')});
+window.addEventListener('offline',()=>{updateSyncUi();toast('Sin conexión · trabajando en local')});
+
 async function createAccount(){
   clearAuthMessage();
   const name=$('signupName').value.trim(),email=$('signupEmail').value.trim(),p1=$('signupPassword').value,p2=$('signupPassword2').value;
@@ -383,10 +502,11 @@ function migrateDatabase(raw){
   x.meta.installId=x.meta.installId||newId();
   x.meta.createdAt=x.meta.createdAt||nowISO();
   x.meta.updatedAt=nowISO();
+  x.meta.deleted=x.meta.deleted||{classrooms:[],students:[],occurrences:[]};
   x.profile=x.profile||{id:'local-'+x.meta.installId,mode:'local',email:null,displayName:x.config.teacher||''};
   x.profile.mode=x.profile.mode||'local'; x.profile.displayName=x.config.teacher||x.profile.displayName||'';
   x.classrooms=Array.isArray(x.classrooms)?x.classrooms:[];
-  x.classrooms.forEach(c=>{c.id=c.id||newId();c.ownerId=c.ownerId||x.profile.id;c.level=c.level||x.config.level||'Primaria';c.grade=c.grade||'';c.section=c.section||'';c.name=c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón';c.createdAt=c.createdAt||nowISO();c.updatedAt=c.updatedAt||c.createdAt;c.syncState=c.syncState||'local'});
+  x.classrooms.forEach(c=>{c.id=c.id||newId();c.ownerId=c.ownerId||x.profile.id;c.level=c.level||x.config.level||'Primaria';c.grade=c.grade||'';c.section=c.section||'';c.name=c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón';c.createdAt=c.createdAt||nowISO();c.updatedAt=c.updatedAt||c.createdAt;c.syncState=(c.syncState==='uploaded'?'synced':(c.syncState||'local'))});
   const byKey=new Map(x.classrooms.map(c=>[normalizeClassKey(c.level,c.grade,c.section),c]));
   function ensureClassroom(grade,section){
     const level=x.config.level||'Primaria'; const key=normalizeClassKey(level,grade,section);
@@ -400,12 +520,12 @@ function migrateDatabase(raw){
   x.students.forEach(s=>{
     s.id=s.id||newId(); const c=ensureClassroom(s.grade||'',s.section||'');
     s.ownerId=s.ownerId||x.profile.id; s.classroomId=s.classroomId||(c?c.id:null);
-    s.createdAt=s.createdAt||nowISO(); s.updatedAt=s.updatedAt||s.createdAt; s.syncState=s.syncState||'local';
+    s.createdAt=s.createdAt||nowISO(); s.updatedAt=s.updatedAt||s.createdAt; s.syncState=(s.syncState==='uploaded'?'synced':(s.syncState||'local'));
   });
   x.occurrences.forEach(o=>{
     o.id=o.id||newId(); const st=x.students.find(s=>s.id===o.studentId); const c=st?x.classrooms.find(c=>c.id===st.classroomId):ensureClassroom(o.grade||'',o.section||'');
     o.ownerId=o.ownerId||x.profile.id; o.classroomId=o.classroomId||(c?c.id:null);
-    o.createdAt=o.createdAt||nowISO(); o.updatedAt=o.updatedAt||o.createdAt; o.syncState=o.syncState||'local';
+    o.createdAt=o.createdAt||nowISO(); o.updatedAt=o.updatedAt||o.createdAt; o.syncState=(o.syncState==='uploaded'?'synced':(o.syncState||'local'));
   });
   return x;
 }
@@ -424,7 +544,7 @@ function addClassroom(){let level=$('clLevel').value,grade=$('clGrade').value.tr
 function editClassroom(id){let c=db.classrooms.find(x=>x.id===id);if(!c)return;$('classroomEditId').value=id;$('classroomEditLevel').value=c.level||'Primaria';$('classroomEditGrade').value=c.grade||'';$('classroomEditSection').value=c.section||'';$('classroomEditName').value=c.name||'';$('classroomEditDialog').showModal()}
 function closeClassroomEdit(){$('classroomEditDialog').close()}
 function saveClassroomEdit(){let c=db.classrooms.find(x=>x.id===$('classroomEditId').value);if(!c)return;let level=$('classroomEditLevel').value,grade=$('classroomEditGrade').value.trim(),section=$('classroomEditSection').value.trim(),name=$('classroomEditName').value.trim();let dup=db.classrooms.some(x=>x.id!==c.id&&normalizeClassKey(x.level,x.grade,x.section)===normalizeClassKey(level,grade,section));if(dup)return alert('Ya existe otro salón con ese nivel, grado y sección.');c.level=level;c.grade=grade;c.section=section;c.name=name||[grade,section].filter(Boolean).join(' ')||'Salón';c.updatedAt=nowISO();c.syncState='local';db.students.forEach(st=>{if(st.classroomId===c.id){st.grade=grade;st.section=section;st.updatedAt=nowISO();st.syncState='local'}});db.occurrences.forEach(o=>{if(o.classroomId===c.id){o.grade=grade;o.section=section;o.updatedAt=nowISO();o.syncState='local'}});closeClassroomEdit();persist();toast('Salón actualizado')}
-function deleteClassroom(id){let c=db.classrooms.find(x=>x.id===id);if(!c)return;let n=db.students.filter(s=>s.classroomId===id).length;if(n)return alert(`Este salón tiene ${n} estudiante(s). Mueve o elimina esos estudiantes antes de eliminar el salón.`);if(!confirm('¿Eliminar este salón?'))return;db.classrooms=db.classrooms.filter(x=>x.id!==id);persist();toast('Salón eliminado')}
+function deleteClassroom(id){let c=db.classrooms.find(x=>x.id===id);if(!c)return;let n=db.students.filter(s=>s.classroomId===id).length;if(n)return alert(`Este salón tiene ${n} estudiante(s). Mueve o elimina esos estudiantes antes de eliminar el salón.`);if(!confirm('¿Eliminar este salón?'))return;queueCloudDelete('classrooms',id);db.classrooms=db.classrooms.filter(x=>x.id!==id);persist();toast('Salón eliminado')}
 function openClassroom(id){go('estudiantes');$('studentClassFilter').value=id;renderStudents();$('stClassroom').value=id;applyClassroomToStudentForm()}
 function applyClassroomToStudentForm(){let c=db.classrooms.find(x=>x.id===$('stClassroom').value);if(c){$('stGrade').value=c.grade||'';$('stSection').value=c.section||''}}
 function applyClassroomToBulkForm(){let c=db.classrooms.find(x=>x.id===$('bulkClassroom').value);if(c){$('bulkGrade').value=c.grade||'';$('bulkSection').value=c.section||''}}
@@ -444,7 +564,7 @@ function ensureLocalClassroom(grade,section){
   return c||null;
 }
 function addStudent(again){let name=$('stName').value.trim(),grade=$('stGrade').value.trim(),section=$('stSection').value.trim();if(!name)return alert('Escribe el nombre del estudiante');let selected=db.classrooms.find(c=>c.id===$('stClassroom').value);let c=selected||ensureLocalClassroom(grade,section);if(selected){grade=selected.grade||grade;section=selected.section||section}let dup=db.students.some(s=>s.name.toLowerCase()===name.toLowerCase()&&s.classroomId===(c?c.id:null));if(dup&&!confirm('Ya existe un estudiante con el mismo nombre en este salón. ¿Agregar de todos modos?'))return;db.students.push({id:newId(),ownerId:db.profile.id,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'});persist();toast('Estudiante guardado');$('stName').value='';if(!again&&!selected){$('stGrade').value='';$('stSection').value=''}$('stName').focus()}
-function delStudent(id){if(!confirm('¿Eliminar estudiante? Sus ocurrencias conservarán el nombre registrado.'))return;db.students=db.students.filter(s=>s.id!==id);persist();toast('Estudiante eliminado')}
+function delStudent(id){if(!confirm('¿Eliminar estudiante? Sus ocurrencias conservarán el nombre registrado.'))return;queueCloudDelete('students',id);db.students=db.students.filter(s=>s.id!==id);persist();toast('Estudiante eliminado')}
 function editStudent(id){let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');$('studentEditId').value=id;$('studentEditClassroom').innerHTML=classroomOptions(false);$('studentEditClassroom').value=s.classroomId||'';$('studentEditName').value=s.name||'';$('studentEditGrade').value=s.grade||'';$('studentEditSection').value=s.section||'';let d=$('studentEditDialog');if(typeof d.showModal==='function'){d.showModal()}else{d.setAttribute('open','open')}}
 function closeStudentEdit(){let d=$('studentEditDialog');if(typeof d.close==='function'&&d.open)d.close();else d.removeAttribute('open')}
 function saveStudentEdit(){let id=$('studentEditId').value;let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');let name=$('studentEditName').value.trim();let selected=db.classrooms.find(c=>c.id===$('studentEditClassroom').value);let grade=$('studentEditGrade').value.trim(),section=$('studentEditSection').value.trim();if(selected){grade=selected.grade||grade;section=selected.section||section}if(!name)return alert('El nombre no puede quedar vacío');let c=selected||ensureLocalClassroom(grade,section);let dup=db.students.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()&&x.classroomId===(c?c.id:null));if(dup&&!confirm('Ya existe otro estudiante con el mismo nombre en este salón. ¿Guardar de todos modos?'))return;s.name=name;s.grade=grade;s.section=section;s.classroomId=c?c.id:null;s.updatedAt=nowISO();s.syncState='local';db.occurrences.forEach(o=>{if(o.studentId===id){o.studentName=name;o.grade=grade;o.section=section;o.classroomId=s.classroomId;o.updatedAt=nowISO();o.syncState='local'}});closeStudentEdit();persist();toast('Estudiante actualizado')}
@@ -712,14 +832,14 @@ function renderHistory(){let cid=$('filterClassroom').value,sid=$('filterStudent
 function clearFilters(){['filterClassroom','filterStudent','filterType','filterFrom','filterTo'].forEach(id=>$(id).value='');renderFilterStudentOptions();renderHistory()}
 function openEdit(id){let o=db.occurrences.find(x=>x.id===id);$('editId').value=id;$('editDesc').value=o.description;$('editActions').value=o.actions;$('editFollow').value=o.followText;$('editDialog').showModal()}
 function saveEdit(){let o=db.occurrences.find(x=>x.id===$('editId').value);o.description=$('editDesc').value.trim();o.actions=$('editActions').value.trim();o.followText=$('editFollow').value.trim();o.updatedAt=nowISO();o.syncState='local';$('editDialog').close();persist();renderHistory()}
-function deleteOcc(id){if(!confirm('¿Eliminar esta ocurrencia?'))return;db.occurrences=db.occurrences.filter(o=>o.id!==id);persist();renderHistory()}
+function deleteOcc(id){if(!confirm('¿Eliminar esta ocurrencia?'))return;queueCloudDelete('occurrences',id);db.occurrences=db.occurrences.filter(o=>o.id!==id);persist();renderHistory();toast('Ocurrencia eliminada')}
 function generateReport(){let arr=getFiltered('rep');if(!arr.length)return alert('No hay registros para generar el documento');let cfg=db.config||{};let body=arr.map((o,i)=>`<section><h2>REGISTRO DE OCURRENCIA ${arr.length>1?i+1:''}</h2><table><tr><td><b>Estudiante:</b> ${esc(o.studentName)}</td><td><b>Grado:</b> ${esc(o.grade||'')}</td><td><b>Sección:</b> ${esc(o.section||'')}</td></tr><tr><td><b>Fecha:</b> ${esc(o.date||'')}</td><td><b>Hora:</b> ${esc(o.time||'')}</td><td><b>Lugar:</b> ${esc(o.place||'')}</td></tr><tr><td colspan="3"><b>Tipo:</b> ${esc(o.type||'')}</td></tr></table><h3>Descripción de la ocurrencia</h3><p>${nl(o.description)}</p><h3>Acciones realizadas</h3><p>${nl(o.actions||'—')}</p><h3>Acuerdos y seguimiento</h3><p>${nl(o.followText||'—')}</p><div class="sign"><div>_________________________<br>Docente</div><div>_________________________<br>Padre/madre/apoderado</div></div></section>`).join('<div class="pagebreak"></div>');let html=`<!doctype html><html><head><meta charset="utf-8"><title>Reporte de ocurrencias</title><style>body{font-family:Arial,sans-serif;color:#111;margin:32px}h1,h2{text-align:center}h1{font-size:18px;margin-bottom:2px}h2{font-size:17px;margin-top:24px}h3{font-size:14px;margin-top:20px}table{width:100%;border-collapse:collapse}td{border:1px solid #999;padding:8px}p{line-height:1.45}.sign{display:flex;justify-content:space-between;text-align:center;margin-top:70px;gap:30px}.pagebreak{page-break-after:always}@media print{button{display:none}.pagebreak{page-break-after:always}} </style></head><body><h1>${esc(cfg.school||'INSTITUCIÓN EDUCATIVA')}</h1><div style="text-align:center">${esc(cfg.teacher?('Docente: '+cfg.teacher):'')}</div>${body}</body></html>`;if($('repMode').value==='word'){let blob=new Blob(['\ufeff',html],{type:'application/msword'});downloadBlob(blob,'reporte_ocurrencias.doc')}else{let w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),300)}}
-function backupData(){db.meta.updatedAt=nowISO();downloadBlob(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),'respaldo_ocurrencias_v1_7.json')}
+function backupData(){db.meta.updatedAt=nowISO();downloadBlob(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),'respaldo_ocurrencias_v1_8.json')}
 function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.students||!x.occurrences)throw 0;if(confirm('Esto reemplazará los datos actuales. ¿Continuar?')){db=migrateDatabase(x);persist();toast('Respaldo restaurado y actualizado')}}catch{alert('Archivo de respaldo no válido')}};r.readAsText(f)}
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.7';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · copia manual disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory()}
+function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.8';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
 setNow();refreshAll();initAuth();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body></html>

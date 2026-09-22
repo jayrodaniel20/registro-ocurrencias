@@ -1,7 +1,7 @@
 {
   "name": "Registro de Ocurrencias Escolar",
   "short_name": "Registro Escolar",
-  "description": "Registro local de estudiantes y ocurrencias escolares con cuenta de usuario.",
+  "description": "Registro de estudiantes y ocurrencias escolares con cuenta y sincronización manual nube + local.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
