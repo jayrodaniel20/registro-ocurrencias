@@ -38,7 +38,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>Registro Escolar</h2><div class="small muted">Cuenta y acceso seguro · Versión 1.6.1</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>Registro Escolar</h2><div class="small muted">Cuenta y acceso seguro · Versión 1.6.2</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -60,7 +60,7 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.6.1</small></div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.6.2</small></div></div>
     <div class="head-badge">V1.6 · Cuenta de usuario</div>
   </div>
 </header>
@@ -105,6 +105,18 @@
             <div style="margin-top:5px"><b>Versión de datos:</b> <span id="schemaVersionLabel">—</span></div>
             <div style="margin-top:5px"><b>Modo:</b> <span id="storageModeLabel">Local</span></div>
             <div style="margin-top:5px"><b>ID de instalación:</b> <span id="installIdLabel">—</span></div>
+          </div>
+          <div class="subtle small" style="margin-top:10px">
+            <div class="account-box">
+              <div>
+                <div><b>Cuenta:</b> <span id="accountStateLabel" class="cloud-state">Modo local</span></div>
+                <div style="margin-top:5px"><b>Correo:</b> <span id="accountEmailLabel">No iniciada</span></div>
+              </div>
+              <div class="actions" style="margin-top:0">
+                <button id="loginBtn" type="button" class="btn secondary" onclick="openLoginGate()">Iniciar sesión</button>
+                <button id="logoutBtn" type="button" class="btn danger" onclick="logoutAccount()" style="display:none">Cerrar sesión</button>
+              </div>
+            </div>
           </div>
         </div>
       </details>
@@ -207,7 +219,7 @@ const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHA
 let cloudUser=null;
 let localBypass=false;
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='1.6.1';
+const APP_VERSION='1.6.2';
 const SCHEMA_VERSION=3;
 const $=id=>document.getElementById(id);
 function showAuthMessage(msg,type='ok'){const el=$('authMessage');el.textContent=msg;el.className='auth-message show '+(type==='err'?'err':'ok')}
@@ -219,7 +231,15 @@ function updateAccountUi(){
   if($('accountEmailLabel'))$('accountEmailLabel').textContent=email||'No iniciada';
   if($('accountStateLabel')){$('accountStateLabel').textContent=cloudUser?'Cuenta conectada':'Modo local';$('accountStateLabel').style.background=cloudUser?'#eaf8ef':'#edf3ff';$('accountStateLabel').style.color=cloudUser?'#17653a':'#0e4ea7'}
   if($('logoutBtn'))$('logoutBtn').style.display=cloudUser?'inline-block':'none';
+  if($('loginBtn'))$('loginBtn').style.display=cloudUser?'none':'inline-block';
+  if($('storageModeLabel'))$('storageModeLabel').textContent=cloudUser?'Cuenta conectada · datos aún locales':'Local';
   if(db&&db.profile){db.profile.cloudUserId=cloudUser?.id||null;db.profile.email=email||null;db.profile.mode=cloudUser?'authenticated':'local';localStorage.setItem(DBKEY,JSON.stringify(db));}
+}
+function openLoginGate(){
+  localBypass=false;
+  showAuthTab('login');
+  clearAuthMessage();
+  setAuthGate(true);
 }
 async function createAccount(){
   clearAuthMessage();
@@ -260,7 +280,7 @@ async function saveNewPassword(){
   if(error)return alert(error.message);
   $('passwordDialog').close();toast('Contraseña actualizada');
 }
-function continueLocalMode(){localBypass=true;setAuthGate(false);updateAccountUi();toast('Modo local activo');}
+function continueLocalMode(){localBypass=true;setAuthGate(false);updateAccountUi();refreshAll();toast('Modo local activo');}
 async function initAuth(){
   const {data}=await supabaseClient.auth.getSession();
   cloudUser=data.session?.user||null;
@@ -621,7 +641,7 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.6.1';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización de datos aún no activada':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory()}
+function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.6.2';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización de datos aún no activada':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory()}
 setNow();refreshAll();initAuth();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body></html>
