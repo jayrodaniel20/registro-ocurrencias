@@ -34,8 +34,8 @@
 <body>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.4.2</small></div></div>
-    <div class="head-badge">V1.4.2 · dictado corregido</div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.4.3</small></div></div>
+    <div class="head-badge">V1.4.3 · redacción mejorada</div>
   </div>
 </header>
 <nav>
@@ -98,9 +98,9 @@
       <div id="multiStudentBox" style="display:none"><div class="split-head"><span class="small muted" id="multiCount">0 seleccionados</span><button type="button" class="btn secondary" style="padding:7px 10px" onclick="toggleAllStudents()">Seleccionar todos</button></div><div id="ocStudentMulti" class="multi-box"></div></div>
       <div class="row"><div><label>Fecha</label><input type="date" id="ocDate"></div><div><label>Hora</label><input type="time" id="ocTime"></div></div>
       <div class="row"><div><label>Lugar</label><select id="ocPlace"><option>Aula</option><option>Patio</option><option>Recreo</option><option>Educación Física</option><option>Servicios higiénicos</option><option>Entrada o salida</option><option>Otro</option></select></div><div><label>Tipo</label><select id="ocType"><option>Convivencia</option><option>Conducta</option><option>Aprendizaje</option><option>Participación</option><option>Responsabilidad</option><option>Situación positiva</option><option>Incidente</option><option>Comunicación con familia</option><option>Otro</option></select></div></div>
-      <label>Descripción objetiva de la ocurrencia</label><textarea id="ocDesc" placeholder="Describe hechos observables, sin etiquetas ni juicios."></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocDesc',this)">🎙️ Dictar descripción</button><span class="voice-status" id="voiceStatus-ocDesc">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocDesc','description')">✨ Ordenar redacción</button><span class="small muted">Mantiene los hechos que escribiste.</span></div>
-      <label>Acciones realizadas</label><textarea id="ocActions" placeholder="¿Qué hizo el docente?"></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocActions',this)">🎙️ Dictar acciones</button><span class="voice-status" id="voiceStatus-ocActions">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocActions','actions')">✨ Ordenar redacción</button></div>
-      <label>Acuerdos o seguimiento</label><textarea id="ocFollowText" placeholder="Acuerdos, acciones posteriores o seguimiento."></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocFollowText',this)">🎙️ Dictar seguimiento</button><span class="voice-status" id="voiceStatus-ocFollowText">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocFollowText','follow')">✨ Ordenar redacción</button></div>
+      <label>Descripción objetiva de la ocurrencia</label><textarea id="ocDesc" placeholder="Describe hechos observables, sin etiquetas ni juicios."></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocDesc',this)">🎙️ Dictar descripción</button><span class="voice-status" id="voiceStatus-ocDesc">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocDesc','description')">✨ Mejorar redacción</button><span class="small muted">Mejora coherencia y cohesión sin cambiar los hechos.</span></div>
+      <label>Acciones realizadas</label><textarea id="ocActions" placeholder="¿Qué hizo el docente?"></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocActions',this)">🎙️ Dictar acciones</button><span class="voice-status" id="voiceStatus-ocActions">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocActions','actions')">✨ Mejorar redacción</button></div>
+      <label>Acuerdos o seguimiento</label><textarea id="ocFollowText" placeholder="Acuerdos, acciones posteriores o seguimiento."></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocFollowText',this)">🎙️ Dictar seguimiento</button><span class="voice-status" id="voiceStatus-ocFollowText">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocFollowText','follow')">✨ Mejorar redacción</button></div>
       <label><input type="checkbox" id="ocFollow" style="width:auto"> Requiere seguimiento</label>
       <div class="actions"><button class="btn success" onclick="saveOccurrence()">Guardar ocurrencia</button></div>
     </div>
@@ -136,6 +136,7 @@
 <div id="toast" class="toast">Listo</div>
 <dialog id="studentEditDialog"><div class="modal"><h3>Editar estudiante</h3><input type="hidden" id="studentEditId"><label>Apellidos y nombres</label><input id="studentEditName"><div class="row"><div><label>Grado</label><input id="studentEditGrade"></div><div><label>Sección</label><input id="studentEditSection"></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveStudentEdit()">Guardar cambios</button><button type="button" class="btn secondary" onclick="closeStudentEdit()">Cancelar</button></div></div></dialog>
 <dialog id="editDialog"><div class="modal"><h3>Editar ocurrencia</h3><input type="hidden" id="editId"><label>Descripción</label><textarea id="editDesc"></textarea><label>Acciones</label><textarea id="editActions"></textarea><label>Seguimiento</label><textarea id="editFollow"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()">Guardar cambios</button><button class="btn secondary" onclick="document.getElementById('editDialog').close()">Cancelar</button></div></div></dialog>
+<dialog id="redactionDialog"><div class="modal"><h3 id="redactionTitle">Mejorar redacción</h3><p class="small muted">Compara ambas versiones. La app no agrega hechos nuevos; tú decides si reemplazas el texto.</p><label>Texto original</label><textarea id="redactionOriginal" readonly style="background:#f4f6f9"></textarea><label>Versión mejorada</label><textarea id="redactionImproved"></textarea><div class="actions"><button type="button" class="btn primary" onclick="applyImprovedRedaction()">Usar esta redacción</button><button type="button" class="btn secondary" onclick="document.getElementById('redactionDialog').close()">Conservar original</button></div></div></dialog>
 
 <script>
 const DBKEY='registro_ocurrencias_v1';
@@ -178,21 +179,117 @@ function toggleAllStudents(){
   updateMultiCount();
 }
 function cleanBasicText(text){
-  let t=String(text||'').replace(/\s+/g,' ').trim();
+  let t=String(text||'')
+    .replace(/\s+/g,' ')
+    .replace(/\s+([,.;:!?])/g,'$1')
+    .replace(/([,.;:!?])(?=[^\s])/g,'$1 ')
+    .trim();
   if(!t)return '';
   t=t.charAt(0).toUpperCase()+t.slice(1);
   if(!/[.!?]$/.test(t))t+='.';
   return t;
 }
+
+let pendingRedactionTarget=null;
+
+function removeOralFillers(text){
+  let t=' '+String(text||'').trim()+' ';
+  // Solo muletillas claramente prescindibles. No se eliminan palabras con contenido factual.
+  t=t.replace(/\b(eee+|mmm+|eh+)\b[,.]?/gi,' ');
+  t=t.replace(/^\s*(bueno|a ver|este)\s*[,.:;-]?\s*/i,'');
+  t=t.replace(/\s+/g,' ').trim();
+  return t;
+}
+
+function removeImmediateWordDuplicates(text){
+  // Corrige repeticiones orales simples: "y y", "que que", "el el".
+  return String(text||'').replace(/\b([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)(\s+\1\b)+/gi,'$1');
+}
+
+function improveSequencing(text){
+  let t=String(text||'').trim();
+  // Convierte conectores orales de secuencia en límites de oración sin alterar los hechos.
+  t=t.replace(/\s+y\s+(luego|después|posteriormente)\s+/gi,(m,c)=>'. '+c.charAt(0).toUpperCase()+c.slice(1)+', ');
+  t=t.replace(/\s+(luego|después|posteriormente)\s+/gi,(m,c)=>'. '+c.charAt(0).toUpperCase()+c.slice(1)+', ');
+  t=t.replace(/\s+y\s+finalmente\s+/gi,'. Finalmente, ');
+  // Si una oración queda excesivamente encadenada con "y", se divide solo una vez por pasada.
+  const parts=t.split(/(?<=[.!?])\s+/);
+  t=parts.map(sentence=>{
+    const words=sentence.trim().split(/\s+/);
+    if(words.length<24) return sentence.trim();
+    const matches=[...sentence.matchAll(/\s+y\s+/gi)];
+    if(matches.length<2) return sentence.trim();
+    const idx=matches[Math.floor(matches.length/2)].index;
+    if(idx==null) return sentence.trim();
+    const left=sentence.slice(0,idx).trim();
+    const right=sentence.slice(idx+matches[Math.floor(matches.length/2)][0].length).trim();
+    if(!left||!right) return sentence.trim();
+    return left+'. '+right.charAt(0).toUpperCase()+right.slice(1);
+  }).join(' ');
+  return t;
+}
+
+function polishPunctuation(text){
+  let t=String(text||'')
+    .replace(/\s+/g,' ')
+    .replace(/\s+([,.;:!?])/g,'$1')
+    .replace(/([,.;:!?])(?=[^\s])/g,'$1 ')
+    .replace(/\.{2,}/g,'.')
+    .trim();
+  // Mayúscula después de punto, interrogación o exclamación.
+  t=t.replace(/(^|[.!?]\s+)([a-záéíóúüñ])/g,(m,p,c)=>p+c.toUpperCase());
+  if(t && !/[.!?]$/.test(t)) t+='.';
+  return t;
+}
+
+function improveLocalRedaction(text,kind){
+  let t=String(text||'').trim();
+  t=removeOralFillers(t);
+  t=removeImmediateWordDuplicates(t);
+  t=improveSequencing(t);
+  t=polishPunctuation(t);
+
+  // Ajustes suaves según el campo. No agregan sujetos, causas, acuerdos ni acciones.
+  if(kind==='description'){
+    t=t.replace(/\bpor eso\b/gi,'por ello');
+    t=t.replace(/\by ahí\b/gi,'en ese momento');
+  }else if(kind==='actions'){
+    t=t.replace(/\by ahí\b/gi,'posteriormente');
+    t=t.replace(/\bdespués de eso\b/gi,'posteriormente');
+  }else if(kind==='follow'){
+    t=t.replace(/\by también\b/gi,'Asimismo,');
+    t=t.replace(/\bde ahí\b/gi,'posteriormente');
+  }
+  return polishPunctuation(t);
+}
+
+function fieldLabel(kind){
+  if(kind==='description') return 'Descripción de la ocurrencia';
+  if(kind==='actions') return 'Acciones realizadas';
+  return 'Acuerdos o seguimiento';
+}
+
 function formalizeField(id,kind){
-  const el=$(id); let t=cleanBasicText(el.value);
-  if(!t)return alert('Primero escribe o dicta información en este campo.');
-  const lower=t.toLowerCase();
-  if(kind==='description'&&!/^(durante|en |se |el |la |los |las |al |a las |a los )/i.test(t)) t='Se registró la siguiente situación: '+t.charAt(0).toLowerCase()+t.slice(1);
-  if(kind==='actions'&&!/^(se |el docente|la docente|ante |durante )/i.test(t)) t='Se realizó la siguiente acción: '+t.charAt(0).toLowerCase()+t.slice(1);
-  if(kind==='follow'&&!/^(se |como |queda |el |la |los |las )/i.test(t)) t='Como acuerdo o seguimiento, '+t.charAt(0).toLowerCase()+t.slice(1);
-  el.value=t;
-  toast('Redacción ordenada sin agregar hechos nuevos');
+  const el=$(id);
+  const original=String(el.value||'').trim();
+  if(!original)return alert('Primero escribe o dicta información en este campo.');
+  const improved=improveLocalRedaction(original,kind);
+  if(!improved)return alert('No se pudo mejorar este texto.');
+  pendingRedactionTarget=id;
+  $('redactionTitle').textContent='Mejorar: '+fieldLabel(kind);
+  $('redactionOriginal').value=original;
+  $('redactionImproved').value=improved;
+  $('redactionDialog').showModal();
+}
+
+function applyImprovedRedaction(){
+  if(!pendingRedactionTarget)return;
+  const improved=$('redactionImproved').value.trim();
+  if(!improved)return alert('La versión mejorada está vacía.');
+  $(pendingRedactionTarget).value=improved;
+  $('redactionDialog').close();
+  pendingRedactionTarget=null;
+  toast('Redacción mejorada. Verifica que conserve exactamente los hechos.');
 }
 
 let voiceRecognition=null;
@@ -326,7 +423,7 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.4.2';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let opts=db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.grade||'')} ${esc(s.section||'')}</option>`).join('');$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+opts;$('ocStudentMulti').innerHTML=db.students.length?db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<div class="student-check"><input type="checkbox" id="multi-${s.id}" value="${s.id}" onchange="updateMultiCount()"><label for="multi-${s.id}"><b>${esc(s.name)}</b><br><span class="small muted">${esc(s.grade||'')} ${esc(s.section||'')}</span></label></div>`).join(''):'<div class="empty">No hay estudiantes registrados.</div>';updateMultiCount();['filterStudent','repStudent'].forEach(id=>$(id).innerHTML='<option value="">Todos</option>'+opts);$('studentList').innerHTML=db.students.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Grado</th><th>Sección</th><th></th></tr></thead><tbody>${db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(s.grade||'')}</td><td>${esc(s.section||'')}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay estudiantes registrados.</div>';renderHistory()}
+function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.4.3';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let opts=db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.grade||'')} ${esc(s.section||'')}</option>`).join('');$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+opts;$('ocStudentMulti').innerHTML=db.students.length?db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<div class="student-check"><input type="checkbox" id="multi-${s.id}" value="${s.id}" onchange="updateMultiCount()"><label for="multi-${s.id}"><b>${esc(s.name)}</b><br><span class="small muted">${esc(s.grade||'')} ${esc(s.section||'')}</span></label></div>`).join(''):'<div class="empty">No hay estudiantes registrados.</div>';updateMultiCount();['filterStudent','repStudent'].forEach(id=>$(id).innerHTML='<option value="">Todos</option>'+opts);$('studentList').innerHTML=db.students.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Grado</th><th>Sección</th><th></th></tr></thead><tbody>${db.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(s.grade||'')}</td><td>${esc(s.section||'')}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay estudiantes registrados.</div>';renderHistory()}
 setNow();refreshAll();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body></html>
