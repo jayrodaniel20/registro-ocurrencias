@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#1769e0" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <title>Registro de Ocurrencias Escolar</title>
+  <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
@@ -38,7 +38,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>Registro Escolar</h2><div class="small muted">Cuenta y acceso seguro · Versión 1.8.4</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 1.9</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -60,7 +60,7 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>Registro de Ocurrencias Escolar</h1><small id="schoolHeader">App local · Versión 1.8.4</small></div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 1.9</small></div></div>
     <div class="head-badge">V1.6 · Cuenta de usuario</div>
   </div>
 </header>
@@ -75,13 +75,27 @@
 <main>
   <section id="inicio" class="view active">
     <div class="card hero">
-      <h2>Registro rápido y ordenado</h2>
-      <p class="muted">Guarda estudiantes y ocurrencias en este dispositivo. Genera reportes imprimibles y respaldos.</p>
+      <h2>Acompañamiento y gestión escolar</h2>
+      <p class="muted">Registra, acompaña y da seguimiento a la información escolar desde una sola aplicación.</p>
       <div class="quick">
         <button class="btn primary" onclick="go('ocurrencia')"><span class="qico">➕</span>Nueva ocurrencia</button>
         <button class="btn secondary" onclick="go('salones')"><span class="qico">🏫</span>Mis salones</button>
         <button class="btn secondary" onclick="go('estudiantes')"><span class="qico">👥</span>Mis estudiantes</button>
       </div>
+    </div>
+    <div id="installCard" class="card" style="margin-top:12px;display:none">
+      <div class="split-head">
+        <div>
+          <h3 style="margin-bottom:4px">📲 Instalar aplicación</h3>
+          <div id="installHelpText" class="muted small">Instala la app para abrirla desde la pantalla de inicio.</div>
+        </div>
+        <span id="installStatePill" class="pill">Disponible</span>
+      </div>
+      <div class="actions">
+        <button id="installAppBtn" type="button" class="btn primary" onclick="installApp()">Instalar app</button>
+        <button id="installHelpBtn" type="button" class="btn secondary" onclick="showInstallHelp()">Cómo instalar</button>
+      </div>
+      <div id="installFallback" class="subtle small" style="margin-top:10px;display:none"></div>
     </div>
     <div class="grid" style="margin-top:12px">
       <div class="card stat-card"><div class="stat-label">👥 Estudiantes</div><div class="stat" id="statStudents">0</div></div>
@@ -977,7 +991,78 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school||'App local')+' · Versión 1.8.4';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
-setNow();refreshAll();initAuth();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school?cfg.school+' · ':'')+'SAGE · Versión 1.9';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
+
+let deferredInstallPrompt=null;
+function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;}
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent);}
+function isAndroid(){return /android/i.test(navigator.userAgent);}
+function updateInstallUi(message){
+  const card=$('installCard'), btn=$('installAppBtn'), pill=$('installStatePill'), help=$('installHelpText');
+  if(!card)return;
+  if(isStandalone()){
+    card.style.display='none';
+    return;
+  }
+  card.style.display='block';
+  if(message)help.textContent=message;
+  if(deferredInstallPrompt){
+    btn.style.display='inline-block';
+    pill.textContent='Lista para instalar';
+  }else{
+    btn.style.display='inline-block';
+    pill.textContent='Instalación';
+  }
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  updateInstallUi('La app está lista para instalarse en este dispositivo.');
+});
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  toast('Aplicación instalada correctamente');
+  const card=$('installCard'); if(card)card.style.display='none';
+});
+async function installApp(){
+  if(isStandalone()){toast('La app ya está instalada');return;}
+  if(deferredInstallPrompt){
+    try{
+      deferredInstallPrompt.prompt();
+      const choice=await deferredInstallPrompt.userChoice;
+      if(choice.outcome==='accepted'){
+        $('installHelpText').textContent='Android está completando la instalación. Si el ícono no aparece, revisa el cajón de aplicaciones.';
+        $('installStatePill').textContent='Instalando…';
+      }else{
+        $('installHelpText').textContent='Instalación cancelada. Puedes intentarlo nuevamente.';
+      }
+    }catch(e){showInstallHelp();}
+    deferredInstallPrompt=null;
+    return;
+  }
+  showInstallHelp();
+}
+function showInstallHelp(){
+  const box=$('installFallback'); if(!box)return;
+  box.style.display='block';
+  if(isIOS()){
+    box.innerHTML='<b>iPhone/iPad:</b> abre esta página en Safari → botón Compartir → <b>Añadir a pantalla de inicio</b>.';
+  }else if(isAndroid()){
+    box.innerHTML='<b>Android:</b> abre esta página en Chrome → menú ⋮ → <b>Agregar a pantalla de inicio</b>. Si aparece “Instalar aplicación” y no termina, usa esta alternativa. También revisa el cajón de aplicaciones por si Android la instaló sin colocar el ícono en la pantalla principal.';
+  }else{
+    box.innerHTML='<b>Computadora:</b> en Chrome o Edge busca el ícono de instalación en la barra de direcciones o usa el menú del navegador → <b>Instalar aplicación</b>.';
+  }
+}
+function initInstallExperience(){
+  if(isStandalone())return;
+  updateInstallUi('Puedes instalar la app o agregarla a tu pantalla de inicio.');
+  setTimeout(()=>{
+    if(!deferredInstallPrompt && !isStandalone()){
+      $('installHelpText').textContent='Si “Instalar” no completa el proceso, usa “Cómo instalar” y agrega la app a la pantalla de inicio.';
+    }
+  },1800);
+}
+
+setNow();refreshAll();initAuth();initInstallExperience();if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(reg=>{reg.update().catch(()=>{});}).catch(()=>{});}
 </script>
 </body></html>
