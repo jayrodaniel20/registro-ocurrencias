@@ -42,7 +42,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.1</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -64,8 +64,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.1</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.1 · Multirrol e instituciones</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2 · Roles activos y actualización</div></div>
   </div>
 </header>
 <nav>
@@ -88,6 +88,28 @@
         <button class="btn secondary" onclick="go('salones')"><span class="qico">🏫</span>Mis salones</button>
         <button class="btn secondary" onclick="go('estudiantes')"><span class="qico">👥</span>Mis estudiantes</button>
       </div>
+    </div>
+    <div id="roleSwitcherCard" class="card" style="margin-top:12px;display:none">
+      <div class="split-head">
+        <div>
+          <h3 style="margin-bottom:4px">👤 Rol activo</h3>
+          <div class="muted small">Elige desde qué función quieres trabajar en SAGE.</div>
+        </div>
+        <span id="activeRolePill" class="pill">Sin asignar</span>
+      </div>
+      <label for="activeRoleSelect">Trabajar como</label>
+      <select id="activeRoleSelect" onchange="switchActiveMembership(this.value)"></select>
+      <div id="activeRoleInstitution" class="footer-note"></div>
+    </div>
+    <div id="updateCard" class="card" style="margin-top:12px;display:none">
+      <div class="split-head">
+        <div>
+          <h3 style="margin-bottom:4px">🔄 Nueva versión disponible</h3>
+          <div class="muted small">SAGE puede actualizarse sin borrar tus datos locales.</div>
+        </div>
+        <span class="pill">Actualización</span>
+      </div>
+      <div class="actions"><button type="button" class="btn primary" onclick="updateAppNow()">Actualizar ahora</button><button type="button" class="btn secondary" onclick="dismissUpdateNotice()">Más tarde</button></div>
     </div>
     <div id="installCard" class="card" style="margin-top:12px;display:none">
       <div class="split-head">
@@ -281,11 +303,14 @@ const APP_PUBLIC_URL='https://jayrodaniel20.github.io/registro-ocurrencias/';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 let cloudUser=null;
 let localBypass=false;
+let activeMembershipId=localStorage.getItem('sage_active_membership')||'';
+let swRegistration=null;
+let refreshingForUpdate=false;
 let accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,directorMembership:null,adminMembership:null};
 let adminCache={institutions:[],profiles:[],memberships:[]};
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.1';
+const APP_VERSION='2.2';
 const SCHEMA_VERSION=3;
 const $=id=>document.getElementById(id);
 function showAuthMessage(msg,type='ok'){const el=$('authMessage');el.textContent=msg;el.className='auth-message show '+(type==='err'?'err':'ok')}
@@ -293,6 +318,9 @@ function clearAuthMessage(){const el=$('authMessage');el.textContent='';el.class
 function showAuthTab(tab){clearAuthMessage();$('tabLogin').classList.toggle('active',tab==='login');$('tabSignup').classList.toggle('active',tab==='signup');$('authLogin').classList.toggle('active',tab==='login');$('authSignup').classList.toggle('active',tab==='signup')}
 function setAuthGate(show){$('authGate').classList.toggle('hidden',!show)}
 function hasRole(role){return accessContext.roles.includes(role)}
+function activeMembership(){return accessContext.memberships.find(m=>m.id===activeMembershipId)||accessContext.membership||null}
+function activeRole(){return activeMembership()?.role||null}
+function activeInstitution(){return activeMembership()?.institutions||null}
 function activeInstitutions(){
   const seen=new Set();
   return accessContext.memberships.map(m=>m.institutions).filter(i=>i&&i.id&&!seen.has(i.id)&&seen.add(i.id));
@@ -315,31 +343,73 @@ function updateAccountUi(){
 }
 
 function roleLabel(role){return ({admin_general:'Administrador general',director:'Director',docente:'Docente',especialista_ugel:'Especialista UGEL'})[role]||'Sin asignar'}
+function roleIcon(role){return ({admin_general:'🛡️',director:'🏛️',docente:'👤',especialista_ugel:'🏢'})[role]||'👤'}
 function rolePriority(role){return ({admin_general:4,especialista_ugel:3,director:2,docente:1})[role]||0}
+function membershipLabel(m){return `${roleLabel(m.role)}${m.institutions?.name?' — '+m.institutions.name:''}`}
 function updateNavCount(){const nav=document.querySelector('nav');if(!nav)return;const visible=[...nav.querySelectorAll('button')].filter(b=>getComputedStyle(b).display!=='none').length;nav.style.setProperty('--nav-count',Math.max(1,visible));}
+function renderRoleSwitcher(){
+  const card=$('roleSwitcherCard'),sel=$('activeRoleSelect'),pill=$('activeRolePill'),inst=$('activeRoleInstitution');
+  if(!card||!sel)return;
+  if(!cloudUser||accessContext.memberships.length<2){card.style.display='none';return;}
+  card.style.display='block';
+  sel.innerHTML=accessContext.memberships.map(m=>`<option value="${m.id}">${esc(membershipLabel(m))}</option>`).join('');
+  const current=activeMembership();
+  if(current)sel.value=current.id;
+  if(pill)pill.textContent=current?`${roleIcon(current.role)} ${roleLabel(current.role)}`:'Sin asignar';
+  if(inst)inst.textContent=current?.institutions?.name?`Institución activa: ${current.institutions.name}`:(current?.role==='admin_general'?'Acceso general al sistema':'Sin institución específica');
+}
+function viewAllowed(id){
+  if(!cloudUser)return true;
+  const role=activeRole();
+  if(id==='inicio')return true;
+  if(role==='docente')return ['salones','estudiantes','ocurrencia','historial','reportes'].includes(id);
+  if(role==='director')return id==='institucion';
+  if(role==='admin_general')return id==='administracion';
+  if(role==='especialista_ugel')return id==='institucion';
+  return false;
+}
+function defaultViewForActiveRole(){
+  const role=activeRole();
+  if(role==='admin_general')return 'administracion';
+  if(role==='director'||role==='especialista_ugel')return 'institucion';
+  return 'inicio';
+}
+function switchActiveMembership(id){
+  if(!accessContext.memberships.some(m=>m.id===id))return;
+  activeMembershipId=id;localStorage.setItem('sage_active_membership',id);
+  accessContext.membership=activeMembership();
+  accessContext.role=activeRole();
+  accessContext.institution=activeInstitution();
+  accessContext.institutionId=activeMembership()?.institution_id||null;
+  updateRoleUi();
+  const target=defaultViewForActiveRole();go(target);
+  if(activeRole()==='admin_general')loadAdminPanel();
+  if(activeRole()==='director')loadDirectorDashboard();
+  toast(`Modo ${roleLabel(activeRole())} activado`);
+}
 function updateRoleUi(){
+  const current=activeMembership();
+  const role=current?.role||null;
   const chip=$('headerRoleChip');
   if(chip){
-    if(cloudUser&&accessContext.roles.length){
-      const icons=hasRole('admin_general')?'🛡️ ':hasRole('director')?'🏛️ ':'👤 ';
-      chip.style.display='inline-flex';chip.textContent=icons+roleSummary();
-      chip.className='role-chip '+(hasRole('admin_general')?'admin':hasRole('director')?'director':'');
+    if(cloudUser&&role){
+      chip.style.display='inline-flex';chip.textContent=`${roleIcon(role)} ${roleLabel(role)}`;
+      chip.className='role-chip '+(role==='admin_general'?'admin':role==='director'?'director':'');
     } else chip.style.display='none';
   }
   if($('accountRoleLabel'))$('accountRoleLabel').textContent=roleSummary();
   if($('accountInstitutionLabel'))$('accountInstitutionLabel').textContent=institutionSummary();
-  if($('navAdmin'))$('navAdmin').style.display=hasRole('admin_general')?'flex':'none';
-  if($('navInstitution'))$('navInstitution').style.display=hasRole('director')?'flex':'none';
   const teacherViews=['salones','estudiantes','ocurrencia','historial','reportes'];
-  const canTeach=hasRole('docente')||hasRole('admin_general')||!cloudUser;
+  const canTeach=!cloudUser||role==='docente';
   document.querySelectorAll('nav button[data-view]').forEach(btn=>{
     const v=btn.dataset.view;
     if(teacherViews.includes(v))btn.style.display=canTeach?'flex':'none';
-    else if(v==='administracion')btn.style.display=hasRole('admin_general')?'flex':'none';
-    else if(v==='institucion')btn.style.display=hasRole('director')?'flex':'none';
+    else if(v==='administracion')btn.style.display=role==='admin_general'?'flex':'none';
+    else if(v==='institucion')btn.style.display=(role==='director'||role==='especialista_ugel')?'flex':'none';
     else btn.style.display='flex';
   });
   const quick=document.querySelector('#inicio .quick');if(quick)quick.style.display=canTeach?'':'none';
+  renderRoleSwitcher();
   updateNavCount();
 }
 async function loadAccessContext(){
@@ -353,11 +423,13 @@ async function loadAccessContext(){
     const teacher=valid.find(m=>m.role==='docente')||null;
     const director=valid.find(m=>m.role==='director')||null;
     const admin=valid.find(m=>m.role==='admin_general')||null;
+    let selected=valid.find(m=>m.id===activeMembershipId)||primary;
+    if(selected){activeMembershipId=selected.id;localStorage.setItem('sage_active_membership',selected.id);}
     accessContext={
-      role:primary?.role||null,
-      institutionId:(director||teacher||primary)?.institution_id||null,
-      institution:(director||teacher||primary)?.institutions||null,
-      membership:primary,
+      role:selected?.role||null,
+      institutionId:selected?.institution_id||null,
+      institution:selected?.institutions||null,
+      membership:selected,
       memberships:valid,
       roles:[...new Set(valid.map(m=>m.role))],
       teacherMembership:teacher,
@@ -366,8 +438,8 @@ async function loadAccessContext(){
     };
   }catch(e){console.warn('No se pudieron cargar los roles:',e);}
   updateRoleUi();updateAccountUi();
-  if(hasRole('admin_general'))loadAdminPanel();
-  if(hasRole('director'))loadDirectorDashboard();
+  if(activeRole()==='admin_general')loadAdminPanel();
+  if(activeRole()==='director')loadDirectorDashboard();
   return accessContext;
 }
 
@@ -717,7 +789,7 @@ async function loginAccount(){
   if(!email||!password)return showAuthMessage('Escribe tu correo y contraseña.','err');
   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
   if(error)return showAuthMessage(error.message,'err');
-  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await loadAccessContext();refreshAll();if(hasRole('director')&&!hasRole('docente')&&!hasRole('admin_general'))go('institucion');toast('Sesión iniciada');
+  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await loadAccessContext();refreshAll();go(defaultViewForActiveRole());toast('Sesión iniciada');
 }
 async function logoutAccount(){
   if(!confirm('¿Cerrar sesión en este dispositivo? Tus datos locales no se borrarán.'))return;
@@ -744,11 +816,11 @@ async function initAuth(){
   const {data}=await supabaseClient.auth.getSession();
   cloudUser=data.session?.user||null;
   updateAccountUi();
-  if(cloudUser){setAuthGate(false);await loadAccessContext();if(hasRole('director')&&!hasRole('docente')&&!hasRole('admin_general'))go('institucion')}else if(!localBypass){setAuthGate(true)}
+  if(cloudUser){setAuthGate(false);await loadAccessContext();go(defaultViewForActiveRole())}else if(!localBypass){setAuthGate(true)}
   supabaseClient.auth.onAuthStateChange((event,session)=>{
     cloudUser=session?.user||null;updateAccountUi();
     if(event==='PASSWORD_RECOVERY'){$('passwordDialog').showModal();setAuthGate(false)}
-    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(()=>loadAccessContext().then(()=>{if(hasRole('director')&&!hasRole('docente')&&!hasRole('admin_general'))go('institucion')}),0)}
+    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(()=>loadAccessContext().then(()=>go(defaultViewForActiveRole())),0)}
     else if(event==='SIGNED_OUT'){accessContext={role:null,institutionId:null,institution:null,membership:null};updateRoleUi();if(!localBypass)setAuthGate(true)}
   });
 }
@@ -874,7 +946,7 @@ function persist(){db.meta=db.meta||{};db.meta.updatedAt=nowISO();db.meta.appVer
 // Guarda la migración inmediatamente sin borrar ni reemplazar los datos existentes.
 localStorage.setItem(DBKEY,JSON.stringify(db));
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1800)}
-function go(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='historial')renderHistory()}
+function go(id){if(!viewAllowed(id)){id=defaultViewForActiveRole();}document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='historial')renderHistory();if(id==='administracion'&&activeRole()==='admin_general')loadAdminPanel();if(id==='institucion'&&activeRole()==='director')loadDirectorDashboard()}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
 function saveConfig(){db.config={school:$('cfgSchool').value.trim(),teacher:$('cfgTeacher').value.trim(),level:$('cfgLevel').value,className:$('cfgClass').value.trim()};db.profile=db.profile||{};db.profile.displayName=db.config.teacher||'';persist();toast('Configuración guardada')}
 function classroomLabel(c){return c?(c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón'):''}
@@ -1240,6 +1312,33 @@ function showInstallHelp(){
     box.innerHTML='<b>Computadora:</b> en Chrome o Edge busca el ícono de instalación en la barra de direcciones o usa el menú del navegador → <b>Instalar aplicación</b>.';
   }
 }
+function showUpdateNotice(reg){
+  swRegistration=reg||swRegistration;
+  const card=$('updateCard');if(card)card.style.display='block';
+}
+function dismissUpdateNotice(){const card=$('updateCard');if(card)card.style.display='none';}
+function updateAppNow(){
+  if(swRegistration?.waiting){swRegistration.waiting.postMessage('SKIP_WAITING');return;}
+  if(swRegistration){swRegistration.update().catch(()=>{});toast('Buscando actualización…');}
+  else location.reload();
+}
+function initServiceWorkerUpdates(){
+  if(!('serviceWorker' in navigator))return;
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    swRegistration=reg;
+    if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg);
+    reg.addEventListener('updatefound',()=>{
+      const nw=reg.installing;if(!nw)return;
+      nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller)showUpdateNotice(reg);});
+    });
+    reg.update().catch(()=>{});
+    window.addEventListener('focus',()=>reg.update().catch(()=>{}));
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(refreshingForUpdate)return;refreshingForUpdate=true;location.reload();
+  });
+}
+
 function initInstallExperience(){
   if(isStandalone())return;
   updateInstallUi('Puedes instalar la app o agregarla a tu pantalla de inicio.');
@@ -1250,6 +1349,6 @@ function initInstallExperience(){
   },1800);
 }
 
-setNow();refreshAll();initAuth();initInstallExperience();if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(reg=>{reg.update().catch(()=>{});}).catch(()=>{});}
+setNow();refreshAll();initAuth();initInstallExperience();initServiceWorkerUpdates();
 </script>
 </body></html>

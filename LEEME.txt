@@ -1,0 +1,5 @@
+SAGE V2.2
+- Selector de rol activo para usuarios con múltiples roles.
+- Modo Docente, Director y Administrador con navegación separada.
+- Aviso de actualización de la app cuando hay una nueva versión del service worker.
+- No requiere ejecutar SQL nuevo para esta versión.
