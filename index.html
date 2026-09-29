@@ -42,7 +42,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.0</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.1</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -64,8 +64,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.0</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.0 · Roles e instituciones</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.1</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.1 · Multirrol e instituciones</div></div>
   </div>
 </header>
 <nav>
@@ -281,17 +281,24 @@ const APP_PUBLIC_URL='https://jayrodaniel20.github.io/registro-ocurrencias/';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 let cloudUser=null;
 let localBypass=false;
-let accessContext={role:null,institutionId:null,institution:null,membership:null};
+let accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,directorMembership:null,adminMembership:null};
 let adminCache={institutions:[],profiles:[],memberships:[]};
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.0';
+const APP_VERSION='2.1';
 const SCHEMA_VERSION=3;
 const $=id=>document.getElementById(id);
 function showAuthMessage(msg,type='ok'){const el=$('authMessage');el.textContent=msg;el.className='auth-message show '+(type==='err'?'err':'ok')}
 function clearAuthMessage(){const el=$('authMessage');el.textContent='';el.className='auth-message'}
 function showAuthTab(tab){clearAuthMessage();$('tabLogin').classList.toggle('active',tab==='login');$('tabSignup').classList.toggle('active',tab==='signup');$('authLogin').classList.toggle('active',tab==='login');$('authSignup').classList.toggle('active',tab==='signup')}
 function setAuthGate(show){$('authGate').classList.toggle('hidden',!show)}
+function hasRole(role){return accessContext.roles.includes(role)}
+function activeInstitutions(){
+  const seen=new Set();
+  return accessContext.memberships.map(m=>m.institutions).filter(i=>i&&i.id&&!seen.has(i.id)&&seen.add(i.id));
+}
+function roleSummary(){return accessContext.roles.length?accessContext.roles.map(roleLabel).join(' + '):'Sin asignar'}
+function institutionSummary(){const arr=activeInstitutions();return arr.length?arr.map(i=>i.name).join(' · '):'Sin asignar'}
 function updateAccountUi(){
   const email=cloudUser?.email||'';
   if($('accountEmailLabel'))$('accountEmailLabel').textContent=email||'No iniciada';
@@ -301,8 +308,8 @@ function updateAccountUi(){
   if($('storageModeLabel'))$('storageModeLabel').textContent=cloudUser?'Nube + local':'Local';
   if(db&&db.profile){db.profile.cloudUserId=cloudUser?.id||null;db.profile.email=email||null;db.profile.mode=cloudUser?'authenticated':'local';localStorage.setItem(DBKEY,JSON.stringify(db));}
   if($('syncNowBtn'))$('syncNowBtn').style.display=cloudUser?'inline-block':'none';
-  if($('accountRoleLabel'))$('accountRoleLabel').textContent=roleLabel(accessContext.role);
-  if($('accountInstitutionLabel'))$('accountInstitutionLabel').textContent=accessContext.institution?.name||'Sin asignar';
+  if($('accountRoleLabel'))$('accountRoleLabel').textContent=roleSummary();
+  if($('accountInstitutionLabel'))$('accountInstitutionLabel').textContent=institutionSummary();
   updateRoleUi();
   updateSyncUi();
 }
@@ -311,38 +318,56 @@ function roleLabel(role){return ({admin_general:'Administrador general',director
 function rolePriority(role){return ({admin_general:4,especialista_ugel:3,director:2,docente:1})[role]||0}
 function updateNavCount(){const nav=document.querySelector('nav');if(!nav)return;const visible=[...nav.querySelectorAll('button')].filter(b=>getComputedStyle(b).display!=='none').length;nav.style.setProperty('--nav-count',Math.max(1,visible));}
 function updateRoleUi(){
-  const role=accessContext.role;
   const chip=$('headerRoleChip');
   if(chip){
-    if(cloudUser&&role){chip.style.display='inline-flex';chip.textContent=(role==='admin_general'?'🛡️ ':role==='director'?'🏛️ ':'👤 ')+roleLabel(role);chip.className='role-chip '+(role==='admin_general'?'admin':role==='director'?'director':'');}
-    else chip.style.display='none';
+    if(cloudUser&&accessContext.roles.length){
+      const icons=hasRole('admin_general')?'🛡️ ':hasRole('director')?'🏛️ ':'👤 ';
+      chip.style.display='inline-flex';chip.textContent=icons+roleSummary();
+      chip.className='role-chip '+(hasRole('admin_general')?'admin':hasRole('director')?'director':'');
+    } else chip.style.display='none';
   }
-  if($('accountRoleLabel'))$('accountRoleLabel').textContent=roleLabel(role);
-  if($('accountInstitutionLabel'))$('accountInstitutionLabel').textContent=accessContext.institution?.name||'Sin asignar';
-  if($('navAdmin'))$('navAdmin').style.display=role==='admin_general'?'flex':'none';
-  if($('navInstitution'))$('navInstitution').style.display=role==='director'?'flex':'none';
+  if($('accountRoleLabel'))$('accountRoleLabel').textContent=roleSummary();
+  if($('accountInstitutionLabel'))$('accountInstitutionLabel').textContent=institutionSummary();
+  if($('navAdmin'))$('navAdmin').style.display=hasRole('admin_general')?'flex':'none';
+  if($('navInstitution'))$('navInstitution').style.display=hasRole('director')?'flex':'none';
   const teacherViews=['salones','estudiantes','ocurrencia','historial','reportes'];
+  const canTeach=hasRole('docente')||hasRole('admin_general')||!cloudUser;
   document.querySelectorAll('nav button[data-view]').forEach(btn=>{
     const v=btn.dataset.view;
-    if(role==='director'&&teacherViews.includes(v))btn.style.display='none';
-    else if(v!=='administracion'&&v!=='institucion')btn.style.display='flex';
+    if(teacherViews.includes(v))btn.style.display=canTeach?'flex':'none';
+    else if(v==='administracion')btn.style.display=hasRole('admin_general')?'flex':'none';
+    else if(v==='institucion')btn.style.display=hasRole('director')?'flex':'none';
+    else btn.style.display='flex';
   });
-  const quick=document.querySelector('#inicio .quick'); if(quick)quick.style.display=role==='director'?'none':'';
+  const quick=document.querySelector('#inicio .quick');if(quick)quick.style.display=canTeach?'':'none';
   updateNavCount();
 }
 async function loadAccessContext(){
-  accessContext={role:null,institutionId:null,institution:null,membership:null};
+  accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,directorMembership:null,adminMembership:null};
   if(!cloudUser){updateRoleUi();updateAccountUi();return accessContext;}
   try{
     const {data,error}=await supabaseClient.from('user_memberships').select('id,user_id,role,institution_id,active,valid_from,valid_until,institutions(id,name,modular_code,ugel,region,educational_level)').eq('user_id',cloudUser.id).eq('active',true);
     if(error)throw error;
     const valid=(data||[]).filter(m=>!m.valid_until||Date.parse(m.valid_until)>Date.now()).sort((a,b)=>rolePriority(b.role)-rolePriority(a.role));
-    const m=valid[0]||null;
-    if(m)accessContext={role:m.role,institutionId:m.institution_id||null,institution:m.institutions||null,membership:m};
-  }catch(e){console.warn('No se pudo cargar el rol:',e);}
+    const primary=valid[0]||null;
+    const teacher=valid.find(m=>m.role==='docente')||null;
+    const director=valid.find(m=>m.role==='director')||null;
+    const admin=valid.find(m=>m.role==='admin_general')||null;
+    accessContext={
+      role:primary?.role||null,
+      institutionId:(director||teacher||primary)?.institution_id||null,
+      institution:(director||teacher||primary)?.institutions||null,
+      membership:primary,
+      memberships:valid,
+      roles:[...new Set(valid.map(m=>m.role))],
+      teacherMembership:teacher,
+      directorMembership:director,
+      adminMembership:admin
+    };
+  }catch(e){console.warn('No se pudieron cargar los roles:',e);}
   updateRoleUi();updateAccountUi();
-  if(accessContext.role==='admin_general')loadAdminPanel();
-  if(accessContext.role==='director')loadDirectorDashboard();
+  if(hasRole('admin_general'))loadAdminPanel();
+  if(hasRole('director'))loadDirectorDashboard();
   return accessContext;
 }
 
@@ -692,7 +717,7 @@ async function loginAccount(){
   if(!email||!password)return showAuthMessage('Escribe tu correo y contraseña.','err');
   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
   if(error)return showAuthMessage(error.message,'err');
-  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await loadAccessContext();refreshAll();if(accessContext.role==='director')go('institucion');toast('Sesión iniciada');
+  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await loadAccessContext();refreshAll();if(hasRole('director')&&!hasRole('docente')&&!hasRole('admin_general'))go('institucion');toast('Sesión iniciada');
 }
 async function logoutAccount(){
   if(!confirm('¿Cerrar sesión en este dispositivo? Tus datos locales no se borrarán.'))return;
@@ -719,18 +744,18 @@ async function initAuth(){
   const {data}=await supabaseClient.auth.getSession();
   cloudUser=data.session?.user||null;
   updateAccountUi();
-  if(cloudUser){setAuthGate(false);await loadAccessContext();if(accessContext.role==='director')go('institucion')}else if(!localBypass){setAuthGate(true)}
+  if(cloudUser){setAuthGate(false);await loadAccessContext();if(hasRole('director')&&!hasRole('docente')&&!hasRole('admin_general'))go('institucion')}else if(!localBypass){setAuthGate(true)}
   supabaseClient.auth.onAuthStateChange((event,session)=>{
     cloudUser=session?.user||null;updateAccountUi();
     if(event==='PASSWORD_RECOVERY'){$('passwordDialog').showModal();setAuthGate(false)}
-    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(()=>loadAccessContext().then(()=>{if(accessContext.role==='director')go('institucion')}),0)}
+    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(()=>loadAccessContext().then(()=>{if(hasRole('director')&&!hasRole('docente')&&!hasRole('admin_general'))go('institucion')}),0)}
     else if(event==='SIGNED_OUT'){accessContext={role:null,institutionId:null,institution:null,membership:null};updateRoleUi();if(!localBypass)setAuthGate(true)}
   });
 }
 
 function escAttr(v){return esc(v).replace(/"/g,'&quot;')}
 async function loadAdminPanel(){
-  if(accessContext.role!=='admin_general'||!cloudUser)return;
+  if(!hasRole('admin_general')||!cloudUser)return;
   const usersBox=$('adminUsers'),instBox=$('adminInstitutions'),summary=$('adminSummary');
   if(usersBox)usersBox.innerHTML='<div class="muted small">Consultando usuarios…</div>';
   try{
@@ -747,47 +772,48 @@ async function loadAdminPanel(){
     renderAdminUsers();
   }catch(e){if(usersBox)usersBox.innerHTML=`<div style="color:#9d1d1d">No se pudo cargar la administración: ${esc(e.message||e)}</div>`;}
 }
-function currentActiveMembershipFor(userId){return adminCache.memberships.find(m=>m.user_id===userId&&m.active&&(!m.valid_until||Date.parse(m.valid_until)>Date.now())&&m.role!=='admin_general')||adminCache.memberships.find(m=>m.user_id===userId&&m.active&&m.role==='admin_general')||null}
+function activeMembershipsFor(userId){return adminCache.memberships.filter(m=>m.user_id===userId&&m.active&&(!m.valid_until||Date.parse(m.valid_until)>Date.now()))}
 function renderAdminUsers(){
   const box=$('adminUsers');if(!box)return;
   const instOpts=adminCache.institutions.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('');
   box.innerHTML=adminCache.profiles.length?adminCache.profiles.map(p=>{
-    const m=currentActiveMembershipFor(p.id);const isSelf=p.id===cloudUser.id;const currentInst=m?.institution_id||'';const currentRole=m?.role||'';
-    return `<div class="admin-user"><strong>${esc(p.display_name||'Usuario sin nombre')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div><div class="role-line"><span class="pill">${esc(roleLabel(currentRole))}</span>${m?.institutions?.name?`<span class="pill">${esc(m.institutions.name)}</span>`:''}</div>${isSelf&&currentRole==='admin_general'?'<div class="footer-note">Tu cuenta es el Administrador general inicial. Este rol no se modifica desde este panel.</div>':`<div class="row" style="margin-top:10px"><div><label>Rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente" ${currentRole==='docente'?'selected':''}>Docente</option><option value="director" ${currentRole==='director'?'selected':''}>Director</option><option value="especialista_ugel" ${currentRole==='especialista_ugel'?'selected':''}>Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">Guardar asignación</button>${m?`<button class="btn danger" type="button" onclick="deactivateUserRole('${p.id}')">Desactivar rol</button>`:''}</div>`}</div>`;
+    const ms=activeMembershipsFor(p.id);const isSelf=p.id===cloudUser.id;
+    const membershipsHtml=ms.length?ms.map(m=>`<div class="role-line"><span class="pill">${esc(roleLabel(m.role))}</span>${m?.institutions?.name?`<span class="pill">${esc(m.institutions.name)}</span>`:''}${m.role==='admin_general'?`<span class="small muted">Rol protegido</span>`:`<button class="btn danger" style="padding:6px 10px;min-height:auto" type="button" onclick="deactivateMembership('${m.id}')">Desactivar</button>`}</div>`).join(''):'<div class="role-line"><span class="pill">Sin asignar</span></div>';
+    return `<div class="admin-user"><strong>${esc(p.display_name||'Usuario sin nombre')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente para registrar información de tu institución.</div>':''}<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">Agregar asignación</button></div></div>`;
   }).join(''):'<div class="muted small">No hay usuarios registrados.</div>';
-  adminCache.profiles.forEach(p=>{const m=currentActiveMembershipFor(p.id);const el=$('inst_'+p.id);if(el&&m?.institution_id)el.value=m.institution_id});
 }
 async function assignUserRole(userId){
-  if(accessContext.role!=='admin_general')return alert('Acceso no autorizado.');
+  if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
   const role=$('role_'+userId)?.value||'',institutionId=$('inst_'+userId)?.value||'';
   if(!role)return alert('Selecciona un rol.');
   if(['docente','director'].includes(role)&&!institutionId)return alert('Selecciona la institución del usuario.');
   if(role==='especialista_ugel'&&!institutionId&&!confirm('El especialista quedará sin institución específica. ¿Continuar?'))return;
-  if(!confirm(`¿Asignar el rol ${roleLabel(role)} a este usuario?`))return;
+  const duplicate=activeMembershipsFor(userId).some(m=>m.role===role&&(m.institution_id||'')===(institutionId||''));
+  if(duplicate)return alert('Este usuario ya tiene ese rol activo en la institución seleccionada.');
+  if(!confirm(`¿Agregar el rol ${roleLabel(role)} a este usuario sin eliminar sus otros roles?`))return;
   try{
     const now=nowISO();
-    const current=adminCache.memberships.filter(m=>m.user_id===userId&&m.active&&m.role!=='admin_general');
-    for(const m of current){const {error}=await supabaseClient.from('user_memberships').update({active:false,valid_until:now,updated_at:now}).eq('id',m.id);if(error)throw error;}
     const {error}=await supabaseClient.from('user_memberships').insert({user_id:userId,role,institution_id:institutionId||null,active:true,valid_from:now,assigned_by:cloudUser.id,updated_at:now});if(error)throw error;
-    toast('Rol asignado correctamente');await loadAdminPanel();
-  }catch(e){alert('No se pudo asignar el rol.\n\n'+(e.message||e));}
+    toast('Rol agregado correctamente');await loadAdminPanel();if(userId===cloudUser.id)await loadAccessContext();
+  }catch(e){alert('No se pudo agregar el rol.\n\n'+(e.message||e));}
 }
-async function deactivateUserRole(userId){
-  const m=currentActiveMembershipFor(userId);if(!m||m.role==='admin_general')return;
-  if(!confirm(`¿Desactivar el rol ${roleLabel(m.role)} de este usuario?`))return;
-  const now=nowISO();const {error}=await supabaseClient.from('user_memberships').update({active:false,valid_until:now,updated_at:now}).eq('id',m.id);if(error)return alert(error.message);toast('Rol desactivado');await loadAdminPanel();
+async function deactivateMembership(membershipId){
+  if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
+  const m=adminCache.memberships.find(x=>x.id===membershipId);if(!m||m.role==='admin_general')return;
+  if(!confirm(`¿Desactivar el rol ${roleLabel(m.role)}${m.institutions?.name?' de '+m.institutions.name:''}?`))return;
+  const now=nowISO();const {error}=await supabaseClient.from('user_memberships').update({active:false,valid_until:now,updated_at:now}).eq('id',m.id);if(error)return alert(error.message);toast('Rol desactivado');await loadAdminPanel();if(m.user_id===cloudUser.id)await loadAccessContext();
 }
 async function loadDirectorDashboard(){
-  if(accessContext.role!=='director'||!accessContext.institutionId)return;
+  if(!hasRole('director')||!accessContext.directorMembership?.institution_id)return;
   const box=$('directorOccurrences');if(box)box.innerHTML='<div class="muted small">Consultando información institucional…</div>';
-  if($('directorInstitutionName'))$('directorInstitutionName').textContent=(accessContext.institution?.name||'Institución')+' · Consulta institucional en modo solo lectura.';
+  if($('directorInstitutionName'))$('directorInstitutionName').textContent=(accessContext.directorMembership?.institutions?.name||'Institución')+' · Consulta institucional en modo solo lectura.';
   try{
     const [pRes,cRes,sRes,oRes,mRes]=await Promise.all([
       supabaseClient.from('profiles').select('id,display_name,email'),
       supabaseClient.from('classrooms').select('*').order('name'),
       supabaseClient.from('students').select('*').order('name'),
       supabaseClient.from('occurrences').select('*').order('occurrence_date',{ascending:false}).limit(1000),
-      supabaseClient.from('user_memberships').select('user_id,role,institution_id,active').eq('institution_id',accessContext.institutionId).eq('active',true)
+      supabaseClient.from('user_memberships').select('user_id,role,institution_id,active').eq('institution_id',accessContext.directorMembership.institution_id).eq('active',true)
     ]);
     for(const r of [pRes,cRes,sRes,oRes,mRes])if(r.error)throw r.error;
     const memberIds=new Set((mRes.data||[]).filter(m=>m.role==='docente').map(m=>m.user_id));
@@ -801,7 +827,7 @@ async function loadDirectorDashboard(){
 function directorFiltered(){const uid=$('dirTeacherFilter')?.value||'',type=$('dirTypeFilter')?.value||'',from=$('dirFrom')?.value||'',to=$('dirTo')?.value||'';return directorCache.occurrences.filter(o=>(!uid||o.user_id===uid)&&(!type||o.type===type)&&(!from||o.occurrence_date>=from)&&(!to||o.occurrence_date<=to));}
 function directorTeacherName(uid){const p=directorCache.profiles.find(x=>x.id===uid);return p?.display_name||p?.email||'Docente';}
 function renderDirectorOccurrences(){const box=$('directorOccurrences');if(!box)return;const arr=directorFiltered();box.innerHTML=arr.length?arr.map(o=>`<div class="director-item"><div class="split-head"><strong>${esc(o.student_name||'Estudiante')}</strong><span class="pill">${esc(o.type||'Sin tipo')}</span></div><div class="small muted">${esc(o.occurrence_date||'')} ${esc(o.occurrence_time||'')} · Docente: ${esc(directorTeacherName(o.user_id))}</div><p>${esc(o.description||'')}</p>${o.actions?`<p class="small"><b>Acciones:</b> ${esc(o.actions)}</p>`:''}${o.follow_text?`<p class="small"><b>Seguimiento:</b> ${esc(o.follow_text)}</p>`:''}</div>`).join(''):'<div class="card empty">No hay ocurrencias con esos filtros.</div>';}
-function printDirectorReport(){const arr=directorFiltered();if(!arr.length)return alert('No hay registros para generar el reporte.');const inst=accessContext.institution?.name||'Institución educativa';const rows=arr.map(o=>`<tr><td>${esc(o.occurrence_date||'')}</td><td>${esc(o.student_name||'')}</td><td>${esc(directorTeacherName(o.user_id))}</td><td>${esc(o.type||'')}</td><td>${esc(o.description||'')}</td></tr>`).join('');const w=window.open('','_blank');w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Reporte institucional SAGE</title><style>body{font-family:Arial,sans-serif;margin:28px;color:#111}h1,h2{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #999;padding:7px;vertical-align:top}@media print{button{display:none}}</style></head><body><h1>SAGE</h1><h2>${esc(inst)}</h2><p>Reporte institucional de ocurrencias · ${new Date().toLocaleDateString()}</p><table><thead><tr><th>Fecha</th><th>Estudiante</th><th>Docente</th><th>Tipo</th><th>Descripción</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);w.document.close();setTimeout(()=>w.print(),250);}
+function printDirectorReport(){const arr=directorFiltered();if(!arr.length)return alert('No hay registros para generar el reporte.');const inst=accessContext.directorMembership?.institutions?.name||'Institución educativa';const rows=arr.map(o=>`<tr><td>${esc(o.occurrence_date||'')}</td><td>${esc(o.student_name||'')}</td><td>${esc(directorTeacherName(o.user_id))}</td><td>${esc(o.type||'')}</td><td>${esc(o.description||'')}</td></tr>`).join('');const w=window.open('','_blank');w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Reporte institucional SAGE</title><style>body{font-family:Arial,sans-serif;margin:28px;color:#111}h1,h2{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #999;padding:7px;vertical-align:top}@media print{button{display:none}}</style></head><body><h1>SAGE</h1><h2>${esc(inst)}</h2><p>Reporte institucional de ocurrencias · ${new Date().toLocaleDateString()}</p><table><thead><tr><th>Fecha</th><th>Estudiante</th><th>Docente</th><th>Tipo</th><th>Descripción</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);w.document.close();setTimeout(()=>w.print(),250);}
 
 function newId(){return (crypto&&crypto.randomUUID)?crypto.randomUUID():'id-'+Date.now()+'-'+Math.random().toString(16).slice(2)}
 function nowISO(){return new Date().toISOString()}
@@ -1152,7 +1178,7 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school?cfg.school+' · ':'')+'SAGE · Versión 2.0';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
+function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school?cfg.school+' · ':'')+'SAGE · Versión 2.1';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
 
 let deferredInstallPrompt=null;
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;}
