@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2.2.1" />
+  <link rel="manifest" href="manifest.webmanifest?v=2.2.3" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
@@ -42,7 +42,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.1</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.3</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -50,7 +50,7 @@
       <div class="actions"><button class="btn primary" type="button" onclick="loginAccount()">Iniciar sesión</button><button class="btn secondary" type="button" onclick="requestPasswordReset()">Olvidé mi contraseña</button></div>
     </div>
     <div id="authSignup" class="auth-panel">
-      <label>Nombre del docente</label><input id="signupName" placeholder="Nombre y apellidos">
+      <label>Nombre y apellidos</label><input id="signupName" placeholder="Nombre y apellidos">
       <label>Correo electrónico</label><input id="signupEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
       <label>Contraseña</label><input id="signupPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres">
       <label>Repetir contraseña</label><input id="signupPassword2" type="password" autocomplete="new-password" placeholder="Repite la contraseña">
@@ -64,8 +64,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.1</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.1 · Actualización estable</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.3</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.3 · Rol Auxiliar</div></div>
   </div>
 </header>
 <nav>
@@ -133,7 +133,7 @@
     </div>
     <div class="card" style="margin-top:12px">
       <h3>Configuración básica</h3>
-      <div class="row"><div><label>Institución asignada</label><input id="cfgSchool" readonly placeholder="El Administrador general asignará tu institución" style="background:#f4f6f9"></div><div><label>Docente</label><input id="cfgTeacher" placeholder="Nombre del docente"></div></div>
+      <div class="row"><div><label>Institución asignada</label><input id="cfgSchool" readonly placeholder="El Administrador general asignará tu institución" style="background:#f4f6f9"></div><div><label>Nombre del usuario</label><input id="cfgTeacher" placeholder="Nombre y apellidos"></div></div>
       <div class="footer-note">La institución educativa ya no se crea ni modifica desde la cuenta del usuario. La asigna el Administrador general de SAGE.</div>
       <div class="row"><div><label>Nivel</label><select id="cfgLevel"><option>Primaria</option><option>Inicial</option><option>Secundaria</option></select></div><div><label>Nombre del aula (opcional)</label><input id="cfgClass" placeholder="5.º Única"></div></div>
       <div class="actions"><button class="btn primary" onclick="saveConfig()">Guardar configuración</button></div>
@@ -221,7 +221,7 @@
       <div class="row"><div><label>Fecha</label><input type="date" id="ocDate"></div><div><label>Hora</label><input type="time" id="ocTime"></div></div>
       <div class="row"><div><label>Lugar</label><select id="ocPlace"><option>Aula</option><option>Patio</option><option>Recreo</option><option>Educación Física</option><option>Servicios higiénicos</option><option>Entrada o salida</option><option>Otro</option></select></div><div><label>Tipo</label><select id="ocType"><option>Convivencia</option><option>Conducta</option><option>Aprendizaje</option><option>Participación</option><option>Responsabilidad</option><option>Situación positiva</option><option>Incidente</option><option>Comunicación con familia</option><option>Otro</option></select></div></div>
       <label>Descripción objetiva de la ocurrencia</label><textarea id="ocDesc" placeholder="Describe hechos observables, sin etiquetas ni juicios."></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocDesc',this)">🎙️ Dictar descripción</button><span class="voice-status" id="voiceStatus-ocDesc">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocDesc','description')">✨ Mejorar redacción</button><span class="small muted">Mejora coherencia y cohesión sin cambiar los hechos.</span></div>
-      <label>Acciones realizadas</label><textarea id="ocActions" placeholder="¿Qué hizo el docente?"></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocActions',this)">🎙️ Dictar acciones</button><span class="voice-status" id="voiceStatus-ocActions">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocActions','actions')">✨ Mejorar redacción</button></div>
+      <label>Acciones realizadas</label><textarea id="ocActions" placeholder="¿Qué acción realizó el responsable?"></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocActions',this)">🎙️ Dictar acciones</button><span class="voice-status" id="voiceStatus-ocActions">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocActions','actions')">✨ Mejorar redacción</button></div>
       <label>Acuerdos o seguimiento</label><textarea id="ocFollowText" placeholder="Acuerdos, acciones posteriores o seguimiento."></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('ocFollowText',this)">🎙️ Dictar seguimiento</button><span class="voice-status" id="voiceStatus-ocFollowText">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('ocFollowText','follow')">✨ Mejorar redacción</button></div>
       <label><input type="checkbox" id="ocFollow" style="width:auto"> Requiere seguimiento</label>
       <div class="actions"><button class="btn success" onclick="saveOccurrence()">Guardar ocurrencia</button></div>
@@ -263,14 +263,14 @@
     <div class="section-title"><div><h2>Panel de la institución</h2><p id="directorInstitutionName">Consulta institucional en modo solo lectura.</p></div></div>
     <div class="readonly-banner">🔒 Este perfil es de <b>consulta</b>. El director puede visualizar y generar reportes, pero no crear, editar ni eliminar ocurrencias.</div>
     <div class="grid">
-      <div class="card stat-card"><div class="stat-label">👩‍🏫 Docentes</div><div class="stat" id="dirStatTeachers">0</div></div>
+      <div class="card stat-card"><div class="stat-label">👥 Personal registrador</div><div class="stat" id="dirStatTeachers">0</div></div>
       <div class="card stat-card"><div class="stat-label">🏫 Salones</div><div class="stat" id="dirStatClassrooms">0</div></div>
       <div class="card stat-card"><div class="stat-label">👥 Estudiantes</div><div class="stat" id="dirStatStudents">0</div></div>
       <div class="card stat-card"><div class="stat-label">🗂️ Ocurrencias</div><div class="stat" id="dirStatOccurrences">0</div></div>
     </div>
     <div class="card" style="margin-top:12px">
-      <div class="split-head"><div><h3 style="margin-bottom:4px">Ocurrencias registradas</h3><div class="small muted">Información reportada por los docentes de la institución.</div></div><button class="btn secondary" type="button" onclick="loadDirectorDashboard()">Actualizar</button></div>
-      <div class="row"><div><label>Docente</label><select id="dirTeacherFilter" onchange="renderDirectorOccurrences()"><option value="">Todos</option></select></div><div><label>Tipo</label><select id="dirTypeFilter" onchange="renderDirectorOccurrences()"><option value="">Todos</option></select></div></div>
+      <div class="split-head"><div><h3 style="margin-bottom:4px">Ocurrencias registradas</h3><div class="small muted">Información reportada por docentes y auxiliares de la institución.</div></div><button class="btn secondary" type="button" onclick="loadDirectorDashboard()">Actualizar</button></div>
+      <div class="row"><div><label>Responsable</label><select id="dirTeacherFilter" onchange="renderDirectorOccurrences()"><option value="">Todos</option></select></div><div><label>Tipo</label><select id="dirTypeFilter" onchange="renderDirectorOccurrences()"><option value="">Todos</option></select></div></div>
       <div class="row"><div><label>Desde</label><input id="dirFrom" type="date" onchange="renderDirectorOccurrences()"></div><div><label>Hasta</label><input id="dirTo" type="date" onchange="renderDirectorOccurrences()"></div></div>
       <div class="actions"><button class="btn primary" type="button" onclick="printDirectorReport()">Imprimir / Guardar PDF</button></div>
       <div id="directorOccurrences" class="director-list" style="margin-top:12px"><div class="muted small">Cargando información…</div></div>
@@ -319,11 +319,11 @@ let localBypass=false;
 let activeMembershipId=localStorage.getItem('sage_active_membership')||'';
 let swRegistration=null;
 let refreshingForUpdate=false;
-let accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,directorMembership:null,adminMembership:null};
+let accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,auxiliaryMembership:null,directorMembership:null,adminMembership:null};
 let adminCache={institutions:[],profiles:[],memberships:[]};
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.2';
+const APP_VERSION='2.2.3';
 const SCHEMA_VERSION=3;
 const $=id=>document.getElementById(id);
 function showAuthMessage(msg,type='ok'){const el=$('authMessage');el.textContent=msg;el.className='auth-message show '+(type==='err'?'err':'ok')}
@@ -355,9 +355,9 @@ function updateAccountUi(){
   updateSyncUi();
 }
 
-function roleLabel(role){return ({admin_general:'Administrador general',director:'Director',docente:'Docente',especialista_ugel:'Especialista UGEL'})[role]||'Sin asignar'}
-function roleIcon(role){return ({admin_general:'🛡️',director:'🏛️',docente:'👤',especialista_ugel:'🏢'})[role]||'👤'}
-function rolePriority(role){return ({admin_general:4,especialista_ugel:3,director:2,docente:1})[role]||0}
+function roleLabel(role){return ({admin_general:'Administrador general',director:'Director',docente:'Docente',auxiliar:'Auxiliar de educación',especialista_ugel:'Especialista UGEL'})[role]||'Sin asignar'}
+function roleIcon(role){return ({admin_general:'🛡️',director:'🏛️',docente:'👤',auxiliar:'🧩',especialista_ugel:'🏢'})[role]||'👤'}
+function rolePriority(role){return ({admin_general:4,especialista_ugel:3,director:2,docente:1,auxiliar:1})[role]||0}
 function membershipLabel(m){return `${roleLabel(m.role)}${m.institutions?.name?' — '+m.institutions.name:''}`}
 function updateNavCount(){const nav=document.querySelector('nav');if(!nav)return;const visible=[...nav.querySelectorAll('button')].filter(b=>getComputedStyle(b).display!=='none').length;nav.style.setProperty('--nav-count',Math.max(1,visible));}
 function renderRoleSwitcher(){
@@ -375,7 +375,7 @@ function viewAllowed(id){
   if(!cloudUser)return true;
   const role=activeRole();
   if(id==='inicio')return true;
-  if(role==='docente')return ['salones','estudiantes','ocurrencia','historial','reportes'].includes(id);
+  if(role==='docente'||role==='auxiliar')return ['salones','estudiantes','ocurrencia','historial','reportes'].includes(id);
   if(role==='director')return id==='institucion';
   if(role==='admin_general')return id==='administracion';
   if(role==='especialista_ugel')return id==='institucion';
@@ -413,7 +413,7 @@ function updateRoleUi(){
   if($('accountRoleLabel'))$('accountRoleLabel').textContent=roleSummary();
   if($('accountInstitutionLabel'))$('accountInstitutionLabel').textContent=institutionSummary();
   const teacherViews=['salones','estudiantes','ocurrencia','historial','reportes'];
-  const canTeach=!cloudUser||role==='docente';
+  const canTeach=!cloudUser||role==='docente'||role==='auxiliar';
   document.querySelectorAll('nav button[data-view]').forEach(btn=>{
     const v=btn.dataset.view;
     if(teacherViews.includes(v))btn.style.display=canTeach?'flex':'none';
@@ -426,7 +426,7 @@ function updateRoleUi(){
   updateNavCount();
 }
 async function loadAccessContext(){
-  accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,directorMembership:null,adminMembership:null};
+  accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,auxiliaryMembership:null,directorMembership:null,adminMembership:null};
   if(!cloudUser){updateRoleUi();updateAccountUi();return accessContext;}
   try{
     const {data,error}=await supabaseClient.from('user_memberships').select('id,user_id,role,institution_id,active,valid_from,valid_until,institutions(id,name,modular_code,ugel,region,educational_level)').eq('user_id',cloudUser.id).eq('active',true);
@@ -434,6 +434,7 @@ async function loadAccessContext(){
     const valid=(data||[]).filter(m=>!m.valid_until||Date.parse(m.valid_until)>Date.now()).sort((a,b)=>rolePriority(b.role)-rolePriority(a.role));
     const primary=valid[0]||null;
     const teacher=valid.find(m=>m.role==='docente')||null;
+    const auxiliary=valid.find(m=>m.role==='auxiliar')||null;
     const director=valid.find(m=>m.role==='director')||null;
     const admin=valid.find(m=>m.role==='admin_general')||null;
     let selected=valid.find(m=>m.id===activeMembershipId)||primary;
@@ -446,6 +447,7 @@ async function loadAccessContext(){
       memberships:valid,
       roles:[...new Set(valid.map(m=>m.role))],
       teacherMembership:teacher,
+      auxiliaryMembership:auxiliary,
       directorMembership:director,
       adminMembership:admin
     };
@@ -853,7 +855,7 @@ async function loadAdminPanel(){
     adminCache={institutions:iRes.data||[],profiles:pRes.data||[],memberships:mRes.data||[]};
     if(instBox)instBox.innerHTML=adminCache.institutions.length?adminCache.institutions.map(i=>`<div style="margin-top:8px"><b>${esc(i.name)}</b><div class="muted">CM ${esc(i.modular_code||'—')} · ${esc(i.ugel||'—')} · ${esc(i.educational_level||'—')}</div></div>`).join(''):'No hay instituciones registradas.';
     const active=adminCache.memberships.filter(m=>m.active&&(!m.valid_until||Date.parse(m.valid_until)>Date.now()));
-    if(summary)summary.innerHTML=`<div><b>${adminCache.institutions.length}</b> instituciones</div><div style="margin-top:6px"><b>${adminCache.profiles.length}</b> usuarios registrados</div><div style="margin-top:6px"><b>${active.filter(m=>m.role==='director').length}</b> directores activos</div><div style="margin-top:6px"><b>${active.filter(m=>m.role==='docente').length}</b> docentes asignados</div>`;
+    if(summary)summary.innerHTML=`<div><b>${adminCache.institutions.length}</b> instituciones</div><div style="margin-top:6px"><b>${adminCache.profiles.length}</b> usuarios registrados</div><div style="margin-top:6px"><b>${active.filter(m=>m.role==='director').length}</b> directores activos</div><div style="margin-top:6px"><b>${active.filter(m=>m.role==='docente').length}</b> docentes asignados</div><div style="margin-top:6px"><b>${active.filter(m=>m.role==='auxiliar').length}</b> auxiliares asignados</div>`;
     renderAdminUsers();
   }catch(e){if(usersBox)usersBox.innerHTML=`<div style="color:#9d1d1d">No se pudo cargar la administración: ${esc(e.message||e)}</div>`;}
 }
@@ -864,7 +866,7 @@ function renderAdminUsers(){
   box.innerHTML=adminCache.profiles.length?adminCache.profiles.map(p=>{
     const ms=activeMembershipsFor(p.id);const isSelf=p.id===cloudUser.id;
     const membershipsHtml=ms.length?ms.map(m=>`<div class="role-line"><span class="pill">${esc(roleLabel(m.role))}</span>${m?.institutions?.name?`<span class="pill">${esc(m.institutions.name)}</span>`:''}${m.role==='admin_general'?`<span class="small muted">Rol protegido</span>`:`<button class="btn danger" style="padding:6px 10px;min-height:auto" type="button" onclick="deactivateMembership('${m.id}')">Desactivar</button>`}</div>`).join(''):'<div class="role-line"><span class="pill">Sin asignar</span></div>';
-    return `<div class="admin-user"><strong>${esc(p.display_name||'Usuario sin nombre')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente para registrar información de tu institución.</div>':''}<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">Agregar asignación</button></div></div>`;
+    return `<div class="admin-user"><strong>${esc(p.display_name||'Usuario sin nombre')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente o Auxiliar para registrar información de una institución.</div>':''}<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="auxiliar">Auxiliar de educación</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">Agregar asignación</button></div></div>`;
   }).join(''):'<div class="muted small">No hay usuarios registrados.</div>';
 }
 async function createInstitution(){
@@ -887,7 +889,7 @@ async function assignUserRole(userId){
   if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
   const role=$('role_'+userId)?.value||'',institutionId=$('inst_'+userId)?.value||'';
   if(!role)return alert('Selecciona un rol.');
-  if(['docente','director'].includes(role)&&!institutionId)return alert('Selecciona la institución del usuario.');
+  if(['docente','auxiliar','director'].includes(role)&&!institutionId)return alert('Selecciona la institución del usuario.');
   if(role==='especialista_ugel'&&!institutionId&&!confirm('El especialista quedará sin institución específica. ¿Continuar?'))return;
   const duplicate=activeMembershipsFor(userId).some(m=>m.role===role&&(m.institution_id||'')===(institutionId||''));
   if(duplicate)return alert('Este usuario ya tiene ese rol activo en la institución seleccionada.');
@@ -917,18 +919,18 @@ async function loadDirectorDashboard(){
       supabaseClient.from('user_memberships').select('user_id,role,institution_id,active').eq('institution_id',accessContext.directorMembership.institution_id).eq('active',true)
     ]);
     for(const r of [pRes,cRes,sRes,oRes,mRes])if(r.error)throw r.error;
-    const memberIds=new Set((mRes.data||[]).filter(m=>m.role==='docente').map(m=>m.user_id));
+    const memberIds=new Set((mRes.data||[]).filter(m=>['docente','auxiliar'].includes(m.role)).map(m=>m.user_id));
     directorCache={profiles:(pRes.data||[]).filter(p=>memberIds.has(p.id)),classrooms:cRes.data||[],students:sRes.data||[],occurrences:oRes.data||[]};
     $('dirStatTeachers').textContent=directorCache.profiles.length;$('dirStatClassrooms').textContent=directorCache.classrooms.length;$('dirStatStudents').textContent=directorCache.students.length;$('dirStatOccurrences').textContent=directorCache.occurrences.length;
-    const tf=$('dirTeacherFilter');if(tf){const old=tf.value;tf.innerHTML='<option value="">Todos</option>'+directorCache.profiles.map(p=>`<option value="${p.id}">${esc(p.display_name||p.email||'Docente')}</option>`).join('');if([...tf.options].some(o=>o.value===old))tf.value=old;}
+    const tf=$('dirTeacherFilter');if(tf){const old=tf.value;tf.innerHTML='<option value="">Todos</option>'+directorCache.profiles.map(p=>`<option value="${p.id}">${esc(p.display_name||p.email||'Responsable')}</option>`).join('');if([...tf.options].some(o=>o.value===old))tf.value=old;}
     const types=[...new Set(directorCache.occurrences.map(o=>o.type).filter(Boolean))].sort();const ty=$('dirTypeFilter');if(ty){const old=ty.value;ty.innerHTML='<option value="">Todos</option>'+types.map(t=>`<option>${esc(t)}</option>`).join('');if([...ty.options].some(o=>o.value===old))ty.value=old;}
     renderDirectorOccurrences();
   }catch(e){if(box)box.innerHTML=`<div style="color:#9d1d1d">No se pudo consultar la información institucional: ${esc(e.message||e)}</div>`;}
 }
 function directorFiltered(){const uid=$('dirTeacherFilter')?.value||'',type=$('dirTypeFilter')?.value||'',from=$('dirFrom')?.value||'',to=$('dirTo')?.value||'';return directorCache.occurrences.filter(o=>(!uid||o.user_id===uid)&&(!type||o.type===type)&&(!from||o.occurrence_date>=from)&&(!to||o.occurrence_date<=to));}
-function directorTeacherName(uid){const p=directorCache.profiles.find(x=>x.id===uid);return p?.display_name||p?.email||'Docente';}
-function renderDirectorOccurrences(){const box=$('directorOccurrences');if(!box)return;const arr=directorFiltered();box.innerHTML=arr.length?arr.map(o=>`<div class="director-item"><div class="split-head"><strong>${esc(o.student_name||'Estudiante')}</strong><span class="pill">${esc(o.type||'Sin tipo')}</span></div><div class="small muted">${esc(o.occurrence_date||'')} ${esc(o.occurrence_time||'')} · Docente: ${esc(directorTeacherName(o.user_id))}</div><p>${esc(o.description||'')}</p>${o.actions?`<p class="small"><b>Acciones:</b> ${esc(o.actions)}</p>`:''}${o.follow_text?`<p class="small"><b>Seguimiento:</b> ${esc(o.follow_text)}</p>`:''}</div>`).join(''):'<div class="card empty">No hay ocurrencias con esos filtros.</div>';}
-function printDirectorReport(){const arr=directorFiltered();if(!arr.length)return alert('No hay registros para generar el reporte.');const inst=accessContext.directorMembership?.institutions?.name||'Institución educativa';const rows=arr.map(o=>`<tr><td>${esc(o.occurrence_date||'')}</td><td>${esc(o.student_name||'')}</td><td>${esc(directorTeacherName(o.user_id))}</td><td>${esc(o.type||'')}</td><td>${esc(o.description||'')}</td></tr>`).join('');const w=window.open('','_blank');w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Reporte institucional SAGE</title><style>body{font-family:Arial,sans-serif;margin:28px;color:#111}h1,h2{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #999;padding:7px;vertical-align:top}@media print{button{display:none}}</style></head><body><h1>SAGE</h1><h2>${esc(inst)}</h2><p>Reporte institucional de ocurrencias · ${new Date().toLocaleDateString()}</p><table><thead><tr><th>Fecha</th><th>Estudiante</th><th>Docente</th><th>Tipo</th><th>Descripción</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);w.document.close();setTimeout(()=>w.print(),250);}
+function directorTeacherName(uid){const p=directorCache.profiles.find(x=>x.id===uid);return p?.display_name||p?.email||'Responsable';}
+function renderDirectorOccurrences(){const box=$('directorOccurrences');if(!box)return;const arr=directorFiltered();box.innerHTML=arr.length?arr.map(o=>`<div class="director-item"><div class="split-head"><strong>${esc(o.student_name||'Estudiante')}</strong><span class="pill">${esc(o.type||'Sin tipo')}</span></div><div class="small muted">${esc(o.occurrence_date||'')} ${esc(o.occurrence_time||'')} · Registrado por: ${esc(directorTeacherName(o.user_id))}</div><p>${esc(o.description||'')}</p>${o.actions?`<p class="small"><b>Acciones:</b> ${esc(o.actions)}</p>`:''}${o.follow_text?`<p class="small"><b>Seguimiento:</b> ${esc(o.follow_text)}</p>`:''}</div>`).join(''):'<div class="card empty">No hay ocurrencias con esos filtros.</div>';}
+function printDirectorReport(){const arr=directorFiltered();if(!arr.length)return alert('No hay registros para generar el reporte.');const inst=accessContext.directorMembership?.institutions?.name||'Institución educativa';const rows=arr.map(o=>`<tr><td>${esc(o.occurrence_date||'')}</td><td>${esc(o.student_name||'')}</td><td>${esc(directorTeacherName(o.user_id))}</td><td>${esc(o.type||'')}</td><td>${esc(o.description||'')}</td></tr>`).join('');const w=window.open('','_blank');w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Reporte institucional SAGE</title><style>body{font-family:Arial,sans-serif;margin:28px;color:#111}h1,h2{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #999;padding:7px;vertical-align:top}@media print{button{display:none}}</style></head><body><h1>SAGE</h1><h2>${esc(inst)}</h2><p>Reporte institucional de ocurrencias · ${new Date().toLocaleDateString()}</p><table><thead><tr><th>Fecha</th><th>Estudiante</th><th>Registrado por</th><th>Tipo</th><th>Descripción</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);w.document.close();setTimeout(()=>w.print(),250);}
 
 function newId(){return (crypto&&crypto.randomUUID)?crypto.randomUUID():'id-'+Date.now()+'-'+Math.random().toString(16).slice(2)}
 function nowISO(){return new Date().toISOString()}
@@ -1273,7 +1275,7 @@ function clearFilters(){['filterClassroom','filterStudent','filterType','filterF
 function openEdit(id){let o=db.occurrences.find(x=>x.id===id);$('editId').value=id;$('editDesc').value=o.description;$('editActions').value=o.actions;$('editFollow').value=o.followText;$('editDialog').showModal()}
 function saveEdit(){let o=db.occurrences.find(x=>x.id===$('editId').value);o.description=$('editDesc').value.trim();o.actions=$('editActions').value.trim();o.followText=$('editFollow').value.trim();o.updatedAt=nowISO();o.syncState='local';$('editDialog').close();persist();renderHistory()}
 function deleteOcc(id){if(!confirm('¿Eliminar esta ocurrencia?'))return;queueCloudDelete('occurrences',id);db.occurrences=db.occurrences.filter(o=>o.id!==id);persist();renderHistory();toast('Ocurrencia eliminada')}
-function generateReport(){let arr=getFiltered('rep');if(!arr.length)return alert('No hay registros para generar el documento');let cfg=db.config||{};let body=arr.map((o,i)=>`<section><h2>REGISTRO DE OCURRENCIA ${arr.length>1?i+1:''}</h2><table><tr><td><b>Estudiante:</b> ${esc(o.studentName)}</td><td><b>Grado:</b> ${esc(o.grade||'')}</td><td><b>Sección:</b> ${esc(o.section||'')}</td></tr><tr><td><b>Fecha:</b> ${esc(o.date||'')}</td><td><b>Hora:</b> ${esc(o.time||'')}</td><td><b>Lugar:</b> ${esc(o.place||'')}</td></tr><tr><td colspan="3"><b>Tipo:</b> ${esc(o.type||'')}</td></tr></table><h3>Descripción de la ocurrencia</h3><p>${nl(o.description)}</p><h3>Acciones realizadas</h3><p>${nl(o.actions||'—')}</p><h3>Acuerdos y seguimiento</h3><p>${nl(o.followText||'—')}</p><div class="sign"><div>_________________________<br>Docente</div><div>_________________________<br>Padre/madre/apoderado</div></div></section>`).join('<div class="pagebreak"></div>');let html=`<!doctype html><html><head><meta charset="utf-8"><title>Reporte de ocurrencias</title><style>body{font-family:Arial,sans-serif;color:#111;margin:32px}h1,h2{text-align:center}h1{font-size:18px;margin-bottom:2px}h2{font-size:17px;margin-top:24px}h3{font-size:14px;margin-top:20px}table{width:100%;border-collapse:collapse}td{border:1px solid #999;padding:8px}p{line-height:1.45}.sign{display:flex;justify-content:space-between;text-align:center;margin-top:70px;gap:30px}.pagebreak{page-break-after:always}@media print{button{display:none}.pagebreak{page-break-after:always}} </style></head><body><h1>${esc(cfg.school||'INSTITUCIÓN EDUCATIVA')}</h1><div style="text-align:center">${esc(cfg.teacher?('Docente: '+cfg.teacher):'')}</div>${body}</body></html>`;if($('repMode').value==='word'){let blob=new Blob(['\ufeff',html],{type:'application/msword'});downloadBlob(blob,'reporte_ocurrencias.doc')}else{let w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),300)}}
+function generateReport(){let arr=getFiltered('rep');if(!arr.length)return alert('No hay registros para generar el documento');let cfg=db.config||{};const responsibleRole=activeRole()==='auxiliar'?'Auxiliar de educación':'Docente';let body=arr.map((o,i)=>`<section><h2>REGISTRO DE OCURRENCIA ${arr.length>1?i+1:''}</h2><table><tr><td><b>Estudiante:</b> ${esc(o.studentName)}</td><td><b>Grado:</b> ${esc(o.grade||'')}</td><td><b>Sección:</b> ${esc(o.section||'')}</td></tr><tr><td><b>Fecha:</b> ${esc(o.date||'')}</td><td><b>Hora:</b> ${esc(o.time||'')}</td><td><b>Lugar:</b> ${esc(o.place||'')}</td></tr><tr><td colspan="3"><b>Tipo:</b> ${esc(o.type||'')}</td></tr></table><h3>Descripción de la ocurrencia</h3><p>${nl(o.description)}</p><h3>Acciones realizadas</h3><p>${nl(o.actions||'—')}</p><h3>Acuerdos y seguimiento</h3><p>${nl(o.followText||'—')}</p><div class="sign"><div>_________________________<br>${responsibleRole}</div><div>_________________________<br>Padre/madre/apoderado</div></div></section>`).join('<div class="pagebreak"></div>');let html=`<!doctype html><html><head><meta charset="utf-8"><title>Reporte de ocurrencias</title><style>body{font-family:Arial,sans-serif;color:#111;margin:32px}h1,h2{text-align:center}h1{font-size:18px;margin-bottom:2px}h2{font-size:17px;margin-top:24px}h3{font-size:14px;margin-top:20px}table{width:100%;border-collapse:collapse}td{border:1px solid #999;padding:8px}p{line-height:1.45}.sign{display:flex;justify-content:space-between;text-align:center;margin-top:70px;gap:30px}.pagebreak{page-break-after:always}@media print{button{display:none}.pagebreak{page-break-after:always}} </style></head><body><h1>${esc(cfg.school||'INSTITUCIÓN EDUCATIVA')}</h1><div style="text-align:center">${esc(cfg.teacher?(responsibleRole+': '+cfg.teacher):'')}</div>${body}</body></html>`;if($('repMode').value==='word'){let blob=new Blob(['\ufeff',html],{type:'application/msword'});downloadBlob(blob,'reporte_ocurrencias.doc')}else{let w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),300)}}
 function backupData(){db.meta.updatedAt=nowISO();downloadBlob(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),'respaldo_ocurrencias_v1_8.json')}
 function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.students||!x.occurrences)throw 0;if(confirm('Esto reemplazará los datos actuales. ¿Continuar?')){db=migrateDatabase(x);persist();toast('Respaldo restaurado y actualizado')}}catch{alert('Archivo de respaldo no válido')}};r.readAsText(f)}
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
@@ -1387,7 +1389,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.1',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.3',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg,latestAvailableVersion);
     reg.addEventListener('updatefound',()=>{

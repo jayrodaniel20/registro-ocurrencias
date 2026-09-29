@@ -1,5 +1,5 @@
 {
-  "version": "2.2.2",
-  "released": "2026-09-29",
-  "notes": "La institución educativa es administrada solo por el Administrador general; los usuarios reciben su institución mediante asignación de rol."
+  "version": "2.2.3",
+  "message": "Nuevo rol Auxiliar de educación y acceso institucional actualizado.",
+  "released_at": "2026-09-29T00:00:00-05:00"
 }
