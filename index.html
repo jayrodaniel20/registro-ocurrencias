@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
-  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="manifest" href="manifest.webmanifest?v=2.2.1" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
@@ -42,7 +42,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.1</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -64,8 +64,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2 · Roles activos y actualización</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.1</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.1 · Actualización estable</div></div>
   </div>
 </header>
 <nav>
@@ -105,7 +105,7 @@
       <div class="split-head">
         <div>
           <h3 style="margin-bottom:4px">🔄 Nueva versión disponible</h3>
-          <div class="muted small">SAGE puede actualizarse sin borrar tus datos locales.</div>
+          <div class="muted small">SAGE puede actualizarse sin borrar tus datos locales. <span id="updateVersionText"></span></div>
         </div>
         <span class="pill">Actualización</span>
       </div>
@@ -133,7 +133,8 @@
     </div>
     <div class="card" style="margin-top:12px">
       <h3>Configuración básica</h3>
-      <div class="row"><div><label>Institución educativa</label><input id="cfgSchool" placeholder="I.E. ..."></div><div><label>Docente</label><input id="cfgTeacher" placeholder="Nombre del docente"></div></div>
+      <div class="row"><div><label>Institución asignada</label><input id="cfgSchool" readonly placeholder="El Administrador general asignará tu institución" style="background:#f4f6f9"></div><div><label>Docente</label><input id="cfgTeacher" placeholder="Nombre del docente"></div></div>
+      <div class="footer-note">La institución educativa ya no se crea ni modifica desde la cuenta del usuario. La asigna el Administrador general de SAGE.</div>
       <div class="row"><div><label>Nivel</label><select id="cfgLevel"><option>Primaria</option><option>Inicial</option><option>Secundaria</option></select></div><div><label>Nombre del aula (opcional)</label><input id="cfgClass" placeholder="5.º Única"></div></div>
       <div class="actions"><button class="btn primary" onclick="saveConfig()">Guardar configuración</button></div>
     </div>
@@ -282,7 +283,19 @@
       <div class="split-head"><div><h3 style="margin-bottom:4px">Tu acceso</h3><div class="small muted">Solo los administradores generales pueden gestionar roles.</div></div><span class="role-chip admin">🛡️ Administrador general</span></div>
     </div>
     <div class="admin-grid" style="margin-top:12px">
-      <div class="card"><h3>Instituciones</h3><div id="adminInstitutions" class="small muted">Cargando…</div></div>
+      <div class="card">
+        <div class="split-head"><div><h3 style="margin-bottom:4px">Instituciones</h3><div class="small muted">Solo el Administrador general puede registrarlas.</div></div></div>
+        <div id="adminInstitutions" class="small muted">Cargando…</div>
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;font-weight:850;color:#38445a">➕ Registrar nueva institución</summary>
+          <div style="margin-top:12px">
+            <label>Nombre de la institución</label><input id="adminInstName" placeholder="Ej.: 38490 SAN MARTIN DE PORRES">
+            <div class="row"><div><label>Código modular</label><input id="adminInstCode" placeholder="Ej.: 0423913"></div><div><label>Nivel educativo</label><select id="adminInstLevel"><option>Inicial</option><option selected>Primaria</option><option>Secundaria</option></select></div></div>
+            <div class="row"><div><label>UGEL</label><input id="adminInstUGEL" placeholder="Ej.: Huanca Sancos"></div><div><label>Región</label><input id="adminInstRegion" placeholder="Ej.: Ayacucho"></div></div>
+            <div class="actions"><button class="btn primary" type="button" onclick="createInstitution()">Guardar institución</button></div>
+          </div>
+        </details>
+      </div>
       <div class="card"><h3>Resumen</h3><div id="adminSummary" class="small muted">Cargando…</div></div>
     </div>
     <div class="card" style="margin-top:12px">
@@ -310,7 +323,7 @@ let accessContext={role:null,institutionId:null,institution:null,membership:null
 let adminCache={institutions:[],profiles:[],memberships:[]};
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2';
+const APP_VERSION='2.2.2';
 const SCHEMA_VERSION=3;
 const $=id=>document.getElementById(id);
 function showAuthMessage(msg,type='ok'){const el=$('authMessage');el.textContent=msg;el.className='auth-message show '+(type==='err'?'err':'ok')}
@@ -854,6 +867,22 @@ function renderAdminUsers(){
     return `<div class="admin-user"><strong>${esc(p.display_name||'Usuario sin nombre')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente para registrar información de tu institución.</div>':''}<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">Agregar asignación</button></div></div>`;
   }).join(''):'<div class="muted small">No hay usuarios registrados.</div>';
 }
+async function createInstitution(){
+  if(activeRole()!=='admin_general')return alert('Solo el Administrador general puede registrar instituciones.');
+  const name=$('adminInstName')?.value.trim()||'', modularCode=$('adminInstCode')?.value.trim()||'', ugel=$('adminInstUGEL')?.value.trim()||'', region=$('adminInstRegion')?.value.trim()||'', educationalLevel=$('adminInstLevel')?.value||'Primaria';
+  if(!name)return alert('Escribe el nombre de la institución.');
+  if(!modularCode)return alert('Escribe el código modular.');
+  if(adminCache.institutions.some(i=>(i.modular_code||'').trim()===modularCode))return alert('Ya existe una institución con ese código modular.');
+  try{
+    const {error}=await supabaseClient.from('institutions').insert({name,modular_code:modularCode,ugel,region,educational_level:educationalLevel,active:true,created_by:cloudUser.id,updated_at:new Date().toISOString()});
+    if(error)throw error;
+    ['adminInstName','adminInstCode','adminInstUGEL','adminInstRegion'].forEach(id=>{if($(id))$(id).value=''});
+    if($('adminInstLevel'))$('adminInstLevel').value='Primaria';
+    toast('Institución registrada');
+    await loadAdminPanel();
+  }catch(e){alert('No se pudo registrar la institución: '+(e.message||e));}
+}
+
 async function assignUserRole(userId){
   if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
   const role=$('role_'+userId)?.value||'',institutionId=$('inst_'+userId)?.value||'';
@@ -948,7 +977,7 @@ localStorage.setItem(DBKEY,JSON.stringify(db));
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1800)}
 function go(id){if(!viewAllowed(id)){id=defaultViewForActiveRole();}document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='historial')renderHistory();if(id==='administracion'&&activeRole()==='admin_general')loadAdminPanel();if(id==='institucion'&&activeRole()==='director')loadDirectorDashboard()}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
-function saveConfig(){db.config={school:$('cfgSchool').value.trim(),teacher:$('cfgTeacher').value.trim(),level:$('cfgLevel').value,className:$('cfgClass').value.trim()};db.profile=db.profile||{};db.profile.displayName=db.config.teacher||'';persist();toast('Configuración guardada')}
+function saveConfig(){const inst=activeInstitution();db.config={school:inst?.name||'',teacher:$('cfgTeacher').value.trim(),level:$('cfgLevel').value,className:$('cfgClass').value.trim()};db.profile=db.profile||{};db.profile.displayName=db.config.teacher||'';persist();toast('Configuración guardada')}
 function classroomLabel(c){return c?(c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón'):''}
 function classroomOptions(includeAll=false){let rows=db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b)));return (includeAll?'<option value="">Todos los salones</option>':'<option value="">Seleccionar salón...</option>')+rows.map(c=>`<option value="${c.id}">${esc(classroomLabel(c))} · ${esc(c.level||'')}</option>`).join('')}
 function addClassroom(){let level=$('clLevel').value,grade=$('clGrade').value.trim(),section=$('clSection').value.trim(),name=$('clName').value.trim();if(!grade&&!section&&!name)return alert('Escribe al menos el grado, la sección o un nombre para el salón');let dup=db.classrooms.find(c=>normalizeClassKey(c.level,c.grade,c.section)===normalizeClassKey(level,grade,section));if(dup)return alert('Ya existe un salón con ese nivel, grado y sección. Puedes editarlo.');db.classrooms.push({id:newId(),ownerId:db.profile.id,level,grade,section,name:name||[grade,section].filter(Boolean).join(' ')||'Salón',createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'});$('clGrade').value='';$('clSection').value='';$('clName').value='';persist();toast('Salón creado')}
@@ -1250,7 +1279,7 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};$('cfgSchool').value=cfg.school||'';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(cfg.school?cfg.school+' · ':'')+'SAGE · Versión 2.1';if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
+function refreshAll(){let cfg=db.config||{};const assignedInst=activeInstitution();const assignedSchool=assignedInst?.name||'';if(assignedSchool&&cfg.school!==assignedSchool){cfg.school=assignedSchool;db.config=cfg;localStorage.setItem(DBKEY,JSON.stringify(db));}$('cfgSchool').value=assignedSchool||'Sin institución asignada';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||assignedInst?.educational_level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(assignedSchool?assignedSchool+' · ':'')+'SAGE · Versión '+APP_VERSION;if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
 
 let deferredInstallPrompt=null;
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;}
@@ -1312,30 +1341,72 @@ function showInstallHelp(){
     box.innerHTML='<b>Computadora:</b> en Chrome o Edge busca el ícono de instalación en la barra de direcciones o usa el menú del navegador → <b>Instalar aplicación</b>.';
   }
 }
-function showUpdateNotice(reg){
+let latestAvailableVersion=null;
+function showUpdateNotice(reg,version){
   swRegistration=reg||swRegistration;
+  latestAvailableVersion=version||latestAvailableVersion;
   const card=$('updateCard');if(card)card.style.display='block';
+  const txt=$('updateVersionText');
+  if(txt)txt.textContent=latestAvailableVersion?` Versión disponible: ${latestAvailableVersion}.`:'';
 }
 function dismissUpdateNotice(){const card=$('updateCard');if(card)card.style.display='none';}
-function updateAppNow(){
-  if(swRegistration?.waiting){swRegistration.waiting.postMessage('SKIP_WAITING');return;}
-  if(swRegistration){swRegistration.update().catch(()=>{});toast('Buscando actualización…');}
-  else location.reload();
+async function checkPublishedVersion(){
+  try{
+    const r=await fetch(`version.json?t=${Date.now()}`,{cache:'no-store'});
+    if(!r.ok)return;
+    const data=await r.json();
+    const published=String(data.version||'').trim();
+    if(published && published!==APP_VERSION){
+      latestAvailableVersion=published;
+      showUpdateNotice(swRegistration,published);
+      if(swRegistration)swRegistration.update().catch(()=>{});
+    }
+  }catch(e){}
+}
+async function updateAppNow(){
+  toast('Preparando actualización…');
+  try{
+    if(swRegistration){
+      await swRegistration.update();
+      if(swRegistration.waiting){
+        swRegistration.waiting.postMessage('SKIP_WAITING');
+        return;
+      }
+    }
+    // Si todavía no hay un worker esperando, recarga desde red sin alterar datos locales.
+    const url=new URL(location.href);
+    url.searchParams.set('appv',latestAvailableVersion||APP_VERSION);
+    url.searchParams.set('_refresh',Date.now());
+    location.replace(url.toString());
+  }catch(e){
+    location.reload();
+  }
 }
 function initServiceWorkerUpdates(){
-  if(!('serviceWorker' in navigator))return;
-  navigator.serviceWorker.register('sw.js').then(reg=>{
+  if(!('serviceWorker' in navigator)){
+    checkPublishedVersion();
+    return;
+  }
+  navigator.serviceWorker.register('sw.js?v=2.2.1',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
-    if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg);
+    if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg,latestAvailableVersion);
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;if(!nw)return;
-      nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller)showUpdateNotice(reg);});
+      nw.addEventListener('statechange',()=>{
+        if(nw.state==='installed'&&navigator.serviceWorker.controller){
+          showUpdateNotice(reg,latestAvailableVersion);
+        }
+      });
     });
     reg.update().catch(()=>{});
-    window.addEventListener('focus',()=>reg.update().catch(()=>{}));
-  }).catch(()=>{});
+    checkPublishedVersion();
+    window.addEventListener('focus',()=>{reg.update().catch(()=>{});checkPublishedVersion();});
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkPublishedVersion();});
+  }).catch(()=>{checkPublishedVersion();});
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    if(refreshingForUpdate)return;refreshingForUpdate=true;location.reload();
+    if(refreshingForUpdate)return;
+    refreshingForUpdate=true;
+    location.reload();
   });
 }
 
