@@ -1,5 +1,5 @@
 {
-  "version": "2.2.4",
-  "message": "Perfil obligatorio al primer ingreso e inicio simplificado para usuarios.",
-  "released_at": "2026-10-10T17:30:00-05:00"
+  "version": "2.2.5",
+  "message": "Seguimiento de casos: lista de pendientes, estado, fecha y nota de seguimiento.",
+  "released_at": "2026-10-10T17:45:00-05:00"
 }
