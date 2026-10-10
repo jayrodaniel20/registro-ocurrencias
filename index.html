@@ -42,7 +42,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.3</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.4</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -64,8 +64,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.3</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.3 · Rol Auxiliar</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.4</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.4 · Perfil e inicio simple</div></div>
   </div>
 </header>
 <nav>
@@ -131,12 +131,19 @@
       <div class="card stat-card"><div class="stat-label">📅 Hoy</div><div class="stat" id="statToday">0</div></div>
       <div class="card stat-card"><div class="stat-label">🔔 Seguimiento</div><div class="stat" id="statFollow">0</div></div>
     </div>
-    <div class="card" style="margin-top:12px">
-      <h3>Configuración básica</h3>
-      <div class="row"><div><label>Institución asignada</label><input id="cfgSchool" readonly placeholder="El Administrador general asignará tu institución" style="background:#f4f6f9"></div><div><label>Nombre del usuario</label><input id="cfgTeacher" placeholder="Nombre y apellidos"></div></div>
-      <div class="footer-note">La institución educativa ya no se crea ni modifica desde la cuenta del usuario. La asigna el Administrador general de SAGE.</div>
-      <div class="row"><div><label>Nivel</label><select id="cfgLevel"><option>Primaria</option><option>Inicial</option><option>Secundaria</option></select></div><div><label>Nombre del aula (opcional)</label><input id="cfgClass" placeholder="5.º Única"></div></div>
-      <div class="actions"><button class="btn primary" onclick="saveConfig()">Guardar configuración</button></div>
+    <div class="card" id="profileSummaryCard" style="margin-top:12px">
+      <div class="split-head">
+        <div>
+          <h3 style="margin-bottom:4px">👤 Mi cuenta</h3>
+          <div class="muted small">Tu institución y tus roles son asignados por el Administrador general.</div>
+        </div>
+        <button type="button" class="btn secondary" style="padding:8px 12px;min-height:auto" onclick="openProfileDialog(false)">Editar nombre</button>
+      </div>
+      <div class="subtle small" style="margin-top:10px">
+        <div><b>Nombre:</b> <span id="profileNameHome">—</span></div>
+        <div style="margin-top:5px"><b>Institución:</b> <span id="profileInstitutionHome">Sin institución asignada</span></div>
+        <div style="margin-top:5px"><b>Rol activo:</b> <span id="profileRoleHome">Sin asignar</span></div>
+      </div>
     </div>
     <div class="card" style="margin-top:12px">
       <details>
@@ -309,6 +316,7 @@
 <dialog id="redactionDialog"><div class="modal"><h3 id="redactionTitle">Mejorar redacción</h3><p class="small muted">Compara ambas versiones. La app no agrega hechos nuevos; tú decides si reemplazas el texto.</p><label>Texto original</label><textarea id="redactionOriginal" readonly style="background:#f4f6f9"></textarea><label>Versión mejorada</label><textarea id="redactionImproved"></textarea><div class="actions"><button type="button" class="btn primary" onclick="applyImprovedRedaction()">Usar esta redacción</button><button type="button" class="btn secondary" onclick="document.getElementById('redactionDialog').close()">Conservar original</button></div></div></dialog>
 
 <dialog id="passwordDialog"><div class="modal"><h3>Crear nueva contraseña</h3><p class="small muted">Escribe una nueva contraseña para tu cuenta.</p><label>Nueva contraseña</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><label>Repetir contraseña</label><input id="newPassword2" type="password" autocomplete="new-password"><div class="actions"><button class="btn primary" type="button" onclick="saveNewPassword()">Guardar contraseña</button><button class="btn secondary" type="button" onclick="document.getElementById('passwordDialog').close()">Cancelar</button></div></div></dialog>
+<dialog id="profileDialog"><div class="modal"><h3>Completa tu perfil</h3><p id="profileDialogText" class="small muted">Necesitamos tu nombre y apellidos para que el Administrador general pueda identificar tu cuenta y asignarte la institución y el rol correctos.</p><label>Nombre y apellidos</label><input id="profileDisplayName" autocomplete="name" placeholder="Nombre y apellidos"><div class="actions"><button class="btn primary" type="button" onclick="saveProfileIdentity()">Guardar y continuar</button><button id="profileCancelBtn" class="btn secondary" type="button" onclick="closeProfileDialog()">Cancelar</button></div></div></dialog>
 <script>
 const SUPABASE_URL='https://rbhslphjvqxtoleephdk.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_XkAyinrprmor3xfbFfRkpA_b6Yug7Nh';
@@ -323,7 +331,7 @@ let accessContext={role:null,institutionId:null,institution:null,membership:null
 let adminCache={institutions:[],profiles:[],memberships:[]};
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.3';
+const APP_VERSION='2.2.4';
 const SCHEMA_VERSION=3;
 const $=id=>document.getElementById(id);
 function showAuthMessage(msg,type='ok'){const el=$('authMessage');el.textContent=msg;el.className='auth-message show '+(type==='err'?'err':'ok')}
@@ -452,7 +460,7 @@ async function loadAccessContext(){
       adminMembership:admin
     };
   }catch(e){console.warn('No se pudieron cargar los roles:',e);}
-  updateRoleUi();updateAccountUi();
+  updateRoleUi();updateAccountUi();updateProfileSummary();
   if(activeRole()==='admin_general')loadAdminPanel();
   if(activeRole()==='director')loadDirectorDashboard();
   return accessContext;
@@ -795,7 +803,7 @@ async function createAccount(){
   if(p1!==p2)return showAuthMessage('Las contraseñas no coinciden.','err');
   const {data,error}=await supabaseClient.auth.signUp({email,password:p1,options:{data:{display_name:name},emailRedirectTo:APP_PUBLIC_URL}});
   if(error)return showAuthMessage(error.message,'err');
-  if(data.session){cloudUser=data.user;setAuthGate(false);updateAccountUi();await loadAccessContext();toast('Cuenta creada e iniciada');}
+  if(data.session){cloudUser=data.user;setAuthGate(false);updateAccountUi();await ensureProfileIdentity(true);await loadAccessContext();toast('Cuenta creada e iniciada');}
   else showAuthMessage('Cuenta creada. Revisa tu correo y pulsa el enlace de confirmación. Después vuelve a la app e inicia sesión.');
 }
 async function loginAccount(){
@@ -804,7 +812,7 @@ async function loginAccount(){
   if(!email||!password)return showAuthMessage('Escribe tu correo y contraseña.','err');
   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
   if(error)return showAuthMessage(error.message,'err');
-  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await loadAccessContext();refreshAll();go(defaultViewForActiveRole());toast('Sesión iniciada');
+  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await ensureProfileIdentity(true);await loadAccessContext();refreshAll();go(defaultViewForActiveRole());toast('Sesión iniciada');
 }
 async function logoutAccount(){
   if(!confirm('¿Cerrar sesión en este dispositivo? Tus datos locales no se borrarán.'))return;
@@ -831,11 +839,11 @@ async function initAuth(){
   const {data}=await supabaseClient.auth.getSession();
   cloudUser=data.session?.user||null;
   updateAccountUi();
-  if(cloudUser){setAuthGate(false);await loadAccessContext();go(defaultViewForActiveRole())}else if(!localBypass){setAuthGate(true)}
+  if(cloudUser){setAuthGate(false);await ensureProfileIdentity(true);await loadAccessContext();go(defaultViewForActiveRole())}else if(!localBypass){setAuthGate(true)}
   supabaseClient.auth.onAuthStateChange((event,session)=>{
     cloudUser=session?.user||null;updateAccountUi();
     if(event==='PASSWORD_RECOVERY'){$('passwordDialog').showModal();setAuthGate(false)}
-    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(()=>loadAccessContext().then(()=>go(defaultViewForActiveRole())),0)}
+    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(async()=>{await ensureProfileIdentity(true);await loadAccessContext();go(defaultViewForActiveRole())},0)}
     else if(event==='SIGNED_OUT'){accessContext={role:null,institutionId:null,institution:null,membership:null};updateRoleUi();if(!localBypass)setAuthGate(true)}
   });
 }
@@ -866,7 +874,7 @@ function renderAdminUsers(){
   box.innerHTML=adminCache.profiles.length?adminCache.profiles.map(p=>{
     const ms=activeMembershipsFor(p.id);const isSelf=p.id===cloudUser.id;
     const membershipsHtml=ms.length?ms.map(m=>`<div class="role-line"><span class="pill">${esc(roleLabel(m.role))}</span>${m?.institutions?.name?`<span class="pill">${esc(m.institutions.name)}</span>`:''}${m.role==='admin_general'?`<span class="small muted">Rol protegido</span>`:`<button class="btn danger" style="padding:6px 10px;min-height:auto" type="button" onclick="deactivateMembership('${m.id}')">Desactivar</button>`}</div>`).join(''):'<div class="role-line"><span class="pill">Sin asignar</span></div>';
-    return `<div class="admin-user"><strong>${esc(p.display_name||'Usuario sin nombre')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente o Auxiliar para registrar información de una institución.</div>':''}<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="auxiliar">Auxiliar de educación</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">Agregar asignación</button></div></div>`;
+    return `<div class="admin-user"><strong>${esc(p.display_name||'Perfil pendiente')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente o Auxiliar para registrar información de una institución.</div>':''}<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="auxiliar">Auxiliar de educación</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">Agregar asignación</button></div></div>`;
   }).join(''):'<div class="muted small">No hay usuarios registrados.</div>';
 }
 async function createInstitution(){
@@ -979,7 +987,59 @@ localStorage.setItem(DBKEY,JSON.stringify(db));
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1800)}
 function go(id){if(!viewAllowed(id)){id=defaultViewForActiveRole();}document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='historial')renderHistory();if(id==='administracion'&&activeRole()==='admin_general')loadAdminPanel();if(id==='institucion'&&activeRole()==='director')loadDirectorDashboard()}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
-function saveConfig(){const inst=activeInstitution();db.config={school:inst?.name||'',teacher:$('cfgTeacher').value.trim(),level:$('cfgLevel').value,className:$('cfgClass').value.trim()};db.profile=db.profile||{};db.profile.displayName=db.config.teacher||'';persist();toast('Configuración guardada')}
+function saveConfig(){toast('La institución y el rol se administran desde SAGE. Los salones se configuran en Mis salones.')}
+let currentProfile=null;
+async function ensureProfileIdentity(forcePrompt=true){
+  if(!cloudUser)return null;
+  let profile=null;
+  try{
+    const {data,error}=await supabaseClient.from('profiles').select('id,display_name,email').eq('id',cloudUser.id).maybeSingle();
+    if(error)throw error;
+    profile=data||null;
+    let name=String(profile?.display_name||cloudUser.user_metadata?.display_name||cloudUser.user_metadata?.full_name||'').trim();
+    const email=cloudUser.email||profile?.email||null;
+    if(name && (!profile || profile.display_name!==name || profile.email!==email)){
+      const {data:up,error:upErr}=await supabaseClient.from('profiles').upsert({id:cloudUser.id,email,display_name:name,updated_at:nowISO()},{onConflict:'id'}).select('id,display_name,email').single();
+      if(upErr)throw upErr;
+      profile=up;
+    }
+    currentProfile=profile||{id:cloudUser.id,email,display_name:name||null};
+    db.profile=db.profile||{};
+    if(name){db.profile.displayName=name;db.config=db.config||{};db.config.teacher=name;localStorage.setItem(DBKEY,JSON.stringify(db));}
+    updateProfileSummary();
+    if(!name && forcePrompt)openProfileDialog(true);
+    return currentProfile;
+  }catch(e){console.warn('No se pudo verificar el perfil:',e);return null;}
+}
+function updateProfileSummary(){
+  const name=currentProfile?.display_name||db.profile?.displayName||cloudUser?.user_metadata?.display_name||'Perfil pendiente';
+  const inst=activeInstitution();
+  if($('profileNameHome'))$('profileNameHome').textContent=name;
+  if($('profileInstitutionHome'))$('profileInstitutionHome').textContent=inst?.name||'Sin institución asignada';
+  if($('profileRoleHome'))$('profileRoleHome').textContent=roleLabel(activeRole());
+}
+function openProfileDialog(required=false){
+  if(!cloudUser)return openLoginGate();
+  const d=$('profileDialog');
+  $('profileDisplayName').value=currentProfile?.display_name||db.profile?.displayName||cloudUser.user_metadata?.display_name||'';
+  $('profileDialogText').textContent=required?'Antes de continuar, escribe tu nombre y apellidos. Así el Administrador general podrá identificarte y asignarte la institución y el rol correctos.':'Actualiza tu nombre y apellidos. Este dato será visible para el Administrador general.';
+  $('profileCancelBtn').style.display=required?'none':'';
+  d.dataset.required=required?'1':'0';
+  if(typeof d.showModal==='function')d.showModal();else d.setAttribute('open','open');
+  setTimeout(()=>$('profileDisplayName')?.focus(),80);
+}
+function closeProfileDialog(){const d=$('profileDialog');if(d.dataset.required==='1')return; if(typeof d.close==='function'&&d.open)d.close();else d.removeAttribute('open')}
+async function saveProfileIdentity(){
+  if(!cloudUser)return;
+  const name=$('profileDisplayName').value.trim().replace(/\s+/g,' ');
+  if(name.length<5 || !name.includes(' '))return alert('Escribe tus nombres y apellidos completos.');
+  const {data,error}=await supabaseClient.from('profiles').upsert({id:cloudUser.id,email:cloudUser.email||null,display_name:name,updated_at:nowISO()},{onConflict:'id'}).select('id,display_name,email').single();
+  if(error)return alert('No se pudo guardar tu nombre. '+(error.message||error));
+  currentProfile=data;db.profile=db.profile||{};db.profile.displayName=name;db.config=db.config||{};db.config.teacher=name;localStorage.setItem(DBKEY,JSON.stringify(db));
+  const d=$('profileDialog');if(typeof d.close==='function'&&d.open)d.close();else d.removeAttribute('open');
+  updateProfileSummary();toast('Perfil actualizado');
+}
+
 function classroomLabel(c){return c?(c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón'):''}
 function classroomOptions(includeAll=false){let rows=db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b)));return (includeAll?'<option value="">Todos los salones</option>':'<option value="">Seleccionar salón...</option>')+rows.map(c=>`<option value="${c.id}">${esc(classroomLabel(c))} · ${esc(c.level||'')}</option>`).join('')}
 function addClassroom(){let level=$('clLevel').value,grade=$('clGrade').value.trim(),section=$('clSection').value.trim(),name=$('clName').value.trim();if(!grade&&!section&&!name)return alert('Escribe al menos el grado, la sección o un nombre para el salón');let dup=db.classrooms.find(c=>normalizeClassKey(c.level,c.grade,c.section)===normalizeClassKey(level,grade,section));if(dup)return alert('Ya existe un salón con ese nivel, grado y sección. Puedes editarlo.');db.classrooms.push({id:newId(),ownerId:db.profile.id,level,grade,section,name:name||[grade,section].filter(Boolean).join(' ')||'Salón',createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'});$('clGrade').value='';$('clSection').value='';$('clName').value='';persist();toast('Salón creado')}
@@ -1281,7 +1341,7 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};const assignedInst=activeInstitution();const assignedSchool=assignedInst?.name||'';if(assignedSchool&&cfg.school!==assignedSchool){cfg.school=assignedSchool;db.config=cfg;localStorage.setItem(DBKEY,JSON.stringify(db));}$('cfgSchool').value=assignedSchool||'Sin institución asignada';$('cfgTeacher').value=cfg.teacher||'';$('cfgLevel').value=cfg.level||assignedInst?.educational_level||'Primaria';$('cfgClass').value=cfg.className||'';$('schoolHeader').textContent=(assignedSchool?assignedSchool+' · ':'')+'SAGE · Versión '+APP_VERSION;if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
+function refreshAll(){let cfg=db.config||{};const assignedInst=activeInstitution();const assignedSchool=assignedInst?.name||'';if(assignedSchool&&cfg.school!==assignedSchool){cfg.school=assignedSchool;db.config=cfg;localStorage.setItem(DBKEY,JSON.stringify(db));}updateProfileSummary();$('schoolHeader').textContent=(assignedSchool?assignedSchool+' · ':'')+'SAGE · Versión '+APP_VERSION;if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow).length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
 
 let deferredInstallPrompt=null;
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;}
