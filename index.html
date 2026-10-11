@@ -38,11 +38,12 @@
     @media(max-width:640px){.row{grid-template-columns:1fr}.quick{grid-template-columns:1fr 1fr}.head-badge{display:none}.card{border-radius:17px;padding:14px}.hero h2{font-size:20px}.quick button{min-height:76px;padding:12px}.grid{grid-template-columns:repeat(2,1fr)}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.5</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.6</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -64,8 +65,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.5</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.5 · Seguimiento de casos</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.6</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.6 · Importación Excel y CSV</div></div>
   </div>
 </header>
 <nav>
@@ -205,13 +206,15 @@
       <div class="actions"><button class="btn primary" onclick="addStudent(false)">Guardar</button><button class="btn secondary" onclick="addStudent(true)">Guardar y agregar otro</button></div>
     </div>
     <div class="card" style="margin-top:12px">
-      <h3>Importar lista</h3>
-      <label>Salón para la lista (opcional)</label><select id="bulkClassroom" onchange="applyClassroomToBulkForm()"><option value="">Usar grado y sección del archivo/lista</option></select>
-      <p class="muted small">Importa CSV con columnas <b>nombre, grado, seccion</b>. También puedes pegar una lista de nombres, uno por línea.</p>
-      <input type="file" id="csvFile" accept=".csv,text/csv">
+      <h3>Importar lista de estudiantes</h3>
+      <label>Salón de destino</label><select id="bulkClassroom" onchange="applyClassroomToBulkForm()"><option value="">Seleccionar salón...</option></select>
+      <p class="muted small">Formatos admitidos: <b>Excel (.xlsx)</b> y <b>CSV (.csv)</b>. El archivo debe tener una columna de nombres con un encabezado como <b>Apellidos y nombres</b>, <b>Nombres y apellidos</b>, <b>Estudiante</b> o <b>Nombre</b>. La columna <b>N.°</b> es opcional.</p>
+      <input type="file" id="studentFile" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv">
+      <div class="actions"><button class="btn secondary" onclick="importStudentFile()">Importar archivo</button></div>
+      <hr style="border:none;border-top:1px solid #e7ebf0;margin:16px 0">
       <label>Pegar nombres (opcional)</label><textarea id="pasteNames" placeholder="Jhon\nAdrián\nHeidy"></textarea>
       <div class="row"><div><label>Grado para la lista pegada</label><input id="bulkGrade" placeholder="5.º"></div><div><label>Sección</label><input id="bulkSection" placeholder="Única"></div></div>
-      <div class="actions"><button class="btn secondary" onclick="importCSV()">Importar CSV</button><button class="btn secondary" onclick="importPasted()">Agregar lista pegada</button></div>
+      <div class="actions"><button class="btn secondary" onclick="importPasted()">Agregar lista pegada</button></div>
     </div>
     <div class="card" style="margin-top:12px"><div class="split-head"><h3 style="margin:0">Lista de estudiantes</h3><select id="studentClassFilter" onchange="renderStudents()" style="max-width:250px"><option value="">Todos los salones</option></select></div><div id="studentList"></div></div>
   </section>
@@ -333,7 +336,7 @@ let accessContext={role:null,institutionId:null,institution:null,membership:null
 let adminCache={institutions:[],profiles:[],memberships:[]};
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.5';
+const APP_VERSION='2.2.6';
 const SCHEMA_VERSION=3;
 const $=id=>document.getElementById(id);
 function showAuthMessage(msg,type='ok'){const el=$('authMessage');el.textContent=msg;el.className='auth-message show '+(type==='err'?'err':'ok')}
@@ -1073,7 +1076,70 @@ function editStudent(id){let s=db.students.find(x=>x.id===id);if(!s)return alert
 function closeStudentEdit(){let d=$('studentEditDialog');if(typeof d.close==='function'&&d.open)d.close();else d.removeAttribute('open')}
 function saveStudentEdit(){let id=$('studentEditId').value;let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');let name=$('studentEditName').value.trim();let selected=db.classrooms.find(c=>c.id===$('studentEditClassroom').value);let grade=$('studentEditGrade').value.trim(),section=$('studentEditSection').value.trim();if(selected){grade=selected.grade||grade;section=selected.section||section}if(!name)return alert('El nombre no puede quedar vacío');let c=selected||ensureLocalClassroom(grade,section);let dup=db.students.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()&&x.classroomId===(c?c.id:null));if(dup&&!confirm('Ya existe otro estudiante con el mismo nombre en este salón. ¿Guardar de todos modos?'))return;s.name=name;s.grade=grade;s.section=section;s.classroomId=c?c.id:null;s.updatedAt=nowISO();s.syncState='local';db.occurrences.forEach(o=>{if(o.studentId===id){o.studentName=name;o.grade=grade;o.section=section;o.classroomId=s.classroomId;o.updatedAt=nowISO();o.syncState='local'}});closeStudentEdit();persist();toast('Estudiante actualizado')}
 function importPasted(){let names=$('pasteNames').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),grade=$('bulkGrade').value.trim(),section=$('bulkSection').value.trim();if(!names.length)return alert('Pega uno o más nombres');let selected=db.classrooms.find(c=>c.id===$('bulkClassroom').value);let c=selected||ensureLocalClassroom(grade,section);if(selected){grade=selected.grade||grade;section=selected.section||section}names.forEach(name=>db.students.push({id:newId(),ownerId:db.profile.id,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'}));$('pasteNames').value='';persist();toast('Lista agregada')}
-function importCSV(){let f=$('csvFile').files[0];if(!f)return alert('Selecciona un archivo CSV');let r=new FileReader();r.onload=()=>{let lines=r.result.split(/\r?\n/).filter(Boolean);if(!lines.length)return;let sep=lines[0].includes(';')?';':',';let headers=lines[0].split(sep).map(x=>x.trim().toLowerCase());let start=headers.some(h=>h.includes('nombre'))?1:0;for(let i=start;i<lines.length;i++){let p=lines[i].split(sep).map(x=>x.trim().replace(/^"|"$/g,''));if(!p[0])continue;let name,grade='',section='';if(start){name=p[headers.findIndex(h=>h.includes('nombre'))]||'';let gi=headers.findIndex(h=>h.includes('grado'));let si=headers.findIndex(h=>h.includes('secci'));grade=gi>=0?p[gi]||'':'';section=si>=0?p[si]||'':''}else{name=p[0];grade=p[1]||'';section=p[2]||''}let chosen=db.classrooms.find(c=>c.id===$('bulkClassroom').value);if(chosen){grade=chosen.grade||grade;section=chosen.section||section}let c=chosen||ensureLocalClassroom(grade,section);db.students.push({id:newId(),ownerId:db.profile.id,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'})}persist();toast('Lista importada')};r.readAsText(f,'utf-8')}
+function normalizeHeaderText(v){
+  return String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+}
+function findStudentNameColumn(headers){
+  const normalized=headers.map(normalizeHeaderText);
+  const exact=['apellidos y nombres','nombres y apellidos','nombre del estudiante','nombres del estudiante','estudiante','nombre','nombres'];
+  for(const target of exact){const i=normalized.indexOf(target);if(i>=0)return i}
+  let i=normalized.findIndex(h=>h.includes('apellido')&&h.includes('nombre'));if(i>=0)return i;
+  i=normalized.findIndex(h=>h.includes('estudiante'));if(i>=0)return i;
+  i=normalized.findIndex(h=>h.includes('nombre'));return i;
+}
+async function importStudentFile(){
+  const input=$('studentFile');
+  const f=input&&input.files&&input.files[0];
+  if(!f)return alert('Selecciona un archivo Excel (.xlsx) o CSV (.csv).');
+  const ext=(f.name.split('.').pop()||'').toLowerCase();
+  if(!['xlsx','csv'].includes(ext))return alert('Formato no admitido. Usa un archivo Excel (.xlsx) o CSV (.csv).');
+  const chosen=db.classrooms.find(c=>c.id===$('bulkClassroom').value);
+  if(!chosen)return alert('Primero selecciona el salón de destino.');
+  if(typeof XLSX==='undefined')return alert('No se pudo cargar el lector de Excel. Verifica tu conexión a internet y vuelve a intentarlo.');
+  try{
+    const data=await f.arrayBuffer();
+    const wb=XLSX.read(data,{type:'array'});
+    const first=wb.SheetNames&&wb.SheetNames[0];
+    if(!first)return alert('El archivo no contiene una hoja válida.');
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[first],{header:1,defval:'',raw:false,blankrows:false});
+    if(!rows.length)return alert('El archivo está vacío.');
+    let headerRow=-1,nameCol=-1;
+    for(let r=0;r<Math.min(rows.length,10);r++){
+      const idx=findStudentNameColumn(rows[r]||[]);
+      if(idx>=0){headerRow=r;nameCol=idx;break}
+    }
+    if(headerRow<0||nameCol<0){
+      return alert('No se encontró la columna de estudiantes. Usa un encabezado como “Apellidos y nombres”, “Nombres y apellidos”, “Estudiante” o “Nombre”.');
+    }
+    const names=[];
+    for(let r=headerRow+1;r<rows.length;r++){
+      let name=String((rows[r]||[])[nameCol]??'').trim();
+      name=name.replace(/^\s*\d+[.)-]?\s+/,'').replace(/\s+/g,' ').trim();
+      if(!name)continue;
+      const nh=normalizeHeaderText(name);
+      if(['apellidos y nombres','nombres y apellidos','estudiante','nombre','nombres'].includes(nh))continue;
+      names.push(name);
+    }
+    const unique=[];const seen=new Set();
+    for(const name of names){const k=normalizeHeaderText(name);if(k&&!seen.has(k)){seen.add(k);unique.push(name)}}
+    if(!unique.length)return alert('No se encontraron nombres de estudiantes debajo del encabezado.');
+    const existing=new Set(db.students.filter(s=>s.classroomId===chosen.id).map(s=>normalizeHeaderText(s.name)));
+    const toAdd=unique.filter(name=>!existing.has(normalizeHeaderText(name)));
+    const duplicates=unique.length-toAdd.length;
+    const preview=unique.slice(0,10).map((n,i)=>`${i+1}. ${n}`).join('\n');
+    const more=unique.length>10?`\n… y ${unique.length-10} más.`:'';
+    const dupMsg=duplicates?`\n\n${duplicates} estudiante(s) ya existen en este salón y no se volverán a importar.`:'';
+    if(!confirm(`Se encontraron ${unique.length} estudiante(s) para ${classroomLabel(chosen)}:\n\n${preview}${more}${dupMsg}\n\nSe importarán ${toAdd.length}. ¿Continuar?`))return;
+    const grade=chosen.grade||'',section=chosen.section||'';
+    toAdd.forEach(name=>db.students.push({id:newId(),ownerId:db.profile.id,classroomId:chosen.id,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'}));
+    input.value='';
+    persist();
+    toast(toAdd.length?`${toAdd.length} estudiante(s) importado(s)`:'No había estudiantes nuevos para importar');
+  }catch(e){
+    console.error(e);
+    alert('No se pudo leer el archivo. Verifica que sea un Excel (.xlsx) o CSV (.csv) válido.');
+  }
+}
 
 let studentMode='one';
 function setStudentMode(mode){
@@ -1366,7 +1432,7 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')}
-function refreshAll(){let cfg=db.config||{};const assignedInst=activeInstitution();const assignedSchool=assignedInst?.name||'';if(assignedSchool&&cfg.school!==assignedSchool){cfg.school=assignedSchool;db.config=cfg;localStorage.setItem(DBKEY,JSON.stringify(db));}updateProfileSummary();$('schoolHeader').textContent=(assignedSchool?assignedSchool+' · ':'')+'SAGE · Versión '+APP_VERSION;if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;db.occurrences.forEach(ensureFollowFields);$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow&&o.followStatus!=='closed').length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Usar grado y sección del archivo/lista</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
+function refreshAll(){let cfg=db.config||{};const assignedInst=activeInstitution();const assignedSchool=assignedInst?.name||'';if(assignedSchool&&cfg.school!==assignedSchool){cfg.school=assignedSchool;db.config=cfg;localStorage.setItem(DBKEY,JSON.stringify(db));}updateProfileSummary();$('schoolHeader').textContent=(assignedSchool?assignedSchool+' · ':'')+'SAGE · Versión '+APP_VERSION;if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;db.occurrences.forEach(ensureFollowFields);$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow&&o.followStatus!=='closed').length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Seleccionar salón...</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistory();updateSyncUi()}
 
 let deferredInstallPrompt=null;
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;}

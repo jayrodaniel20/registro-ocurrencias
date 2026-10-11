@@ -1,5 +1,5 @@
 {
-  "version": "2.2.5",
-  "message": "Seguimiento de casos: lista de pendientes, estado, fecha y nota de seguimiento.",
-  "released_at": "2026-10-10T17:45:00-05:00"
+  "version": "2.2.6",
+  "message": "Importación de estudiantes desde Excel (.xlsx) y CSV (.csv), con vista previa y control de duplicados.",
+  "released_at": "2026-10-10T20:35:00-05:00"
 }
