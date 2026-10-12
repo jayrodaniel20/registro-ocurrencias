@@ -1,5 +1,5 @@
 {
-  "version": "2.2.6",
-  "message": "Importación de estudiantes desde Excel (.xlsx) y CSV (.csv), con vista previa y control de duplicados.",
-  "released_at": "2026-10-10T20:35:00-05:00"
+  "version": "2.2.7",
+  "message": "Mejoras en seguimiento, nuevos nombres de campos con visualización en viñetas y vista completa de ocurrencias para Director en modo solo lectura.",
+  "released_at": "2026-10-12T12:35:00-05:00"
 }

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'sage-v2.2.6';
+const CACHE_VERSION = 'sage-v2.2.7';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const OFFLINE_URL = './index.html';
 const STATIC_ASSETS = [
