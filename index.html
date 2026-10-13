@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2.2.10" />
+  <link rel="manifest" href="manifest.webmanifest?v=2.2.11" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
@@ -48,6 +48,8 @@
 .drill-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:10px}.drill-card{border:1px solid var(--line);background:#fff;border-radius:13px;padding:11px}.drill-card strong{font-size:18px;color:var(--pri2)}
 .chart-bars{display:grid;gap:10px;margin-top:12px}.chart-row{display:grid;grid-template-columns:minmax(110px,190px) 1fr 42px;gap:9px;align-items:center}.chart-label{font-size:12px;font-weight:800;color:#36445d;overflow-wrap:anywhere}.chart-track{height:20px;background:#edf2f7;border-radius:999px;overflow:hidden;border:1px solid #e0e7ef}.chart-fill{height:100%;min-width:3px;background:linear-gradient(90deg,#1769e0,#20a66a);border-radius:999px}.chart-value{text-align:right;font-size:12px;font-weight:900;color:#145da0}.stats-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.stats-tabs button.active{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}.modal-wide{max-width:820px}.drill-list{display:grid;gap:8px;margin-top:12px}.drill-occ{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fbfdff}
 .subtype-badge{display:inline-block;margin-left:5px;padding:3px 7px;border-radius:999px;background:#eef5fb;color:#31546f;font-size:11px;font-weight:700}
+
+.shared-badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#eaf8ef;color:#17653a;font-size:10px;font-weight:850;margin-left:5px}.responsible-badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#fff3d9;color:#8a5600;font-size:10px;font-weight:850;margin-left:5px}.access-type{width:auto;min-width:165px;margin:0}.access-list{display:grid;gap:8px;max-height:50vh;overflow:auto;padding:4px}.access-row{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:13px;padding:10px;background:#fbfdff}.access-row input{width:auto;margin-top:3px}.access-row label{margin:0;flex:1;font-size:13px}.access-help{background:#eef6ff;border:1px solid #d7e8ff;border-radius:13px;padding:11px;color:#38516f;font-size:12px;line-height:1.45}.readonly-tools{opacity:.7}.readonly-tools button{display:none!important}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -55,7 +57,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.10</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.11</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -77,8 +79,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.10</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.10 · Análisis institucional</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.11</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.11 · Análisis institucional</div></div>
   </div>
 </header>
 <nav>
@@ -198,7 +200,7 @@
 
 
   <section id="salones" class="view">
-    <div class="section-title"><div><h2>Mis salones</h2><p>Crea y organiza los grupos con los que trabajas.</p></div></div>
+    <div class="section-title"><div><h2>Mis salones</h2><p>Consulta los salones propios y los que te asignó el Administrador.</p></div></div><div class="access-help" style="margin-bottom:12px">Un mismo salón y su lista de estudiantes pueden compartirse con varios docentes o auxiliares. La relación se carga una sola vez.</div>
     <div class="card">
       <h3>Crear salón</h3>
       <div class="row"><div><label>Nivel</label><select id="clLevel"><option>Primaria</option><option>Inicial</option><option>Secundaria</option></select></div><div><label>Nombre personalizado (opcional)</label><input id="clName" placeholder="Ej. Abejitas, 5.º Única"></div></div>
@@ -346,6 +348,7 @@
 <dialog id="redactionDialog"><div class="modal"><h3 id="redactionTitle">Mejorar redacción</h3><p class="small muted">Compara ambas versiones. La app no agrega hechos nuevos; tú decides si reemplazas el texto.</p><label>Texto original</label><textarea id="redactionOriginal" readonly style="background:#f4f6f9"></textarea><label>Versión mejorada</label><textarea id="redactionImproved"></textarea><div class="actions"><button type="button" class="btn primary" onclick="applyImprovedRedaction()">Usar esta redacción</button><button type="button" class="btn secondary" onclick="document.getElementById('redactionDialog').close()">Conservar original</button></div></div></dialog>
 
 <dialog id="passwordDialog"><div class="modal"><h3>Crear nueva contraseña</h3><p class="small muted">Escribe una nueva contraseña para tu cuenta.</p><label>Nueva contraseña</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><label>Repetir contraseña</label><input id="newPassword2" type="password" autocomplete="new-password"><div class="actions"><button class="btn primary" type="button" onclick="saveNewPassword()">Guardar contraseña</button><button class="btn secondary" type="button" onclick="document.getElementById('passwordDialog').close()">Cancelar</button></div></div></dialog>
+<dialog id="classroomAccessDialog"><div class="modal modal-wide"><div class="split-head"><div><h3 style="margin-bottom:4px">Asignar salones al usuario</h3><p class="small muted" id="classroomAccessUser" style="margin:0">Selecciona los salones a los que tendrá acceso.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('classroomAccessDialog').close()">Cerrar</button></div><div class="access-help" style="margin-top:12px"><b>Docente responsable:</b> puede cargar, editar y eliminar estudiantes del salón, además de registrar ocurrencias.<br><b>Acceso compartido:</b> puede consultar la misma lista y registrar ocurrencias, pero no modificar la nómina. La lista se carga una sola vez.</div><div class="actions"><button type="button" class="btn secondary" onclick="setAllClassroomAccess(true)">Seleccionar todos</button><button type="button" class="btn secondary" onclick="setAllClassroomAccess(false)">Quitar todos</button></div><div id="classroomAccessList" class="access-list"><div class="muted small">Cargando salones…</div></div><div class="actions"><button type="button" class="btn primary" onclick="saveClassroomAccess()">Guardar accesos</button></div></div></dialog>
 <dialog id="profileDialog"><div class="modal"><h3>Completa tu perfil</h3><p id="profileDialogText" class="small muted">Necesitamos tu nombre y apellidos para que el Administrador general pueda identificar tu cuenta y asignarte la institución y el rol correctos.</p><label>Nombre y apellidos</label><input id="profileDisplayName" autocomplete="name" placeholder="Nombre y apellidos"><div class="actions"><button class="btn primary" type="button" onclick="saveProfileIdentity()">Guardar y continuar</button><button id="profileCancelBtn" class="btn secondary" type="button" onclick="closeProfileDialog()">Cancelar</button></div></div></dialog>
 <script>
 const SUPABASE_URL='https://rbhslphjvqxtoleephdk.supabase.co';
@@ -359,9 +362,11 @@ let swRegistration=null;
 let refreshingForUpdate=false;
 let accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,auxiliaryMembership:null,directorMembership:null,adminMembership:null};
 let adminCache={institutions:[],profiles:[],memberships:[]};
+let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,classrooms:[],selected:new Set(),types:new Map()};
+let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.10';
+const APP_VERSION='2.2.11';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -475,6 +480,19 @@ function updateRoleUi(){
   renderRoleSwitcher();
   updateNavCount();
 }
+async function refreshCurrentClassroomAccess(){
+  currentClassroomAccess=new Map();
+  if(!cloudUser)return currentClassroomAccess;
+  try{
+    const {data,error}=await supabaseClient.from('user_classroom_access').select('classroom_id,access_type,active').eq('user_id',cloudUser.id).eq('active',true);
+    if(error)throw error;
+    (data||[]).forEach(a=>currentClassroomAccess.set(a.classroom_id,a.access_type||'shared'));
+  }catch(e){console.warn('No se pudieron cargar los accesos a salones:',e);}
+  return currentClassroomAccess;
+}
+function classroomAccessType(classroomId){return currentClassroomAccess.get(classroomId)||''}
+function canManageClassroomStudents(c){return !!c&&!c.sharedReadOnly||!!c?.responsibleManaged}
+
 async function loadAccessContext(){
   accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,auxiliaryMembership:null,directorMembership:null,adminMembership:null};
   if(!cloudUser){updateRoleUi();updateAccountUi();return accessContext;}
@@ -502,6 +520,7 @@ async function loadAccessContext(){
       adminMembership:admin
     };
   }catch(e){console.warn('No se pudieron cargar los roles:',e);}
+  await refreshCurrentClassroomAccess();
   updateRoleUi();updateAccountUi();updateProfileSummary();
   if(activeRole()==='admin_general')loadAdminPanel();
   if(activeRole()==='director')loadDirectorDashboard();
@@ -553,9 +572,12 @@ async function refreshCloudMigrationStatus(){
 }
 function cloudRows(){
   const uid=cloudUser.id, map=ensureCloudMap();
-  const classrooms=db.classrooms.map(c=>({id:mappedUuid('classrooms',c.id),user_id:uid,level:c.level||null,grade:c.grade||null,section:c.section||null,name:c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón',created_at:c.createdAt||nowISO(),updated_at:c.updatedAt||c.createdAt||nowISO()}));
-  const students=db.students.map(s=>({id:mappedUuid('students',s.id),user_id:uid,classroom_id:s.classroomId?mappedUuid('classrooms',s.classroomId):null,name:s.name,grade:s.grade||null,section:s.section||null,created_at:s.createdAt||nowISO(),updated_at:s.updatedAt||s.createdAt||nowISO()}));
-  const occurrences=db.occurrences.map(o=>({id:mappedUuid('occurrences',o.id),user_id:uid,classroom_id:o.classroomId?mappedUuid('classrooms',o.classroomId):null,student_id:o.studentId?mappedUuid('students',o.studentId):null,student_name:o.studentName||'Estudiante',grade:o.grade||null,section:o.section||null,occurrence_date:o.date||new Date().toISOString().slice(0,10),occurrence_time:o.time||null,place:o.place||null,type:o.type||null,subtype:o.subtype||null,description:o.description||'',actions:o.actions||null,follow_text:o.followText||null,requires_follow:!!o.requiresFollow,follow_status:o.requiresFollow?(o.followStatus||'pending'):null,follow_date:o.followDate||null,follow_note:o.followNote||null,group_id:o.groupId?mappedUuid('groups',o.groupId):null,created_at:o.createdAt||nowISO(),updated_at:o.updatedAt||o.createdAt||nowISO()}));
+  const ownClassrooms=db.classrooms.filter(c=>!c.sharedReadOnly&&(!c.cloudOwnerId||c.cloudOwnerId===uid));
+  const ownStudents=db.students.filter(st=>(!st.sharedReadOnly||st.responsibleManaged)&&(!st.cloudOwnerId||st.cloudOwnerId===uid||st.responsibleManaged));
+  const ownOccurrences=db.occurrences.filter(o=>!o.cloudOwnerId||o.cloudOwnerId===uid);
+  const classrooms=ownClassrooms.map(c=>({id:mappedUuid('classrooms',c.id),user_id:uid,level:c.level||null,grade:c.grade||null,section:c.section||null,name:c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón',created_at:c.createdAt||nowISO(),updated_at:c.updatedAt||c.createdAt||nowISO()}));
+  const students=ownStudents.map(st=>({id:mappedUuid('students',st.id),user_id:st.cloudOwnerId||uid,classroom_id:st.classroomId?mappedUuid('classrooms',st.classroomId):null,name:st.name,grade:st.grade||null,section:st.section||null,created_at:st.createdAt||nowISO(),updated_at:st.updatedAt||st.createdAt||nowISO()}));
+  const occurrences=ownOccurrences.map(o=>({id:mappedUuid('occurrences',o.id),user_id:uid,classroom_id:o.classroomId?mappedUuid('classrooms',o.classroomId):null,student_id:o.studentId?mappedUuid('students',o.studentId):null,student_name:o.studentName||'Estudiante',grade:o.grade||null,section:o.section||null,occurrence_date:o.date||new Date().toISOString().slice(0,10),occurrence_time:o.time||null,place:o.place||null,type:o.type||null,subtype:o.subtype||null,description:o.description||'',actions:o.actions||null,follow_text:o.followText||null,requires_follow:!!o.requiresFollow,follow_status:o.requiresFollow?(o.followStatus||'pending'):null,follow_date:o.followDate||null,follow_note:o.followNote||null,group_id:o.groupId?mappedUuid('groups',o.groupId):null,created_at:o.createdAt||nowISO(),updated_at:o.updatedAt||o.createdAt||nowISO()}));
   return {classrooms,students,occurrences};
 }
 async function uploadLocalDataToCloud(){
@@ -593,7 +615,7 @@ function queueCloudDelete(kind,localId){
   if(!q.some(x=>x.id===cloudId))q.push({id:cloudId,deletedAt:nowISO()});
 }
 function pendingSyncCount(){
-  const dirty=[...db.classrooms,...db.students,...db.occurrences].filter(x=>x.syncState==='local').length;
+  const dirty=[...db.classrooms,...db.students,...db.occurrences].filter(x=>x.syncState==='local'&&(!x.sharedReadOnly||x.responsibleManaged)&&(!x.cloudOwnerId||!cloudUser||x.cloudOwnerId===cloudUser.id||x.responsibleManaged)).length;
   const q=ensureDeletionQueue();
   return dirty+q.classrooms.length+q.students.length+q.occurrences.length;
 }
@@ -618,9 +640,13 @@ function findLocalByCloudId(kind,cloudId){
   return null;
 }
 function cloudToLocal(kind,row){
-  if(kind==='classrooms')return {id:row.id,ownerId:db.profile.id,level:row.level||'Primaria',grade:row.grade||'',section:row.section||'',name:row.name||'Salón',createdAt:row.created_at||nowISO(),updatedAt:row.updated_at||row.created_at||nowISO(),syncState:'synced'};
-  if(kind==='students')return {id:row.id,ownerId:db.profile.id,classroomId:row.classroom_id||null,name:row.name||'',grade:row.grade||'',section:row.section||'',createdAt:row.created_at||nowISO(),updatedAt:row.updated_at||row.created_at||nowISO(),syncState:'synced'};
-  return {id:row.id,ownerId:db.profile.id,classroomId:row.classroom_id||null,studentId:row.student_id||null,studentName:row.student_name||'Estudiante',grade:row.grade||'',section:row.section||'',date:row.occurrence_date||'',time:row.occurrence_time||'',place:row.place||'',type:row.type||'',subtype:row.subtype||'',description:row.description||'',actions:row.actions||'',followText:row.follow_text||'',requiresFollow:!!row.requires_follow,followStatus:row.requires_follow?(row.follow_status||'pending'):'',followDate:row.follow_date||'',followNote:row.follow_note||'',groupId:row.group_id||null,createdAt:row.created_at||nowISO(),updatedAt:row.updated_at||row.created_at||nowISO(),syncState:'synced'};
+  const owner=row.user_id||null;
+  const accessType=kind==='classrooms'?classroomAccessType(row.id):(kind==='students'?classroomAccessType(row.classroom_id):'');
+  const responsible=accessType==='responsible';
+  const shared=!!(cloudUser&&owner&&owner!==cloudUser.id&&!responsible);
+  if(kind==='classrooms')return {id:row.id,ownerId:owner||db.profile.id,cloudOwnerId:owner,sharedReadOnly:!!(cloudUser&&owner&&owner!==cloudUser.id),responsibleManaged:responsible,level:row.level||'Primaria',grade:row.grade||'',section:row.section||'',name:row.name||'Salón',createdAt:row.created_at||nowISO(),updatedAt:row.updated_at||row.created_at||nowISO(),syncState:'synced'};
+  if(kind==='students')return {id:row.id,ownerId:owner||db.profile.id,cloudOwnerId:owner,sharedReadOnly:shared,responsibleManaged:responsible,classroomId:row.classroom_id||null,name:row.name||'',grade:row.grade||'',section:row.section||'',createdAt:row.created_at||nowISO(),updatedAt:row.updated_at||row.created_at||nowISO(),syncState:'synced'};
+  return {id:row.id,ownerId:owner||db.profile.id,cloudOwnerId:owner,classroomId:row.classroom_id||null,studentId:row.student_id||null,studentName:row.student_name||'Estudiante',grade:row.grade||'',section:row.section||'',date:row.occurrence_date||'',time:row.occurrence_time||'',place:row.place||'',type:row.type||'',subtype:row.subtype||'',description:row.description||'',actions:row.actions||'',followText:row.follow_text||'',requiresFollow:!!row.requires_follow,followStatus:row.requires_follow?(row.follow_status||'pending'):'',followDate:row.follow_date||'',followNote:row.follow_note||'',groupId:row.group_id||null,createdAt:row.created_at||nowISO(),updatedAt:row.updated_at||row.created_at||nowISO(),syncState:'synced'};
 }
 
 function normStudentPart(v){
@@ -647,7 +673,7 @@ function normStudentKey(name,grade,section){
 function collapseLocalStudentDuplicates(){
   const groups=new Map();
   for(const s of db.students){
-    const key=normStudentKey(s.name,s.grade,s.section);
+    const key=normStudentKey(s.name,s.grade,s.section)+'|'+(s.classroomId||'');
     if(!key.replace(/\|/g,''))continue;
     if(!groups.has(key))groups.set(key,[]);
     groups.get(key).push(s);
@@ -685,8 +711,8 @@ function collapseLocalStudentDuplicates(){
 }
 async function cleanupCloudStudentDuplicates(remoteStudents){
   const groups=new Map();
-  for(const r of remoteStudents||[]){
-    const key=normStudentKey(r.name,r.grade,r.section);
+  for(const r of (remoteStudents||[]).filter(x=>!cloudUser||!x.user_id||x.user_id===cloudUser.id)){
+    const key=normStudentKey(r.name,r.grade,r.section)+'|'+(r.classroom_id||'');
     if(!key.replace(/\|/g,''))continue;
     if(!groups.has(key))groups.set(key,[]);
     groups.get(key).push(r);
@@ -785,6 +811,7 @@ async function syncNow(){
   if(!navigator.onLine){updateSyncUi();return alert('No hay conexión a internet. Tus cambios siguen guardados en este dispositivo.');}
   const btn=$('syncNowBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='Sincronizando…';
   try{
+    await refreshCurrentClassroomAccess();
     // 1) Propaga eliminaciones locales pendientes.
     await applyPendingDeletes();
 
@@ -915,10 +942,62 @@ function renderAdminUsers(){
   const instOpts=adminCache.institutions.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('');
   box.innerHTML=adminCache.profiles.length?adminCache.profiles.map(p=>{
     const ms=activeMembershipsFor(p.id);const isSelf=p.id===cloudUser.id;
-    const membershipsHtml=ms.length?ms.map(m=>`<div class="role-line"><span class="pill">${esc(roleLabel(m.role))}</span>${m?.institutions?.name?`<span class="pill">${esc(m.institutions.name)}</span>`:''}${m.role==='admin_general'?`<span class="small muted">Rol protegido</span>`:`<button class="btn danger" style="padding:6px 10px;min-height:auto" type="button" onclick="deactivateMembership('${m.id}')">Desactivar</button>`}</div>`).join(''):'<div class="role-line"><span class="pill">Sin asignar</span></div>';
+    const membershipsHtml=ms.length?ms.map(m=>`<div class="role-line"><span class="pill">${esc(roleLabel(m.role))}</span>${m?.institutions?.name?`<span class="pill">${esc(m.institutions.name)}</span>`:''}${['docente','auxiliar'].includes(m.role)&&m.institution_id?`<button class="btn secondary" style="padding:6px 10px;min-height:auto" type="button" onclick="openClassroomAccessManager('${p.id}','${m.institution_id}','${escAttr(p.display_name||p.email||'Usuario')}','${m.role}')">Asignar salones</button>`:''}${m.role==='admin_general'?`<span class="small muted">Rol protegido</span>`:`<button class="btn danger" style="padding:6px 10px;min-height:auto" type="button" onclick="deactivateMembership('${m.id}')">Desactivar</button>`}</div>`).join(''):'<div class="role-line"><span class="pill">Sin asignar</span></div>';
     return `<div class="admin-user"><strong>${esc(p.display_name||'Perfil pendiente')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente o Auxiliar para registrar información de una institución.</div>':''}<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="auxiliar">Auxiliar de educación</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">Agregar asignación</button></div></div>`;
   }).join(''):'<div class="muted small">No hay usuarios registrados.</div>';
 }
+async function openClassroomAccessManager(userId,institutionId,userName,role){
+  if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
+  classroomAccessState={userId,institutionId,userName:userName||'Usuario',role:role||'',classrooms:[],selected:new Set(),types:new Map()};
+  $('classroomAccessUser').textContent=`${classroomAccessState.userName} · ${roleLabel(role||'')} · Selecciona uno o varios salones.`;
+  $('classroomAccessList').innerHTML='<div class="muted small">Cargando salones de la institución…</div>';
+  $('classroomAccessDialog').showModal();
+  try{
+    const {data:members,error:mErr}=await supabaseClient.from('user_memberships').select('user_id,role,institution_id,active').eq('institution_id',institutionId).eq('active',true);
+    if(mErr)throw mErr;
+    const ownerIds=[...new Set((members||[]).filter(m=>['docente','auxiliar','director'].includes(m.role)).map(m=>m.user_id))];
+    let classrooms=[];
+    if(ownerIds.length){
+      const {data,error}=await supabaseClient.from('classrooms').select('id,user_id,level,grade,section,name').in('user_id',ownerIds).order('level').order('grade').order('section');
+      if(error)throw error; classrooms=data||[];
+    }
+    const {data:access,error:aErr}=await supabaseClient.from('user_classroom_access').select('classroom_id,active,access_type').eq('user_id',userId).eq('active',true);
+    if(aErr)throw aErr;
+    classroomAccessState.classrooms=classrooms;
+    classroomAccessState.selected=new Set((access||[]).map(a=>a.classroom_id));
+    classroomAccessState.types=new Map((access||[]).map(a=>[a.classroom_id,a.access_type||'shared']));
+    renderClassroomAccessList();
+  }catch(e){$('classroomAccessList').innerHTML=`<div style="color:#9d1d1d">No se pudo cargar la asignación. Ejecuta primero el SQL FINAL de la versión 2.2.11.<br><br>${esc(e.message||e)}</div>`;}
+}
+function renderClassroomAccessList(){
+  const box=$('classroomAccessList'); if(!box)return;
+  const rows=classroomAccessState.classrooms||[];
+  const canResponsible=classroomAccessState.role==='docente';
+  box.innerHTML=rows.length?rows.map(c=>{const checked=classroomAccessState.selected.has(c.id)?'checked':'';const type=classroomAccessState.types.get(c.id)||'shared';const label=c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón';return `<div class="access-row"><input type="checkbox" class="class-access-check" id="access_${c.id}" value="${c.id}" ${checked} onchange="toggleAccessType('${c.id}',this.checked)"><label for="access_${c.id}"><b>${esc(label)}</b><br><span class="small muted">${esc(c.level||'')} · ${esc(c.grade||'')} ${esc(c.section||'')}</span></label><select id="atype_${c.id}" class="access-type" ${checked?'':'disabled'}><option value="shared" ${type==='shared'?'selected':''}>Acceso compartido</option>${canResponsible?`<option value="responsible" ${type==='responsible'?'selected':''}>Docente responsable</option>`:''}</select></div>`}).join(''):'<div class="empty">No hay salones registrados todavía en esta institución.</div>';
+}
+function toggleAccessType(cid,checked){const el=$('atype_'+cid);if(el)el.disabled=!checked}
+function setAllClassroomAccess(value){document.querySelectorAll('.class-access-check').forEach(x=>{x.checked=!!value;toggleAccessType(x.value,!!value)})}
+async function saveClassroomAccess(){
+  if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
+  const st=classroomAccessState;if(!st.userId||!st.institutionId)return;
+  const selected=[...document.querySelectorAll('.class-access-check:checked')].map(x=>({classroom_id:x.value,access_type:($('atype_'+x.value)?.value||'shared')}));
+  if(st.role!=='docente'&&selected.some(x=>x.access_type==='responsible'))return alert('Solo un usuario con rol Docente puede ser asignado como docente responsable.');
+  try{
+    let {error}=await supabaseClient.from('user_classroom_access').delete().eq('user_id',st.userId).eq('institution_id',st.institutionId);if(error)throw error;
+    const responsibleIds=selected.filter(x=>x.access_type==='responsible').map(x=>x.classroom_id);
+    for(const cid of responsibleIds){
+      ({error}=await supabaseClient.from('user_classroom_access').update({access_type:'shared',updated_at:nowISO()}).eq('classroom_id',cid).eq('access_type','responsible').eq('active',true));
+      if(error)throw error;
+    }
+    if(selected.length){
+      const now=nowISO();const rows=selected.map(x=>({user_id:st.userId,classroom_id:x.classroom_id,institution_id:st.institutionId,access_type:x.access_type,active:true,assigned_by:cloudUser.id,created_at:now,updated_at:now}));
+      ({error}=await supabaseClient.from('user_classroom_access').insert(rows));if(error)throw error;
+    }
+    const nr=selected.filter(x=>x.access_type==='responsible').length;
+    toast(`Acceso actualizado · ${selected.length} salón(es)${nr?` · ${nr} como responsable`:''}`);$('classroomAccessDialog').close();
+  }catch(e){alert('No se pudo guardar el acceso a salones.\n\n'+(e.message||e));}
+}
+
 async function createInstitution(){
   if(activeRole()!=='admin_general')return alert('Solo el Administrador general puede registrar instituciones.');
   const name=$('adminInstName')?.value.trim()||'', modularCode=$('adminInstCode')?.value.trim()||'', ugel=$('adminInstUGEL')?.value.trim()||'', region=$('adminInstRegion')?.value.trim()||'', educationalLevel=$('adminInstLevel')?.value||'Primaria';
@@ -1123,16 +1202,16 @@ async function saveProfileIdentity(){
 function classroomLabel(c){return c?(c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón'):''}
 function classroomOptions(includeAll=false){let rows=db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b)));return (includeAll?'<option value="">Todos los salones</option>':'<option value="">Seleccionar salón...</option>')+rows.map(c=>`<option value="${c.id}">${esc(classroomLabel(c))} · ${esc(c.level||'')}</option>`).join('')}
 function addClassroom(){let level=$('clLevel').value,grade=$('clGrade').value.trim(),section=$('clSection').value.trim(),name=$('clName').value.trim();if(!grade&&!section&&!name)return alert('Escribe al menos el grado, la sección o un nombre para el salón');let dup=db.classrooms.find(c=>normalizeClassKey(c.level,c.grade,c.section)===normalizeClassKey(level,grade,section));if(dup)return alert('Ya existe un salón con ese nivel, grado y sección. Puedes editarlo.');db.classrooms.push({id:newId(),ownerId:db.profile.id,level,grade,section,name:name||[grade,section].filter(Boolean).join(' ')||'Salón',createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'});$('clGrade').value='';$('clSection').value='';$('clName').value='';persist();toast('Salón creado')}
-function editClassroom(id){let c=db.classrooms.find(x=>x.id===id);if(!c)return;$('classroomEditId').value=id;$('classroomEditLevel').value=c.level||'Primaria';$('classroomEditGrade').value=c.grade||'';$('classroomEditSection').value=c.section||'';$('classroomEditName').value=c.name||'';$('classroomEditDialog').showModal()}
+function editClassroom(id){let c=db.classrooms.find(x=>x.id===id);if(!c)return;if(c.sharedReadOnly)return alert('Este salón fue asignado por el Administrador y es de solo consulta.');$('classroomEditId').value=id;$('classroomEditLevel').value=c.level||'Primaria';$('classroomEditGrade').value=c.grade||'';$('classroomEditSection').value=c.section||'';$('classroomEditName').value=c.name||'';$('classroomEditDialog').showModal()}
 function closeClassroomEdit(){$('classroomEditDialog').close()}
 function saveClassroomEdit(){let c=db.classrooms.find(x=>x.id===$('classroomEditId').value);if(!c)return;let level=$('classroomEditLevel').value,grade=$('classroomEditGrade').value.trim(),section=$('classroomEditSection').value.trim(),name=$('classroomEditName').value.trim();let dup=db.classrooms.some(x=>x.id!==c.id&&normalizeClassKey(x.level,x.grade,x.section)===normalizeClassKey(level,grade,section));if(dup)return alert('Ya existe otro salón con ese nivel, grado y sección.');c.level=level;c.grade=grade;c.section=section;c.name=name||[grade,section].filter(Boolean).join(' ')||'Salón';c.updatedAt=nowISO();c.syncState='local';db.students.forEach(st=>{if(st.classroomId===c.id){st.grade=grade;st.section=section;st.updatedAt=nowISO();st.syncState='local'}});db.occurrences.forEach(o=>{if(o.classroomId===c.id){o.grade=grade;o.section=section;o.updatedAt=nowISO();o.syncState='local'}});closeClassroomEdit();persist();toast('Salón actualizado')}
-function deleteClassroom(id){let c=db.classrooms.find(x=>x.id===id);if(!c)return;let n=db.students.filter(s=>s.classroomId===id).length;if(n)return alert(`Este salón tiene ${n} estudiante(s). Mueve o elimina esos estudiantes antes de eliminar el salón.`);if(!confirm('¿Eliminar este salón?'))return;queueCloudDelete('classrooms',id);db.classrooms=db.classrooms.filter(x=>x.id!==id);persist();toast('Salón eliminado')}
+function deleteClassroom(id){let c=db.classrooms.find(x=>x.id===id);if(!c)return;if(c.sharedReadOnly)return alert('No puedes eliminar un salón asignado.');let n=db.students.filter(s=>s.classroomId===id).length;if(n)return alert(`Este salón tiene ${n} estudiante(s). Mueve o elimina esos estudiantes antes de eliminar el salón.`);if(!confirm('¿Eliminar este salón?'))return;queueCloudDelete('classrooms',id);db.classrooms=db.classrooms.filter(x=>x.id!==id);persist();toast('Salón eliminado')}
 function openClassroom(id){go('estudiantes');$('studentClassFilter').value=id;renderStudents();$('stClassroom').value=id;applyClassroomToStudentForm()}
 function applyClassroomToStudentForm(){let c=db.classrooms.find(x=>x.id===$('stClassroom').value);if(c){$('stGrade').value=c.grade||'';$('stSection').value=c.section||''}}
 function applyClassroomToBulkForm(){let c=db.classrooms.find(x=>x.id===$('bulkClassroom').value);if(c){$('bulkGrade').value=c.grade||'';$('bulkSection').value=c.section||''}}
 function applyClassroomToStudentEdit(){let c=db.classrooms.find(x=>x.id===$('studentEditClassroom').value);if(c){$('studentEditGrade').value=c.grade||'';$('studentEditSection').value=c.section||''}}
-function renderClassrooms(){let rows=db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b)));$('classroomList').innerHTML=rows.length?`<div class="classroom-grid">${rows.map(c=>{let ns=db.students.filter(s=>s.classroomId===c.id).length,no=db.occurrences.filter(o=>o.classroomId===c.id).length;return `<div class="classroom-card"><h3>🏫 ${esc(classroomLabel(c))}</h3><div class="classroom-meta">${esc(c.level||'')} · ${esc(c.grade||'')} ${esc(c.section||'')}</div><div class="classroom-counts"><span class="classroom-count">👥 ${ns} estudiantes</span><span class="classroom-count">🗂️ ${no} ocurrencias</span></div><div class="actions"><button class="btn primary" onclick="openClassroom('${c.id}')">Ver estudiantes</button><button class="btn secondary" onclick="editClassroom('${c.id}')">Editar</button><button class="btn danger" onclick="deleteClassroom('${c.id}')">Eliminar</button></div></div>`}).join('')}</div>`:'<div class="empty">Todavía no hay salones. Crea el primero arriba.</div>'}
-function renderStudents(){let cid=$('studentClassFilter')?$('studentClassFilter').value:'';let arr=db.students.filter(s=>!cid||s.classroomId===cid).slice().sort((a,b)=>a.name.localeCompare(b.name));$('studentList').innerHTML=arr.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Salón</th><th></th></tr></thead><tbody>${arr.map(s=>{let c=db.classrooms.find(x=>x.id===s.classroomId);return `<tr><td><b>${esc(s.name)}</b><div class="small muted">${db.occurrences.filter(o=>o.studentId===s.id).length} ocurrencia(s)</div></td><td>${esc(c?classroomLabel(c):([s.grade,s.section].filter(Boolean).join(' ')||'Sin salón'))}</td><td><div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${s.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${s.id}')">Eliminar</button></div></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">No hay estudiantes en este salón.</div>'}
+function renderClassrooms(){let rows=db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b)));$('classroomList').innerHTML=rows.length?`<div class="classroom-grid">${rows.map(c=>{let ns=db.students.filter(st=>st.classroomId===c.id).length,no=db.occurrences.filter(o=>o.classroomId===c.id).length;const shared=!!c.sharedReadOnly,responsible=!!c.responsibleManaged;return `<div class="classroom-card"><h3>🏫 ${esc(classroomLabel(c))}${responsible?'<span class="responsible-badge">Responsable</span>':(shared?'<span class="shared-badge">Asignado</span>':'')}</h3><div class="classroom-meta">${esc(c.level||'')} · ${esc(c.grade||'')} ${esc(c.section||'')}</div><div class="classroom-counts"><span class="classroom-count">👥 ${ns} estudiantes</span><span class="classroom-count">🗂️ ${no} ocurrencias propias</span></div><div class="actions"><button class="btn primary" onclick="openClassroom('${c.id}')">Ver estudiantes</button>${shared?'':`<button class="btn secondary" onclick="editClassroom('${c.id}')">Editar</button><button class="btn danger" onclick="deleteClassroom('${c.id}')">Eliminar</button>`}</div></div>`}).join('')}</div>`:'<div class="empty">Todavía no hay salones. Crea el primero arriba o pide al Administrador que te asigne uno.</div>'}
+function renderStudents(){let cid=$('studentClassFilter')?$('studentClassFilter').value:'';let arr=db.students.filter(st=>!cid||st.classroomId===cid).slice().sort((a,b)=>a.name.localeCompare(b.name));$('studentList').innerHTML=arr.length?`<div style="overflow:auto"><table><thead><tr><th>Nombre</th><th>Salón</th><th></th></tr></thead><tbody>${arr.map(st=>{let c=db.classrooms.find(x=>x.id===st.classroomId);const shared=!!(st.sharedReadOnly||c?.sharedReadOnly),responsible=!!(st.responsibleManaged||c?.responsibleManaged),readonly=shared&&!responsible;return `<tr><td><b>${esc(st.name)}</b>${responsible?'<span class="responsible-badge">Responsable</span>':(shared?'<span class="shared-badge">Compartido</span>':'')}<div class="small muted">${db.occurrences.filter(o=>o.studentId===st.id).length} ocurrencia(s) registradas por ti</div></td><td>${esc(c?classroomLabel(c):([st.grade,st.section].filter(Boolean).join(' ')||'Sin salón'))}</td><td>${readonly?'<span class="small muted">Solo consulta</span>':`<div class="actions" style="margin:0"><button type="button" class="btn secondary" onclick="editStudent('${st.id}')">Editar</button><button type="button" class="btn danger" onclick="delStudent('${st.id}')">Eliminar</button></div>`}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">No hay estudiantes en este salón.</div>'}
 function studentsForClassroom(cid){return db.students.filter(s=>!cid||s.classroomId===cid).slice().sort((a,b)=>a.name.localeCompare(b.name))}
 function renderOccurrenceStudents(){let cid=$('ocClassroom').value;let arr=studentsForClassroom(cid);let current=$('ocStudent').value;$('ocStudent').innerHTML='<option value="">Seleccionar...</option>'+arr.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');if(arr.some(s=>s.id===current))$('ocStudent').value=current;$('ocStudentMulti').innerHTML=arr.length?arr.map(s=>`<div class="student-check"><input type="checkbox" id="multi-${s.id}" value="${s.id}" onchange="updateMultiCount()"><label for="multi-${s.id}"><b>${esc(s.name)}</b><br><span class="small muted">${esc(s.grade||'')} ${esc(s.section||'')}</span></label></div>`).join(''):'<div class="empty">No hay estudiantes en este salón.</div>';updateMultiCount()}
 function renderFilterStudentOptions(){let cid=$('filterClassroom').value;let cur=$('filterStudent').value;let arr=studentsForClassroom(cid);$('filterStudent').innerHTML='<option value="">Todos</option>'+arr.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');if(arr.some(s=>s.id===cur))$('filterStudent').value=cur}
@@ -1145,12 +1224,12 @@ function ensureLocalClassroom(grade,section){
   if(!c&&(grade||section)){c={id:newId(),ownerId:db.profile.id,level,grade:grade||'',section:section||'',name:[grade,section].filter(Boolean).join(' '),createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'};db.classrooms.push(c)}
   return c||null;
 }
-function addStudent(again){let name=$('stName').value.trim(),grade=$('stGrade').value.trim(),section=$('stSection').value.trim();if(!name)return alert('Escribe el nombre del estudiante');let selected=db.classrooms.find(c=>c.id===$('stClassroom').value);let c=selected||ensureLocalClassroom(grade,section);if(selected){grade=selected.grade||grade;section=selected.section||section}let dup=db.students.some(s=>s.name.toLowerCase()===name.toLowerCase()&&s.classroomId===(c?c.id:null));if(dup&&!confirm('Ya existe un estudiante con el mismo nombre en este salón. ¿Agregar de todos modos?'))return;db.students.push({id:newId(),ownerId:db.profile.id,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'});persist();toast('Estudiante guardado');$('stName').value='';if(!again&&!selected){$('stGrade').value='';$('stSection').value=''}$('stName').focus()}
-function delStudent(id){if(!confirm('¿Eliminar estudiante? Sus ocurrencias conservarán el nombre registrado.'))return;queueCloudDelete('students',id);db.students=db.students.filter(s=>s.id!==id);persist();toast('Estudiante eliminado')}
-function editStudent(id){let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');$('studentEditId').value=id;$('studentEditClassroom').innerHTML=classroomOptions(false);$('studentEditClassroom').value=s.classroomId||'';$('studentEditName').value=s.name||'';$('studentEditGrade').value=s.grade||'';$('studentEditSection').value=s.section||'';let d=$('studentEditDialog');if(typeof d.showModal==='function'){d.showModal()}else{d.setAttribute('open','open')}}
+function addStudent(again){let selectedCheck=db.classrooms.find(c=>c.id===$('stClassroom').value);if(selectedCheck&&!canManageClassroomStudents(selectedCheck))return alert('La lista de este salón es compartida. Solicita al docente responsable que actualice los estudiantes.');let name=$('stName').value.trim(),grade=$('stGrade').value.trim(),section=$('stSection').value.trim();if(!name)return alert('Escribe el nombre del estudiante');let selected=db.classrooms.find(c=>c.id===$('stClassroom').value);let c=selected||ensureLocalClassroom(grade,section);if(selected){grade=selected.grade||grade;section=selected.section||section}let dup=db.students.some(s=>s.name.toLowerCase()===name.toLowerCase()&&s.classroomId===(c?c.id:null));if(dup&&!confirm('Ya existe un estudiante con el mismo nombre en este salón. ¿Agregar de todos modos?'))return;db.students.push({id:newId(),ownerId:db.profile.id,cloudOwnerId:(c?.responsibleManaged?c.cloudOwnerId:null),responsibleManaged:!!c?.responsibleManaged,sharedReadOnly:false,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'});persist();toast('Estudiante guardado');$('stName').value='';if(!again&&!selected){$('stGrade').value='';$('stSection').value=''}$('stName').focus()}
+function delStudent(id){let st=db.students.find(x=>x.id===id);if(st?.sharedReadOnly&&!st.responsibleManaged)return alert('Este estudiante pertenece a un salón compartido y no puede modificarse desde tu cuenta.');if(!confirm('¿Eliminar estudiante? Sus ocurrencias conservarán el nombre registrado.'))return;queueCloudDelete('students',id);db.students=db.students.filter(s=>s.id!==id);persist();toast('Estudiante eliminado')}
+function editStudent(id){let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');if(s.sharedReadOnly&&!s.responsibleManaged)return alert('Este estudiante pertenece a un salón compartido y es de solo consulta.');$('studentEditId').value=id;$('studentEditClassroom').innerHTML=classroomOptions(false);$('studentEditClassroom').value=s.classroomId||'';$('studentEditName').value=s.name||'';$('studentEditGrade').value=s.grade||'';$('studentEditSection').value=s.section||'';let d=$('studentEditDialog');if(typeof d.showModal==='function'){d.showModal()}else{d.setAttribute('open','open')}}
 function closeStudentEdit(){let d=$('studentEditDialog');if(typeof d.close==='function'&&d.open)d.close();else d.removeAttribute('open')}
-function saveStudentEdit(){let id=$('studentEditId').value;let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');let name=$('studentEditName').value.trim();let selected=db.classrooms.find(c=>c.id===$('studentEditClassroom').value);let grade=$('studentEditGrade').value.trim(),section=$('studentEditSection').value.trim();if(selected){grade=selected.grade||grade;section=selected.section||section}if(!name)return alert('El nombre no puede quedar vacío');let c=selected||ensureLocalClassroom(grade,section);let dup=db.students.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()&&x.classroomId===(c?c.id:null));if(dup&&!confirm('Ya existe otro estudiante con el mismo nombre en este salón. ¿Guardar de todos modos?'))return;s.name=name;s.grade=grade;s.section=section;s.classroomId=c?c.id:null;s.updatedAt=nowISO();s.syncState='local';db.occurrences.forEach(o=>{if(o.studentId===id){o.studentName=name;o.grade=grade;o.section=section;o.classroomId=s.classroomId;o.updatedAt=nowISO();o.syncState='local'}});closeStudentEdit();persist();toast('Estudiante actualizado')}
-function importPasted(){let names=$('pasteNames').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),grade=$('bulkGrade').value.trim(),section=$('bulkSection').value.trim();if(!names.length)return alert('Pega uno o más nombres');let selected=db.classrooms.find(c=>c.id===$('bulkClassroom').value);let c=selected||ensureLocalClassroom(grade,section);if(selected){grade=selected.grade||grade;section=selected.section||section}names.forEach(name=>db.students.push({id:newId(),ownerId:db.profile.id,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'}));$('pasteNames').value='';persist();toast('Lista agregada')}
+function saveStudentEdit(){let id=$('studentEditId').value;let s=db.students.find(x=>x.id===id);if(!s)return alert('No se encontró al estudiante');let name=$('studentEditName').value.trim();let selected=db.classrooms.find(c=>c.id===$('studentEditClassroom').value);if(selected&&!canManageClassroomStudents(selected))return alert('No puedes mover el estudiante a un salón de solo consulta.');let grade=$('studentEditGrade').value.trim(),section=$('studentEditSection').value.trim();if(selected){grade=selected.grade||grade;section=selected.section||section}if(!name)return alert('El nombre no puede quedar vacío');let c=selected||ensureLocalClassroom(grade,section);let dup=db.students.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()&&x.classroomId===(c?c.id:null));if(dup&&!confirm('Ya existe otro estudiante con el mismo nombre en este salón. ¿Guardar de todos modos?'))return;s.name=name;s.grade=grade;s.section=section;s.classroomId=c?c.id:null;s.updatedAt=nowISO();s.syncState='local';db.occurrences.forEach(o=>{if(o.studentId===id){o.studentName=name;o.grade=grade;o.section=section;o.classroomId=s.classroomId;o.updatedAt=nowISO();o.syncState='local'}});closeStudentEdit();persist();toast('Estudiante actualizado')}
+function importPasted(){let selectedCheck=db.classrooms.find(c=>c.id===$('bulkClassroom').value);if(selectedCheck&&!canManageClassroomStudents(selectedCheck))return alert('La lista de este salón es compartida y no debe volver a importarse.');let names=$('pasteNames').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),grade=$('bulkGrade').value.trim(),section=$('bulkSection').value.trim();if(!names.length)return alert('Pega uno o más nombres');let selected=db.classrooms.find(c=>c.id===$('bulkClassroom').value);let c=selected||ensureLocalClassroom(grade,section);if(selected){grade=selected.grade||grade;section=selected.section||section}names.forEach(name=>db.students.push({id:newId(),ownerId:db.profile.id,cloudOwnerId:(c?.responsibleManaged?c.cloudOwnerId:null),responsibleManaged:!!c?.responsibleManaged,sharedReadOnly:false,classroomId:c?c.id:null,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'}));$('pasteNames').value='';persist();toast('Lista agregada')}
 function normalizeHeaderText(v){
   return String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 }
@@ -1162,7 +1241,7 @@ function findStudentNameColumn(headers){
   i=normalized.findIndex(h=>h.includes('estudiante'));if(i>=0)return i;
   i=normalized.findIndex(h=>h.includes('nombre'));return i;
 }
-async function importStudentFile(){
+async function importStudentFile(){const selectedCheck=db.classrooms.find(c=>c.id===$('bulkClassroom').value);if(selectedCheck&&!canManageClassroomStudents(selectedCheck))return alert('La lista de este salón es compartida y no debe volver a importarse.');
   const input=$('studentFile');
   const f=input&&input.files&&input.files[0];
   if(!f)return alert('Selecciona un archivo Excel (.xlsx) o CSV (.csv).');
@@ -1206,7 +1285,7 @@ async function importStudentFile(){
     const dupMsg=duplicates?`\n\n${duplicates} estudiante(s) ya existen en este salón y no se volverán a importar.`:'';
     if(!confirm(`Se encontraron ${unique.length} estudiante(s) para ${classroomLabel(chosen)}:\n\n${preview}${more}${dupMsg}\n\nSe importarán ${toAdd.length}. ¿Continuar?`))return;
     const grade=chosen.grade||'',section=chosen.section||'';
-    toAdd.forEach(name=>db.students.push({id:newId(),ownerId:db.profile.id,classroomId:chosen.id,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'}));
+    toAdd.forEach(name=>db.students.push({id:newId(),ownerId:db.profile.id,cloudOwnerId:(chosen?.responsibleManaged?chosen.cloudOwnerId:null),responsibleManaged:!!chosen?.responsibleManaged,sharedReadOnly:false,classroomId:chosen.id,name,grade,section,createdAt:nowISO(),updatedAt:nowISO(),syncState:'local'}));
     input.value='';
     persist();
     toast(toAdd.length?`${toAdd.length} estudiante(s) importado(s)`:'No había estudiantes nuevos para importar');
@@ -1623,7 +1702,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.10',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.11',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg,latestAvailableVersion);
     reg.addEventListener('updatefound',()=>{
