@@ -1,0 +1,12 @@
+I.E.I. 226 — salones oficiales definidos para el piloto
+
+0 a 2 años — Hormiguitas
+3 años — Abejitas
+3 años — Maripositas
+4 años — Patitos
+4 años — Pollitos
+5 años — Corderitos
+5 años — Conejitos
+
+En SAGE v2.2.17 estos salones se crean/editarán desde:
+Administración > Salones por institución > I.E.I. 226.
