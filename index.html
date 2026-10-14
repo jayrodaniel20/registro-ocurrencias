@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2.2.12" />
+  <link rel="manifest" href="manifest.webmanifest?v=2.2.13" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
@@ -366,7 +366,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.12';
+const APP_VERSION='2.2.13';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -851,6 +851,10 @@ async function syncNow(){
     remote=await fetchCloudRows();
     replaceLocalWithCloud(remote);
     localDupes+=collapseLocalStudentDuplicates();
+    db.profile=db.profile||{};
+    db.profile.cloudUserId=cloudUser.id;
+    db.profile.email=cloudUser.email||null;
+    db.profile.mode='authenticated';
 
     db.classrooms.forEach(x=>x.syncState='synced');
     db.students.forEach(x=>x.syncState='synced');
@@ -862,9 +866,7 @@ async function syncNow(){
     toast(`Sincronización completada · ${db.students.length} estudiante(s)${localDupes?' · duplicados locales corregidos':''}`);
   }catch(e){
     updateSyncUi();
-    alert('No se pudo completar la sincronización. Tus datos locales siguen guardados.
-
-Detalle: '+(e.message||e));
+    alert('No se pudo completar la sincronización. Tus datos locales siguen guardados.\n\nDetalle: '+(e.message||e));
   }finally{btn.disabled=false;btn.textContent=old}
 }
 window.addEventListener('online',()=>{updateSyncUi();toast('Conexión recuperada')});
@@ -872,7 +874,7 @@ window.addEventListener('offline',()=>{updateSyncUi();toast('Sin conexión · tr
 
 async function createAccount(){
   clearAuthMessage();
-  const name=$('signupName').value.trim(),email=$('signupEmail').value.trim(),p1=$('signupPassword').value,p2=$('signupPassword2').value;
+  const name=$('signupName').value.trim(),email=$('signupEmail').value.trim().toLowerCase(),p1=$('signupPassword').value,p2=$('signupPassword2').value;
   if(!name||!email||!p1)return showAuthMessage('Completa nombre, correo y contraseña.','err');
   if(p1.length<6)return showAuthMessage('La contraseña debe tener al menos 6 caracteres.','err');
   if(p1!==p2)return showAuthMessage('Las contraseñas no coinciden.','err');
@@ -883,10 +885,15 @@ async function createAccount(){
 }
 async function loginAccount(){
   clearAuthMessage();
-  const email=$('loginEmail').value.trim(),password=$('loginPassword').value;
+  const email=$('loginEmail').value.trim().toLowerCase(),password=$('loginPassword').value;
   if(!email||!password)return showAuthMessage('Escribe tu correo y contraseña.','err');
   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
-  if(error)return showAuthMessage(error.message,'err');
+  if(error){
+    const msg=String(error.message||error);
+    if(/invalid login credentials/i.test(msg))return showAuthMessage('Correo o contraseña incorrectos. Verifica los datos e inténtalo nuevamente.','err');
+    if(/email not confirmed/i.test(msg))return showAuthMessage('Este correo todavía no está confirmado en Supabase. Comunícalo al administrador para habilitar la cuenta.','err');
+    return showAuthMessage(msg,'err');
+  }
   cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await ensureProfileIdentity(true);await loadAccessContext();refreshAll();go(defaultViewForActiveRole());toast('Sesión iniciada');
 }
 async function logoutAccount(){
@@ -911,8 +918,13 @@ async function saveNewPassword(){
 }
 function continueLocalMode(){localBypass=true;setAuthGate(false);updateAccountUi();refreshAll();toast('Modo local activo');}
 async function initAuth(){
-  const {data}=await supabaseClient.auth.getSession();
-  cloudUser=data.session?.user||null;
+  const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+  cloudUser=sessionData?.session?.user||null;
+  if(cloudUser){
+    const {data:userData,error:userError}=await supabaseClient.auth.getUser();
+    if(userError||!userData?.user){cloudUser=null;}
+    else cloudUser=userData.user;
+  }
   updateAccountUi();
   if(cloudUser){setAuthGate(false);await ensureProfileIdentity(true);await loadAccessContext();go(defaultViewForActiveRole())}else if(!localBypass){setAuthGate(true)}
   supabaseClient.auth.onAuthStateChange((event,session)=>{
@@ -1708,7 +1720,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.12',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.13',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg,latestAvailableVersion);
     reg.addEventListener('updatefound',()=>{
