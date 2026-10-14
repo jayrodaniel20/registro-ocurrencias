@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2.2.11" />
+  <link rel="manifest" href="manifest.webmanifest?v=2.2.12" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
@@ -57,7 +57,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.11</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.12</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -79,8 +79,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.11</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.11 · Análisis institucional</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.12</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.12 · Análisis institucional</div></div>
   </div>
 </header>
 <nav>
@@ -366,7 +366,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.11';
+const APP_VERSION='2.2.12';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -570,11 +570,24 @@ async function refreshCloudMigrationStatus(){
     box.innerHTML=`<div><b>En este dispositivo:</b> ${l.classrooms} salones · ${l.students} estudiantes · ${l.occurrences} ocurrencias</div><div style="margin-top:5px"><b>En tu cuenta:</b> ${c.classrooms} salones · ${c.students} estudiantes · ${c.occurrences} ocurrencias</div><div style="margin-top:5px"><b>Última copia manual:</b> ${esc(last)}</div>`;
   }catch(e){box.innerHTML=`<span style="color:#9d1d1d">No se pudo consultar la nube: ${esc(e.message||e)}</span>`}
 }
-function cloudRows(){
-  const uid=cloudUser.id, map=ensureCloudMap();
-  const ownClassrooms=db.classrooms.filter(c=>!c.sharedReadOnly&&(!c.cloudOwnerId||c.cloudOwnerId===uid));
-  const ownStudents=db.students.filter(st=>(!st.sharedReadOnly||st.responsibleManaged)&&(!st.cloudOwnerId||st.cloudOwnerId===uid||st.responsibleManaged));
-  const ownOccurrences=db.occurrences.filter(o=>!o.cloudOwnerId||o.cloudOwnerId===uid);
+function cloudRows(options={}){
+  const uid=cloudUser.id, dirtyOnly=!!options.dirtyOnly, remote=options.remote||null;
+  const remoteMaps={
+    classrooms:new Map((remote?.classrooms||[]).map(r=>[r.id,r])),
+    students:new Map((remote?.students||[]).map(r=>[r.id,r])),
+    occurrences:new Map((remote?.occurrences||[]).map(r=>[r.id,r]))
+  };
+  const shouldUpload=(kind,item)=>{
+    if(dirtyOnly && item.syncState!=='local')return false;
+    const cloudId=mappedUuid(kind,item.id);
+    const rr=remoteMaps[kind].get(cloudId);
+    if(!rr)return true;
+    // Si la nube cambió después que esta copia local, la nube gana para evitar sobrescribir datos más nuevos.
+    return dateMs(item.updatedAt)>=dateMs(rr.updated_at);
+  };
+  const ownClassrooms=db.classrooms.filter(c=>!c.sharedReadOnly&&(!c.cloudOwnerId||c.cloudOwnerId===uid)&&shouldUpload('classrooms',c));
+  const ownStudents=db.students.filter(st=>(!st.sharedReadOnly||st.responsibleManaged)&&(!st.cloudOwnerId||st.cloudOwnerId===uid||st.responsibleManaged)&&shouldUpload('students',st));
+  const ownOccurrences=db.occurrences.filter(o=>(!o.cloudOwnerId||o.cloudOwnerId===uid)&&shouldUpload('occurrences',o));
   const classrooms=ownClassrooms.map(c=>({id:mappedUuid('classrooms',c.id),user_id:uid,level:c.level||null,grade:c.grade||null,section:c.section||null,name:c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón',created_at:c.createdAt||nowISO(),updated_at:c.updatedAt||c.createdAt||nowISO()}));
   const students=ownStudents.map(st=>({id:mappedUuid('students',st.id),user_id:st.cloudOwnerId||uid,classroom_id:st.classroomId?mappedUuid('classrooms',st.classroomId):null,name:st.name,grade:st.grade||null,section:st.section||null,created_at:st.createdAt||nowISO(),updated_at:st.updatedAt||st.createdAt||nowISO()}));
   const occurrences=ownOccurrences.map(o=>({id:mappedUuid('occurrences',o.id),user_id:uid,classroom_id:o.classroomId?mappedUuid('classrooms',o.classroomId):null,student_id:o.studentId?mappedUuid('students',o.studentId):null,student_name:o.studentName||'Estudiante',grade:o.grade||null,section:o.section||null,occurrence_date:o.date||new Date().toISOString().slice(0,10),occurrence_time:o.time||null,place:o.place||null,type:o.type||null,subtype:o.subtype||null,description:o.description||'',actions:o.actions||null,follow_text:o.followText||null,requires_follow:!!o.requiresFollow,follow_status:o.requiresFollow?(o.followStatus||'pending'):null,follow_date:o.followDate||null,follow_note:o.followNote||null,group_id:o.groupId?mappedUuid('groups',o.groupId):null,created_at:o.createdAt||nowISO(),updated_at:o.updatedAt||o.createdAt||nowISO()}));
@@ -798,13 +811,23 @@ async function applyPendingDeletes(){
     }
   }
 }
-async function uploadMergedLocal(){
+async function uploadDirtyLocal(remote){
   let {error}=await supabaseClient.from('profiles').upsert({id:cloudUser.id,email:cloudUser.email||null,display_name:db.config?.teacher||db.profile?.displayName||null,updated_at:nowISO()},{onConflict:'id'}); if(error)throw error;
   ({error}=await supabaseClient.from('user_settings').upsert({user_id:cloudUser.id,school_name:db.config?.school||null,teacher_name:db.config?.teacher||null,default_level:db.config?.level||null,default_class_name:db.config?.className||null,updated_at:nowISO()},{onConflict:'user_id'})); if(error)throw error;
-  const rows=cloudRows();
+  const rows=cloudRows({dirtyOnly:true,remote});
   if(rows.classrooms.length){({error}=await supabaseClient.from('classrooms').upsert(rows.classrooms,{onConflict:'id'}));if(error)throw error}
   if(rows.students.length){({error}=await supabaseClient.from('students').upsert(rows.students,{onConflict:'id'}));if(error)throw error}
   if(rows.occurrences.length){({error}=await supabaseClient.from('occurrences').upsert(rows.occurrences,{onConflict:'id'}));if(error)throw error}
+  return rows;
+}
+function replaceLocalWithCloud(remote){
+  // Después de una sincronización exitosa, Supabase es la fuente principal de verdad.
+  // Se reconstruye la copia local desde la nube para que celular y laptop converjan al mismo estado.
+  const cm=ensureCloudMap();
+  cm.classrooms={};cm.students={};cm.occurrences={};
+  db.classrooms=(remote.classrooms||[]).map(r=>{const x=cloudToLocal('classrooms',r);cm.classrooms[x.id]=r.id;return x});
+  db.students=(remote.students||[]).map(r=>{const x=cloudToLocal('students',r);cm.students[x.id]=r.id;return x});
+  db.occurrences=(remote.occurrences||[]).map(r=>{const x=cloudToLocal('occurrences',r);cm.occurrences[x.id]=r.id;return x});
 }
 async function syncNow(){
   if(!cloudUser)return alert('Primero inicia sesión.');
@@ -812,41 +835,22 @@ async function syncNow(){
   const btn=$('syncNowBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='Sincronizando…';
   try{
     await refreshCurrentClassroomAccess();
-    // 1) Propaga eliminaciones locales pendientes.
+    // 1) Elimina en la nube lo que fue eliminado localmente.
     await applyPendingDeletes();
 
-    // 2) Descarga primero la nube SIN borrar todavía datos locales.
-    //    Antes de mezclar, limpia duplicados exactos de estudiantes ya existentes en la nube.
-    let localDupes=collapseLocalStudentDuplicates();
+    // 2) Lee la nube antes de subir cambios. Si existe una versión remota más reciente,
+    //    esa versión prevalece para evitar que una copia antigua de otro equipo la sobrescriba.
     let remote=await fetchCloudRows();
-    let cloudDupes=await cleanupCloudStudentDuplicates(remote.students);
-    if(cloudDupes)remote=await fetchCloudRows();
-    remote.classrooms.forEach(r=>applyCloudRow('classrooms',r));
-    remote.students.forEach(r=>applyCloudRow('students',r));
-    remote.occurrences.forEach(r=>applyCloudRow('occurrences',r));
+    let localDupes=collapseLocalStudentDuplicates();
 
-    // IMPORTANTE: refleja eliminaciones hechas en OTRO dispositivo ANTES de subir.
-    // Si no se hace aquí, un salón/estudiante/ocurrencia borrado en el celular podría
-    // ser recreado por una copia antigua que todavía existe en la laptop.
-    // Los registros locales nuevos o editados (syncState='local') se conservan.
-    reconcileRemoteDeletions(remote);
-    localDupes+=collapseLocalStudentDuplicates();
+    // 3) Sube SOLO cambios locales pendientes, nunca toda la copia del dispositivo.
+    await uploadDirtyLocal(remote);
 
-    // 3) Sube la versión combinada local+nube después de retirar copias remotas obsoletas.
-    await uploadMergedLocal();
-
-    // 4) Repite la limpieza en la nube después de subir. Esto corrige duplicados antiguos
-    //    creados por dispositivos con IDs diferentes antes de la versión 1.8.4.
+    // 4) Descarga de nuevo la nube y la convierte en la única copia visible del dispositivo.
+    //    Así laptop y celular muestran exactamente lo mismo después de sincronizar.
     remote=await fetchCloudRows();
-    cloudDupes+=await cleanupCloudStudentDuplicates(remote.students);
-    if(cloudDupes)remote=await fetchCloudRows();
-    remote.classrooms.forEach(r=>applyCloudRow('classrooms',r));
-    remote.students.forEach(r=>applyCloudRow('students',r));
-    remote.occurrences.forEach(r=>applyCloudRow('occurrences',r));
+    replaceLocalWithCloud(remote);
     localDupes+=collapseLocalStudentDuplicates();
-
-    // 5) Recién con una lectura final confirmada se reflejan eliminaciones remotas.
-    reconcileRemoteDeletions(remote);
 
     db.classrooms.forEach(x=>x.syncState='synced');
     db.students.forEach(x=>x.syncState='synced');
@@ -855,10 +859,12 @@ async function syncNow(){
     db.meta.cloudMigratedAt=db.meta.cloudMigratedAt||db.meta.lastSyncAt;
     localStorage.setItem(DBKEY,JSON.stringify(db));
     refreshAll();updateSyncUi();
-    toast(`Sincronización completada · ${db.students.length} estudiante(s)${(localDupes||cloudDupes)?' · duplicados corregidos':''}`);
+    toast(`Sincronización completada · ${db.students.length} estudiante(s)${localDupes?' · duplicados locales corregidos':''}`);
   }catch(e){
     updateSyncUi();
-    alert('No se pudo completar la sincronización. Tus datos locales siguen guardados.\n\nDetalle: '+(e.message||e));
+    alert('No se pudo completar la sincronización. Tus datos locales siguen guardados.
+
+Detalle: '+(e.message||e));
   }finally{btn.disabled=false;btn.textContent=old}
 }
 window.addEventListener('online',()=>{updateSyncUi();toast('Conexión recuperada')});
@@ -967,7 +973,7 @@ async function openClassroomAccessManager(userId,institutionId,userName,role){
     classroomAccessState.selected=new Set((access||[]).map(a=>a.classroom_id));
     classroomAccessState.types=new Map((access||[]).map(a=>[a.classroom_id,a.access_type||'shared']));
     renderClassroomAccessList();
-  }catch(e){$('classroomAccessList').innerHTML=`<div style="color:#9d1d1d">No se pudo cargar la asignación. Ejecuta primero el SQL FINAL de la versión 2.2.11.<br><br>${esc(e.message||e)}</div>`;}
+  }catch(e){$('classroomAccessList').innerHTML=`<div style="color:#9d1d1d">No se pudo cargar la asignación. Ejecuta primero el SQL FINAL de la versión 2.2.12.<br><br>${esc(e.message||e)}</div>`;}
 }
 function renderClassroomAccessList(){
   const box=$('classroomAccessList'); if(!box)return;
@@ -1702,7 +1708,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.11',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.12',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg,latestAvailableVersion);
     reg.addEventListener('updatefound',()=>{
