@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2.2.19" />
+  <link rel="manifest" href="manifest.webmanifest?v=2.2.20" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
@@ -64,7 +64,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.19</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.20</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -86,8 +86,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.19</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.19 · Salones institucionales</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.20</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.20 · Salones institucionales</div></div>
   </div>
 </header>
 <nav>
@@ -340,7 +340,8 @@
         <div><label>Nivel educativo</label><select id="adminClassLevel" onchange="renderAdminClassroomFields()"><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select></div>
       </div>
       <div id="adminInitialClassFields" style="display:none">
-        <div class="row"><div><label>Edad</label><select id="adminClassAge"><option>0 a 2 años</option><option>3 años</option><option>4 años</option><option>5 años</option></select></div><div><label>Nombre del aula</label><input id="adminClassName" placeholder="Ej.: Abejitas, Hormiguitas"></div></div>
+        <div class="row"><div><label>Edad</label><select id="adminClassAge"><option>0 a 2 años</option><option>3 años</option><option>4 años</option><option>5 años</option></select></div><div><label>Sección</label><input id="adminInitialSection" placeholder="Ej.: A, B, Única"></div></div>
+        <label>Nombre del aula</label><input id="adminClassName" placeholder="Ej.: Abejitas, Hormiguitas">
       </div>
       <div id="adminRegularClassFields">
         <div class="row"><div><label id="adminClassGradeLabel">Grado</label><select id="adminClassGrade"></select></div><div><label>Sección</label><input id="adminClassSection" placeholder="Ej.: A, B, Única"></div></div>
@@ -376,7 +377,7 @@
 <dialog id="passwordDialog"><div class="modal"><h3>Crear nueva contraseña</h3><p class="small muted">Escribe una nueva contraseña para tu cuenta.</p><label>Nueva contraseña</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><label>Repetir contraseña</label><input id="newPassword2" type="password" autocomplete="new-password"><div class="actions"><button class="btn primary" type="button" onclick="saveNewPassword()">Guardar contraseña</button><button class="btn secondary" type="button" onclick="document.getElementById('passwordDialog').close()">Cancelar</button></div></div></dialog>
 <dialog id="institutionEditDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">Editar institución</h3><p class="small muted" style="margin:0">Actualiza los datos institucionales.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('institutionEditDialog').close()">Cerrar</button></div><input type="hidden" id="editInstId"><label>Nombre de la institución</label><input id="editInstName"><div class="row"><div><label>Código modular</label><input id="editInstCode"></div><div><label>Nivel educativo</label><select id="editInstLevel"><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select></div></div><div class="row"><div><label>UGEL</label><input id="editInstUGEL"></div><div><label>Región</label><input id="editInstRegion"></div></div><label>Estado</label><select id="editInstActive"><option value="true">Activa</option><option value="false">Inactiva</option></select><div class="actions"><button type="button" class="btn primary" onclick="saveInstitutionEdit()">Guardar cambios</button></div></div></dialog>
 <dialog id="adminClassroomResetDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">⚠️ Reiniciar salón de prueba</h3><p class="small muted" style="margin:0">Esta herramienta es solo para limpiar datos de prueba. No elimina cuentas de docentes, auxiliares ni directivos.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomResetDialog').close()">Cerrar</button></div><input type="hidden" id="adminResetClassId"><div id="adminResetClassSummary" class="subtle" style="margin:12px 0"></div><div class="readonly-banner" style="border-color:#f3c2c2;background:#fff4f4;color:#7a1f1f">Se eliminarán estudiantes, ocurrencias y seguimientos asociados al salón seleccionado. Las cuentas de usuarios y sus roles institucionales se conservarán.</div><label style="margin-top:12px">Acción</label><select id="adminResetMode"><option value="keep">Vaciar datos y conservar el salón</option><option value="delete">Vaciar datos y eliminar también el salón</option></select><label>Para confirmar, escribe REINICIAR</label><input id="adminResetConfirm" autocomplete="off" placeholder="REINICIAR"><div class="actions"><button type="button" class="btn danger" onclick="confirmAdminClassroomReset()">Confirmar reinicio</button><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomResetDialog').close()">Cancelar</button></div></div></dialog>
-<dialog id="adminClassroomEditDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">Editar salón oficial</h3><p class="small muted" style="margin:0">Los cambios también se reflejarán en estudiantes y ocurrencias vinculadas.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomEditDialog').close()">Cerrar</button></div><input type="hidden" id="adminEditClassId"><input type="hidden" id="adminEditClassInstitution"><label>Nivel educativo</label><select id="adminEditClassLevel" onchange="renderAdminEditClassroomFields()"><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select><div id="adminEditInitialFields"><label>Edad</label><select id="adminEditClassAge"><option>0 a 2 años</option><option>3 años</option><option>4 años</option><option>5 años</option></select><label>Nombre del aula</label><input id="adminEditClassName"></div><div id="adminEditRegularFields"><div class="row"><div><label id="adminEditClassGradeLabel">Grado</label><select id="adminEditClassGrade"></select></div><div><label>Sección</label><input id="adminEditClassSection"></div></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveAdminClassroomEdit()">Guardar cambios</button></div></div></dialog>
+<dialog id="adminClassroomEditDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">Editar salón oficial</h3><p class="small muted" style="margin:0">Los cambios también se reflejarán en estudiantes y ocurrencias vinculadas.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomEditDialog').close()">Cerrar</button></div><input type="hidden" id="adminEditClassId"><input type="hidden" id="adminEditClassInstitution"><label>Nivel educativo</label><select id="adminEditClassLevel" onchange="renderAdminEditClassroomFields()"><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select><div id="adminEditInitialFields"><div class="row"><div><label>Edad</label><select id="adminEditClassAge"><option>0 a 2 años</option><option>3 años</option><option>4 años</option><option>5 años</option></select></div><div><label>Sección</label><input id="adminEditInitialSection" placeholder="Ej.: A, B, Única"></div></div><label>Nombre del aula</label><input id="adminEditClassName"></div><div id="adminEditRegularFields"><div class="row"><div><label id="adminEditClassGradeLabel">Grado</label><select id="adminEditClassGrade"></select></div><div><label>Sección</label><input id="adminEditClassSection"></div></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveAdminClassroomEdit()">Guardar cambios</button></div></div></dialog>
 <dialog id="directorSummaryDialog"><div class="modal modal-wide"><div class="split-head"><div><h3 id="directorSummaryTitle" style="margin-bottom:4px">Detalle institucional</h3><p class="small muted" id="directorSummaryHint" style="margin:0">Consulta en modo solo lectura.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('directorSummaryDialog').close()">Cerrar</button></div><div id="directorSummaryContent" style="margin-top:12px"></div></div></dialog>
 <dialog id="classroomAccessDialog"><div class="modal modal-wide"><div class="split-head"><div><h3 style="margin-bottom:4px">Asignar salones al usuario</h3><p class="small muted" id="classroomAccessUser" style="margin:0">Selecciona los salones a los que tendrá acceso.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('classroomAccessDialog').close()">Cerrar</button></div><div class="access-help" style="margin-top:12px"><b>Docente responsable:</b> puede cargar, editar y eliminar estudiantes del salón, además de registrar ocurrencias.<br><b>Acceso compartido:</b> puede consultar la misma lista y registrar ocurrencias, pero no modificar la nómina. La lista se carga una sola vez.</div><div class="actions"><button type="button" class="btn secondary" onclick="setAllClassroomAccess(true)">Seleccionar todos</button><button type="button" class="btn secondary" onclick="setAllClassroomAccess(false)">Quitar todos</button></div><div id="classroomAccessList" class="access-list"><div class="muted small">Cargando salones…</div></div><div class="actions"><button type="button" class="btn primary" onclick="saveClassroomAccess()">Guardar accesos</button></div></div></dialog>
 <dialog id="profileDialog"><div class="modal"><h3>Completa tu perfil</h3><p id="profileDialogText" class="small muted">Necesitamos tu nombre y apellidos para que el Administrador general pueda identificar tu cuenta y asignarte la institución y el rol correctos.</p><label>Nombre y apellidos</label><input id="profileDisplayName" autocomplete="name" placeholder="Nombre y apellidos"><div class="actions"><button class="btn primary" type="button" onclick="saveProfileIdentity()">Guardar y continuar</button><button id="profileCancelBtn" class="btn secondary" type="button" onclick="closeProfileDialog()">Cancelar</button></div></div></dialog>
@@ -398,7 +399,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.19';
+const APP_VERSION='2.2.20';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -1137,22 +1138,23 @@ async function loadAdminClassrooms(){
   try{
     const {data,error}=await supabaseClient.from('classrooms').select('id,user_id,institution_id,level,grade,section,name,created_at,updated_at').eq('institution_id',instId).order('level').order('grade').order('section').order('name');
     if(error)throw error;adminClassroomState.classrooms=data||[];renderAdminClassroomList();
-  }catch(e){if(box)box.innerHTML=`<div style="color:#9d1d1d">No se pudieron cargar los salones. Ejecuta primero el SQL de la versión 2.2.19.<br><br>${esc(e.message||e)}</div>`;}
+  }catch(e){if(box)box.innerHTML=`<div style="color:#9d1d1d">No se pudieron cargar los salones. Ejecuta primero el SQL de la versión 2.2.20.<br><br>${esc(e.message||e)}</div>`;}
 }
 function renderAdminClassroomList(){
   const box=$('adminClassroomList');if(!box)return;const rows=adminClassroomState.classrooms||[];
   if(!rows.length){box.innerHTML='<div class="empty">Esta institución todavía no tiene salones oficiales.</div>';return;}
   const groups={};rows.forEach(c=>{const k=c.level||'Sin nivel';(groups[k]=groups[k]||[]).push(c)});
-  box.innerHTML=Object.entries(groups).map(([level,list])=>`<div style="margin-top:12px"><b>${esc(level)}</b><div class="summary-list" style="margin-top:8px">${list.map(c=>`<div class="summary-item"><div class="split-head"><div><h4>${esc(c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón')}</h4><div class="summary-meta">${esc(c.grade||'')} ${esc(c.section||'')}</div></div><button class="btn secondary" type="button" onclick="openAdminClassroomEdit('${c.id}')">Editar</button><button class="btn danger" type="button" onclick="openAdminClassroomReset('${c.id}')">Reiniciar prueba</button></div></div>`).join('')}</div></div>`).join('');
+  box.innerHTML=Object.entries(groups).map(([level,list])=>`<div style="margin-top:12px"><b>${esc(level)}</b><div class="summary-list" style="margin-top:8px">${list.map(c=>`<div class="summary-item"><div class="split-head"><div><h4>${esc(c.name||[c.grade,c.section].filter(Boolean).join(' ')||'Salón')}</h4><div class="summary-meta">${esc(c.grade||'')}${c.section?' · Sección '+esc(c.section):''}</div></div><button class="btn secondary" type="button" onclick="openAdminClassroomEdit('${c.id}')">Editar</button><button class="btn danger" type="button" onclick="openAdminClassroomReset('${c.id}')">Reiniciar prueba</button></div></div>`).join('')}</div></div>`).join('');
 }
 function adminClassroomPayload(prefix='create'){
   const edit=prefix==='edit';
   const level=$(edit?'adminEditClassLevel':'adminClassLevel').value;
   if(level==='Inicial'){
     const grade=$(edit?'adminEditClassAge':'adminClassAge').value;
+    const section=$(edit?'adminEditInitialSection':'adminInitialSection').value.trim().toUpperCase().replace(/\s+/g,' ');
     const name=$(edit?'adminEditClassName':'adminClassName').value.trim().replace(/\s+/g,' ');
     if(!name)throw new Error('Escribe el nombre del aula de Inicial.');
-    return {level,grade,section:'',name};
+    return {level,grade,section,name};
   }
   const grade=$(edit?'adminEditClassGrade':'adminClassGrade').value;
   const section=$(edit?'adminEditClassSection':'adminClassSection').value.trim().toUpperCase().replace(/\s+/g,' ');
@@ -1163,7 +1165,7 @@ function adminClassroomDuplicate(payload,ignoreId=''){
   return (adminClassroomState.classrooms||[]).some(c=>{
     if(c.id===ignoreId)return false;
     if((c.level||'')!==payload.level)return false;
-    if(payload.level==='Inicial')return (c.grade||'').toLowerCase()===payload.grade.toLowerCase()&&(c.name||'').trim().toLowerCase()===payload.name.trim().toLowerCase();
+    if(payload.level==='Inicial')return (c.grade||'').toLowerCase()===payload.grade.toLowerCase()&&(c.name||'').trim().toLowerCase()===payload.name.trim().toLowerCase()&&(c.section||'').trim().toLowerCase()===payload.section.trim().toLowerCase();
     return (c.grade||'').toLowerCase()===payload.grade.toLowerCase()&&(c.section||'').trim().toLowerCase()===payload.section.trim().toLowerCase();
   });
 }
@@ -1171,16 +1173,16 @@ async function createAdminClassroom(){
   if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
   const institutionId=$('adminClassInstitution')?.value||'';if(!institutionId)return alert('Selecciona primero la institución.');
   let payload;try{payload=adminClassroomPayload('create')}catch(e){return alert(e.message)}
-  if(adminClassroomDuplicate(payload))return alert(payload.level==='Inicial'?'Ya existe un aula con esa edad y nombre en esta institución.':'Ya existe ese grado/año y sección en esta institución.');
+  if(adminClassroomDuplicate(payload))return alert(payload.level==='Inicial'?'Ya existe un aula con esa edad, sección y nombre en esta institución.':'Ya existe ese grado/año y sección en esta institución.');
   try{
     const now=nowISO();const classroomId=(globalThis.crypto&&crypto.randomUUID)?crypto.randomUUID():uuidv4();const {error}=await supabaseClient.from('classrooms').insert({id:classroomId,user_id:cloudUser.id,institution_id:institutionId,...payload,created_at:now,updated_at:now});if(error)throw error;
-    if($('adminClassName'))$('adminClassName').value='';if($('adminClassSection'))$('adminClassSection').value='';toast('Salón oficial creado');await loadAdminClassrooms();
+    if($('adminClassName'))$('adminClassName').value='';if($('adminInitialSection'))$('adminInitialSection').value='';if($('adminClassSection'))$('adminClassSection').value='';toast('Salón oficial creado');await loadAdminClassrooms();
   }catch(e){alert('No se pudo crear el salón.\n\n'+(e.message||e));}
 }
 function openAdminClassroomEdit(id){
   const c=(adminClassroomState.classrooms||[]).find(x=>x.id===id);if(!c)return;
   $('adminEditClassId').value=c.id;$('adminEditClassInstitution').value=c.institution_id||adminClassroomState.institutionId;$('adminEditClassLevel').value=c.level||'Primaria';
-  $('adminEditClassAge').value=c.grade||'3 años';$('adminEditClassName').value=c.name||'';$('adminEditClassSection').value=c.section||'';$('adminEditClassGrade').dataset.selected=c.grade||'1.°';
+  $('adminEditClassAge').value=c.grade||'3 años';$('adminEditInitialSection').value=c.section||'';$('adminEditClassName').value=c.name||'';$('adminEditClassSection').value=c.section||'';$('adminEditClassGrade').dataset.selected=c.grade||'1.°';
   renderAdminEditClassroomFields();if(c.level!=='Inicial')$('adminEditClassGrade').value=c.grade||'1.°';
   $('adminClassroomEditDialog').showModal();
 }
@@ -1188,7 +1190,7 @@ async function saveAdminClassroomEdit(){
   if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
   const id=$('adminEditClassId').value,institutionId=$('adminEditClassInstitution').value;if(!id||!institutionId)return;
   let payload;try{payload=adminClassroomPayload('edit')}catch(e){return alert(e.message)}
-  if(adminClassroomDuplicate(payload,id))return alert(payload.level==='Inicial'?'Ya existe otra aula con esa edad y nombre.':'Ya existe otro salón con ese grado/año y sección.');
+  if(adminClassroomDuplicate(payload,id))return alert(payload.level==='Inicial'?'Ya existe otra aula con esa edad, sección y nombre.':'Ya existe otro salón con ese grado/año y sección.');
   try{
     const now=nowISO();let {error}=await supabaseClient.from('classrooms').update({...payload,institution_id:institutionId,updated_at:now}).eq('id',id).eq('institution_id',institutionId);if(error)throw error;
     ({error}=await supabaseClient.from('students').update({grade:payload.grade,section:payload.section,institution_id:institutionId,updated_at:now}).eq('classroom_id',id));if(error)throw error;
@@ -1238,7 +1240,7 @@ async function openClassroomAccessManager(userId,institutionId,userName,role){
     classroomAccessState.selected=new Set((access||[]).map(a=>a.classroom_id));
     classroomAccessState.types=new Map((access||[]).map(a=>[a.classroom_id,a.access_type||'shared']));
     renderClassroomAccessList();
-  }catch(e){$('classroomAccessList').innerHTML=`<div style="color:#9d1d1d">No se pudo cargar la asignación. Ejecuta primero el SQL de la versión 2.2.19.<br><br>${esc(e.message||e)}</div>`;}
+  }catch(e){$('classroomAccessList').innerHTML=`<div style="color:#9d1d1d">No se pudo cargar la asignación. Ejecuta primero el SQL de la versión 2.2.20.<br><br>${esc(e.message||e)}</div>`;}
 }
 function renderClassroomAccessList(){
   const box=$('classroomAccessList'); if(!box)return;

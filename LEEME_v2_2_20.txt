@@ -1,0 +1,3 @@
+SAGE v2.2.20
+
+Cambio: se agregó el campo Sección de forma independiente también para Inicial. No requiere SQL nuevo.

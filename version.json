@@ -1,4 +1,4 @@
 {
-  "version": "2.2.19",
-  "notes": "Reinicio seguro de salones de prueba sin eliminar cuentas de docentes."
+  "version": "2.2.20",
+  "notes": "Sección independiente en la creación y edición de salones de Inicial, Primaria y Secundaria."
 }
