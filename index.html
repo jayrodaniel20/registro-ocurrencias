@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2.2.14" />
+  <link rel="manifest" href="manifest.webmanifest?v=2.2.15" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
@@ -33,7 +33,7 @@
 
     .role-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#eef5ff;color:#0e4ea7;font-size:11px;font-weight:850;border:1px solid #d7e6ff}
     .role-chip.admin{background:#eef9f1;color:#17653a;border-color:#d2ecd9}.role-chip.director{background:#fff6df;color:#8b5a00;border-color:#f0dfae}
-    .admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.admin-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}.admin-user{padding:12px;border:1px solid var(--line);border-radius:14px;margin-top:10px}.admin-user strong{display:block}.role-line{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:7px}.readonly-banner{background:#fff8e7;border:1px solid #f0dfae;color:#725000;padding:11px 13px;border-radius:14px;margin-bottom:12px;font-size:13px}.director-list{display:grid;gap:10px}.director-item{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}.director-item p{margin:6px 0 0}.follow-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.follow-count{border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;text-align:center;cursor:pointer}.follow-count strong{display:block;font-size:22px;line-height:1.1}.follow-count.active{outline:2px solid var(--primary);background:#f4f9ff}.bullet-list{margin:6px 0 8px 18px;padding:0}.bullet-list li{margin:4px 0;line-height:1.35}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.detail-box{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fafbfd}.detail-section{margin-top:12px}.detail-section h4{margin:0 0 6px;color:#31415f}.hidden-by-role{display:none!important}@media(max-width:640px){.follow-summary,.detail-grid{grid-template-columns:1fr}}
+    .admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.admin-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}.admin-user{padding:12px;border:1px solid var(--line);border-radius:14px;margin-top:10px}.admin-user strong{display:block}.role-line{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:7px}.admin-user-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 10px}.admin-user-tabs button.active{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}.admin-user-toolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,260px);gap:10px;margin-bottom:10px}.admin-group-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 8px}.admin-user.compact-assigned .row,.admin-user.compact-assigned .actions.assign-actions{display:none}@media(max-width:640px){.admin-user-toolbar{grid-template-columns:1fr}}.readonly-banner{background:#fff8e7;border:1px solid #f0dfae;color:#725000;padding:11px 13px;border-radius:14px;margin-bottom:12px;font-size:13px}.director-list{display:grid;gap:10px}.director-item{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}.director-item p{margin:6px 0 0}.follow-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.follow-count{border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;text-align:center;cursor:pointer}.follow-count strong{display:block;font-size:22px;line-height:1.1}.follow-count.active{outline:2px solid var(--primary);background:#f4f9ff}.bullet-list{margin:6px 0 8px 18px;padding:0}.bullet-list li{margin:4px 0;line-height:1.35}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.detail-box{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fafbfd}.detail-section{margin-top:12px}.detail-section h4{margin:0 0 6px;color:#31415f}.hidden-by-role{display:none!important}@media(max-width:640px){.follow-summary,.detail-grid{grid-template-columns:1fr}}
     @media(min-width:760px){nav{left:50%;right:auto;transform:translateX(-50%);width:min(720px,94%);bottom:14px;border:1px solid var(--line);border-radius:20px;padding:7px;box-shadow:0 12px 35px #1e375a22}main{padding-bottom:110px}.quick{grid-template-columns:1fr 1fr}.headtxt h1{font-size:22px}}
     @media(max-width:640px){.row{grid-template-columns:1fr}.quick{grid-template-columns:1fr 1fr}.head-badge{display:none}.card{border-radius:17px;padding:14px}.hero h2{font-size:20px}.quick button{min-height:76px;padding:12px}.grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:759px){main{padding-bottom:calc(260px + env(safe-area-inset-bottom));scroll-padding-bottom:calc(260px + env(safe-area-inset-bottom))}body{scroll-padding-bottom:calc(260px + env(safe-area-inset-bottom))}.view.active{padding-bottom:calc(90px + env(safe-area-inset-bottom))}.view.active:after{content:"";display:block;height:calc(110px + env(safe-area-inset-bottom))}nav{min-height:74px}}
@@ -332,7 +332,15 @@
       <div class="card"><h3>Resumen</h3><div id="adminSummary" class="small muted">Cargando…</div></div>
     </div>
     <div class="card" style="margin-top:12px">
-      <div class="split-head"><div><h3 style="margin-bottom:4px">Usuarios registrados</h3><div class="small muted">Asigna a cada usuario una institución y un rol. El usuario no puede asignarse el cargo por sí mismo.</div></div><button class="btn secondary" type="button" onclick="loadAdminPanel()">Actualizar</button></div>
+      <div class="split-head"><div><h3 style="margin-bottom:4px">Usuarios registrados</h3><div class="small muted">Primero atiende a quienes están por asignar. Los usuarios ya configurados quedan separados para encontrarlos más rápido.</div></div><button class="btn secondary" type="button" onclick="loadAdminPanel()">Actualizar</button></div>
+      <div class="admin-user-tabs">
+        <button id="adminPendingTab" class="btn secondary active" type="button" onclick="setAdminUserGroup('pending')">Por asignar (0)</button>
+        <button id="adminAssignedTab" class="btn secondary" type="button" onclick="setAdminUserGroup('assigned')">Asignados (0)</button>
+      </div>
+      <div class="admin-user-toolbar">
+        <div><label>Buscar usuario</label><input id="adminUserSearch" placeholder="Nombre o correo" oninput="renderAdminUsers()"></div>
+        <div id="adminInstitutionFilterWrap" style="display:none"><label>Institución</label><select id="adminInstitutionFilter" onchange="renderAdminUsers()"><option value="">Todas</option></select></div>
+      </div>
       <div id="adminUsers"><div class="muted small">Cargando usuarios…</div></div>
     </div>
   </section>
@@ -362,11 +370,12 @@ let swRegistration=null;
 let refreshingForUpdate=false;
 let accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,auxiliaryMembership:null,directorMembership:null,adminMembership:null};
 let adminCache={institutions:[],profiles:[],memberships:[]};
+let adminUserGroup='pending';
 let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,classrooms:[],selected:new Set(),types:new Map()};
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.14';
+const APP_VERSION='2.2.15';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -1020,15 +1029,51 @@ async function loadAdminPanel(){
   }catch(e){if(usersBox)usersBox.innerHTML=`<div style="color:#9d1d1d">No se pudo cargar la administración: ${esc(e.message||e)}</div>`;}
 }
 function activeMembershipsFor(userId){return adminCache.memberships.filter(m=>m.user_id===userId&&m.active&&(!m.valid_until||Date.parse(m.valid_until)>Date.now()))}
+function setAdminUserGroup(group){
+  adminUserGroup=group==='assigned'?'assigned':'pending';
+  renderAdminUsers();
+}
 function renderAdminUsers(){
   const box=$('adminUsers');if(!box)return;
+  const activeNow=m=>m.active&&(!m.valid_until||Date.parse(m.valid_until)>Date.now());
+  const active=adminCache.memberships.filter(activeNow);
+  const assignedIds=new Set(active.map(m=>m.user_id));
+  const pending=adminCache.profiles.filter(p=>!assignedIds.has(p.id));
+  const assigned=adminCache.profiles.filter(p=>assignedIds.has(p.id));
+  const pTab=$('adminPendingTab'),aTab=$('adminAssignedTab');
+  if(pTab){pTab.textContent=`Por asignar (${pending.length})`;pTab.classList.toggle('active',adminUserGroup==='pending')}
+  if(aTab){aTab.textContent=`Asignados (${assigned.length})`;aTab.classList.toggle('active',adminUserGroup==='assigned')}
+  const instFilter=$('adminInstitutionFilter'),instWrap=$('adminInstitutionFilterWrap');
+  if(instWrap)instWrap.style.display=adminUserGroup==='assigned'?'block':'none';
+  if(instFilter){
+    const prev=instFilter.value;
+    instFilter.innerHTML='<option value="">Todas</option>'+adminCache.institutions.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('');
+    if([...instFilter.options].some(o=>o.value===prev))instFilter.value=prev;
+  }
+  const q=(($('adminUserSearch')?.value)||'').trim().toLowerCase();
+  const instSelected=adminUserGroup==='assigned'?(instFilter?.value||''):'';
+  let list=(adminUserGroup==='assigned'?assigned:pending).filter(p=>{
+    const text=`${p.display_name||''} ${p.email||''}`.toLowerCase();
+    if(q&&!text.includes(q))return false;
+    if(instSelected){
+      const ms=activeMembershipsFor(p.id);
+      if(!ms.some(m=>m.institution_id===instSelected))return false;
+    }
+    return true;
+  });
   const instOpts=adminCache.institutions.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('');
-  box.innerHTML=adminCache.profiles.length?adminCache.profiles.map(p=>{
+  const groupLabel=adminUserGroup==='assigned'?'Asignados':'Por asignar';
+  const groupHint=adminUserGroup==='assigned'?'Usuarios que ya tienen al menos una asignación activa.':'Cuentas registradas que todavía no tienen una asignación activa.';
+  const head=`<div class="admin-group-title"><div><b>${groupLabel}</b><div class="small muted">${groupHint}</div></div><span class="pill">${list.length}</span></div>`;
+  if(!list.length){box.innerHTML=head+`<div class="empty">${q||instSelected?'No hay usuarios que coincidan con el filtro.':adminUserGroup==='assigned'?'Todavía no hay usuarios asignados.':'No hay usuarios pendientes de asignación.'}</div>`;return;}
+  box.innerHTML=head+list.map(p=>{
     const ms=activeMembershipsFor(p.id);const isSelf=p.id===cloudUser.id;
     const membershipsHtml=ms.length?ms.map(m=>`<div class="role-line"><span class="pill">${esc(roleLabel(m.role))}</span>${m?.institutions?.name?`<span class="pill">${esc(m.institutions.name)}</span>`:''}${['docente','auxiliar'].includes(m.role)&&m.institution_id?`<button class="btn secondary" style="padding:6px 10px;min-height:auto" type="button" onclick="openClassroomAccessManager('${p.id}','${m.institution_id}','${escAttr(p.display_name||p.email||'Usuario')}','${m.role}')">Asignar salones</button>`:''}${m.role==='admin_general'?`<span class="small muted">Rol protegido</span>`:`<button class="btn danger" style="padding:6px 10px;min-height:auto" type="button" onclick="deactivateMembership('${m.id}')">Desactivar</button>`}</div>`).join(''):'<div class="role-line"><span class="pill">Sin asignar</span></div>';
-    return `<div class="admin-user"><strong>${esc(p.display_name||'Perfil pendiente')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente o Auxiliar para registrar información de una institución.</div>':''}<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="auxiliar">Auxiliar de educación</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">Agregar asignación</button></div></div>`;
-  }).join(''):'<div class="muted small">No hay usuarios registrados.</div>';
+    const assignForm=`<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="auxiliar">Auxiliar de educación</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions assign-actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">${adminUserGroup==='assigned'?'Agregar otra asignación':'Asignar usuario'}</button></div>`;
+    return `<div class="admin-user"><strong>${esc(p.display_name||'Perfil pendiente')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente o Auxiliar para registrar información de una institución.</div>':''}${assignForm}</div>`;
+  }).join('');
 }
+
 async function openClassroomAccessManager(userId,institutionId,userName,role){
   if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
   classroomAccessState={userId,institutionId,userName:userName||'Usuario',role:role||'',classrooms:[],selected:new Set(),types:new Map()};
@@ -1785,7 +1830,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.14',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.15',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg,latestAvailableVersion);
     reg.addEventListener('updatefound',()=>{
