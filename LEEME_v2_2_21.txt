@@ -1,0 +1,5 @@
+SAGE v2.2.21
+- Seguimiento: dictado por voz.
+- Seguimiento: mejorar redacción.
+- Mantiene fecha, estado y guardado.
+- No requiere SQL nuevo.

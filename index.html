@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2.2.20" />
+  <link rel="manifest" href="manifest.webmanifest?v=2.2.21" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
@@ -64,7 +64,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.20</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -86,8 +86,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.20</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.20 · Salones institucionales</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.21 · Seguimiento por voz</div></div>
   </div>
 </header>
 <nav>
@@ -367,7 +367,7 @@
 <dialog id="studentEditDialog"><div class="modal"><h3>Editar estudiante</h3><input type="hidden" id="studentEditId"><label>Salón</label><select id="studentEditClassroom" onchange="applyClassroomToStudentEdit()"></select><label>Apellidos y nombres</label><input id="studentEditName"><div class="row"><div><label>Grado</label><input id="studentEditGrade"></div><div><label>Sección</label><input id="studentEditSection"></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveStudentEdit()">Guardar cambios</button><button type="button" class="btn secondary" onclick="closeStudentEdit()">Cancelar</button></div></div></dialog>
 <dialog id="editDialog"><div class="modal"><h3>Editar ocurrencia</h3><input type="hidden" id="editId"><label>Descripción</label><textarea id="editDesc"></textarea><label>Intervenciones realizadas por el docente</label><textarea id="editActions"></textarea><label>Acuerdos y compromisos</label><textarea id="editFollow"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()">Guardar cambios</button><button class="btn secondary" onclick="document.getElementById('editDialog').close()">Cancelar</button></div></div></dialog>
 <dialog id="followupsDialog"><div class="modal" style="max-width:760px"><div class="split-head"><div><h3 style="margin-bottom:4px">🔔 Seguimiento de casos</h3><p class="small muted" style="margin:0">Revisa las ocurrencias marcadas para seguimiento y registra su avance.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('followupsDialog').close()">Cerrar</button></div><div class="follow-summary"><div class="follow-count" id="followCountPending" onclick="setFollowFilter('pending')"><strong id="followPendingNum">0</strong><span>Pendientes</span></div><div class="follow-count" id="followCountProgress" onclick="setFollowFilter('in_progress')"><strong id="followProgressNum">0</strong><span>En proceso</span></div><div class="follow-count" id="followCountClosed" onclick="setFollowFilter('closed')"><strong id="followClosedNum">0</strong><span>Cerrados</span></div></div><label>Mostrar</label><select id="followFilter" onchange="renderFollowups()"><option value="open">Pendientes y en proceso</option><option value="pending">Pendientes</option><option value="in_progress">En proceso</option><option value="closed">Cerrados</option><option value="all">Todos</option></select><div id="followupsList" style="margin-top:12px"></div></div></dialog>
-<dialog id="followEditDialog"><div class="modal"><h3>Actualizar seguimiento</h3><input type="hidden" id="followEditId"><div id="followCaseSummary" class="subtle small" style="margin-bottom:10px"></div><label>Estado</label><select id="followStatus"><option value="pending">Pendiente</option><option value="in_progress">En proceso</option><option value="closed">Cerrado</option></select><label>Fecha de seguimiento</label><input id="followDate" type="date"><label>Resultado o nota de seguimiento</label><textarea id="followNote" placeholder="Ej.: Se verificó el cumplimiento del acuerdo; no se registraron nuevas situaciones."></textarea><div class="actions"><button type="button" class="btn primary" onclick="saveFollowup()">Guardar seguimiento</button><button type="button" class="btn secondary" onclick="document.getElementById('followEditDialog').close()">Cancelar</button></div></div></dialog>
+<dialog id="followEditDialog"><div class="modal"><h3>Seguimiento de la ocurrencia</h3><input type="hidden" id="followEditId"><div id="followCaseSummary" class="subtle small" style="margin-bottom:10px"></div><label>Nota del seguimiento</label><textarea id="followNote" placeholder="Escribe aquí la información del seguimiento..."></textarea><div class="voice-tools"><button type="button" class="voice-btn" onclick="toggleDictation('followNote',this)">🎙️ Dictar seguimiento</button><span class="voice-status" id="voiceStatus-followNote">Listo para dictar</span></div><div class="formal-tools"><button type="button" class="formal-btn" onclick="formalizeField('followNote','followup')">✨ Mejorar redacción</button><span class="small muted">Mejora coherencia y cohesión sin cambiar los hechos.</span></div><div class="grid2" style="margin-top:12px"><div><label>Fecha de seguimiento</label><input id="followDate" type="date"></div><div><label>Estado del seguimiento</label><select id="followStatus"><option value="pending">Pendiente</option><option value="in_progress">En proceso</option><option value="closed">Cerrado</option></select></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveFollowup()">Guardar seguimiento</button><button type="button" class="btn secondary" onclick="document.getElementById('followEditDialog').close()">Cancelar</button></div></div></dialog>
 <dialog id="directorOccurrenceDialog"><div class="modal" style="max-width:780px"><div class="split-head"><div><h3 style="margin-bottom:4px">Detalle de la ocurrencia</h3><p class="small muted" style="margin:0">Consulta institucional · solo lectura</p></div><button type="button" class="btn secondary" onclick="document.getElementById('directorOccurrenceDialog').close()">Cerrar</button></div><div id="directorOccurrenceDetail" style="margin-top:12px"></div></div></dialog>
 <dialog id="directorTypeDialog"><div class="modal modal-wide"><div class="split-head"><div><h3 id="directorTypeTitle" style="margin-bottom:4px">Detalle por tipo</h3><p class="small muted" style="margin:0">Desglose por salón y subtipo.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('directorTypeDialog').close()">Cerrar</button></div><div class="row"><div><label>Subtipo</label><select id="directorTypeSubtype" onchange="renderDirectorTypeDrilldown()"><option value="">Todos</option></select></div><div><label>Mostrar</label><select id="directorTypeScope" onchange="renderDirectorTypeDrilldown()"><option value="classroom">Por salón</option><option value="level">Por nivel educativo</option><option value="subtype">Por subtipo</option></select></div></div><div id="directorTypeDrilldown" style="margin-top:12px"></div></div></dialog>
 <dialog id="directorStatsDialog"><div class="modal modal-wide"><div class="split-head"><div><h3 style="margin-bottom:4px">Estadísticas institucionales</h3><p class="small muted" style="margin:0">Gráficos según los filtros activos del panel Director.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('directorStatsDialog').close()">Cerrar</button></div><div class="stats-tabs"><button id="statsByTypeBtn" type="button" class="btn secondary active" onclick="setDirectorStatsMode('type')">Por tipos</button><button id="statsBySubtypeBtn" type="button" class="btn secondary" onclick="setDirectorStatsMode('subtype')">Por subtipos</button></div><div id="statsTypePickerWrap" style="display:none"><label>Tipo de ocurrencia</label><select id="statsTypePicker" onchange="renderDirectorStats()"></select></div><div id="directorStatsChart" style="margin-top:12px"></div></div></dialog>
@@ -399,7 +399,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.20';
+const APP_VERSION='2.2.21';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -1717,7 +1717,7 @@ function improveLocalRedaction(text,kind){
   }else if(kind==='actions'){
     t=t.replace(/\by ahí\b/gi,'posteriormente');
     t=t.replace(/\bdespués de eso\b/gi,'posteriormente');
-  }else if(kind==='follow'){
+  }else if(kind==='follow'||kind==='followup'){
     t=t.replace(/\by también\b/gi,'Asimismo,');
     t=t.replace(/\bde ahí\b/gi,'posteriormente');
   }
@@ -1727,6 +1727,7 @@ function improveLocalRedaction(text,kind){
 function fieldLabel(kind){
   if(kind==='description') return 'Descripción de la ocurrencia';
   if(kind==='actions') return 'Intervenciones realizadas por el docente';
+  if(kind==='followup') return 'Nota del seguimiento';
   return 'Acuerdos y compromisos';
 }
 
