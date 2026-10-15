@@ -87,7 +87,7 @@
 <header>
   <div class="headwrap">
     <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.25 · Sincronización automática</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.26 · Panel administrador estable</div></div>
   </div>
 </header>
 <nav>
@@ -404,7 +404,7 @@ let adminHomeStatsCache={students:0,occurrences:0,today:0,follow:0,loaded:false,
 let adminHomeStatsLoading=false;
 let adminHomeInstitutions=[];
 let adminFollowRows=[];
-function selectedAdminInstitutionId(){return $('adminHomeInstitutionFilter')?.value||''}
+function selectedAdminInstitutionId(){return $('adminHomeInstitutionFilter')?.value||localStorage.getItem('sage_admin_home_institution')||''}
 function adminInstitutionName(id){return adminHomeInstitutions.find(i=>i.id===id)?.name||'Institución'}
 async function loadAdminHomeInstitutions(){
   if(activeRole()!=='admin_general'||!cloudUser||!supabaseClient)return;
@@ -414,12 +414,15 @@ async function loadAdminHomeInstitutions(){
     if(error)throw error;
     adminHomeInstitutions=data||[];
     const sel=$('adminHomeInstitutionFilter');if(!sel)return;
-    const old=sel.value;
+    const old=sel.value||localStorage.getItem('sage_admin_home_institution')||'';
     sel.innerHTML='<option value="">Todas las instituciones</option>'+adminHomeInstitutions.map(i=>`<option value="${esc(i.id)}">${esc(i.name||'Institución')}</option>`).join('');
     if(old&&adminHomeInstitutions.some(i=>i.id===old))sel.value=old;
+    else sel.value='';
   }catch(err){console.error('No se pudo cargar el filtro de instituciones',err)}
 }
 function onAdminHomeInstitutionChange(){
+  const selected=$('adminHomeInstitutionFilter')?.value||'';
+  localStorage.setItem('sage_admin_home_institution',selected);
   adminHomeStatsCache.loaded=false;
   adminHomeStatsCache.updatedAt=0;
   refreshAdminHomeStats(true);
@@ -429,12 +432,15 @@ function onAdminHomeInstitutionChange(){
 async function refreshAdminHomeStats(force=false){
   if(activeRole()!=='admin_general'||!cloudUser||!supabaseClient)return;
   const card=$('adminHomeInstitutionCard');if(card)card.style.display='block';
+  // Conserva los últimos valores mientras se actualizan; nunca vuelve a 0 por una recarga temporal.
+  if(adminHomeStatsCache.loaded)applyAdminHomeStats();
   if(!adminHomeInstitutions.length)await loadAdminHomeInstitutions();
   const institutionId=selectedAdminInstitutionId();
   const now=Date.now();
   if(adminHomeStatsLoading)return;
   if(!force&&adminHomeStatsCache.loaded&&adminHomeStatsCache.institutionId===institutionId&&(now-adminHomeStatsCache.updatedAt)<15000){applyAdminHomeStats();return;}
   adminHomeStatsLoading=true;
+  if(card)card.setAttribute('aria-busy','true');
   try{
     const today=new Date().toISOString().slice(0,10);
     let studentsQ=supabaseClient.from('students').select('id',{count:'exact',head:true});
@@ -446,7 +452,14 @@ async function refreshAdminHomeStats(force=false){
     const firstError=[studentsRes,occRes,todayRes,followRes].find(r=>r&&r.error)?.error;if(firstError)throw firstError;
     adminHomeStatsCache={students:studentsRes.count||0,occurrences:occRes.count||0,today:todayRes.count||0,follow:followRes.count||0,loaded:true,updatedAt:Date.now(),institutionId};
     applyAdminHomeStats();
-  }catch(err){console.error('No se pudieron cargar los indicadores administrativos',err)}finally{adminHomeStatsLoading=false}
+  }catch(err){
+    console.error('No se pudieron cargar los indicadores administrativos',err);
+    // No borres los últimos indicadores válidos si una consulta temporal falla.
+    if(adminHomeStatsCache.loaded)applyAdminHomeStats();
+  }finally{
+    adminHomeStatsLoading=false;
+    if(card)card.removeAttribute('aria-busy');
+  }
 }
 function applyAdminHomeStats(){
   if(activeRole()!=='admin_general'||!adminHomeStatsCache.loaded)return;
@@ -468,7 +481,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.25';
+const APP_VERSION='2.2.26';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -600,8 +613,13 @@ function classroomAccessType(classroomId){return currentClassroomAccess.get(clas
 function canManageClassroomStudents(c){return !!c&&!c.sharedReadOnly||!!c?.responsibleManaged}
 
 async function loadAccessContext(){
-  accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,auxiliaryMembership:null,directorMembership:null,adminMembership:null};
-  if(!cloudUser){updateRoleUi();updateAccountUi();return accessContext;}
+  // Mantén el contexto anterior mientras Supabase refresca membresías.
+  // Esto evita que el panel de Administrador desaparezca o vuelva a 0 durante una recarga.
+  const previousContext=accessContext;
+  if(!cloudUser){
+    accessContext={role:null,institutionId:null,institution:null,membership:null,memberships:[],roles:[],teacherMembership:null,auxiliaryMembership:null,directorMembership:null,adminMembership:null};
+    updateRoleUi();updateAccountUi();return accessContext;
+  }
   try{
     const {data,error}=await supabaseClient.from('user_memberships').select('id,user_id,role,institution_id,active,valid_from,valid_until,institutions(id,name,modular_code,ugel,region,educational_level)').eq('user_id',cloudUser.id).eq('active',true);
     if(error)throw error;
@@ -625,7 +643,11 @@ async function loadAccessContext(){
       directorMembership:director,
       adminMembership:admin
     };
-  }catch(e){console.warn('No se pudieron cargar los roles:',e);}
+  }catch(e){
+    console.warn('No se pudieron cargar los roles:',e);
+    // Si la actualización temporal falla, conserva el último contexto válido.
+    accessContext=previousContext;
+  }
   await refreshCurrentClassroomAccess();
   updateRoleUi();updateAccountUi();updateProfileSummary();
   if(activeRole()==='admin_general')loadAdminPanel();
@@ -2210,7 +2232,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.25',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.26',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;if(!nw)return;

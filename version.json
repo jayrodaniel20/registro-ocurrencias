@@ -1,5 +1,4 @@
 {
-  "version": "2.2.25",
-  "published_at": "2026-10-15",
-  "notes": "Sincronización automática y segura: al abrir/iniciar sesión, recuperar internet, volver a la app, cambiar de rol y guardar cambios. Mantiene copia local offline, reintenta pendientes y evita sincronizaciones simultáneas. El botón manual queda como respaldo."
+  "version": "2.2.26",
+  "notes": "Panel del Administrador estable durante recargas y sincronización; conserva filtros y últimos indicadores válidos."
 }

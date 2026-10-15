@@ -1,0 +1,21 @@
+SAGE v2.2.26 — PANEL ADMINISTRADOR ESTABLE
+
+Cambios principales:
+- Sincroniza automáticamente al abrir SAGE/iniciar sesión.
+- Renueva roles y accesos de salón desde Supabase.
+- Sincroniza después de guardar cambios.
+- Al recuperar internet, reintenta automáticamente.
+- Al volver a la app y periódicamente, revisa cambios pendientes y accesos nuevos.
+- Mantiene los datos locales si falla internet o Supabase.
+- Evita ejecutar varias sincronizaciones al mismo tiempo.
+- El botón «Sincronizar ahora» queda como respaldo para Docente/Auxiliar.
+- Administrador y Director siguen consultando la nube sin mezclar información institucional en la copia operativa local.
+
+No requiere SQL adicional.
+
+
+CAMBIO v2.2.26
+- El panel Resumen administrativo ya no desaparece durante la recarga de roles.
+- Conserva la institución seleccionada.
+- Conserva los últimos contadores válidos mientras Supabase actualiza o si una consulta temporal falla.
+- Mantiene la sincronización automática de v2.2.25.
