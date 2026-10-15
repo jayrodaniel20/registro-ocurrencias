@@ -1,0 +1,11 @@
+SAGE v2.2.27 — USUARIOS POR CARGO Y RESUMEN PRECISO
+
+CAMBIOS PRINCIPALES
+- Filtro de usuarios por cargo: Administrador general, Director, Docente, Auxiliar, Especialista UGEL y Sin asignar.
+- La búsqueda por texto también reconoce nombres de cargos e instituciones.
+- El resumen diferencia usuarios únicos de asignaciones de roles.
+- Muestra instituciones activas, usuarios asignados y usuarios por asignar.
+- Conserva las mejoras de estabilidad del panel administrador de v2.2.26.
+- Conserva la sincronización automática de v2.2.25.
+
+No requiere SQL adicional.
