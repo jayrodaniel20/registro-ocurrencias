@@ -87,7 +87,7 @@
 <header>
   <div class="headwrap">
     <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.27 · Usuarios por cargo y resumen preciso</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.28 · Contadores administrativos estables</div></div>
   </div>
 </header>
 <nav>
@@ -155,13 +155,14 @@
         </div>
         <span class="pill">Administrador</span>
       </div>
+      <div id="adminHomeStatsStatus" class="small muted" style="margin:0 0 8px">Datos administrativos en línea</div>
       <label for="adminHomeInstitutionFilter">Institución</label>
       <select id="adminHomeInstitutionFilter" onchange="onAdminHomeInstitutionChange()">
         <option value="">Todas las instituciones</option>
       </select>
     </div>
     <div class="grid" style="margin-top:12px">
-      <div class="card stat-card"><div class="stat-label">👥 Estudiantes</div><div class="stat" id="statStudents">0</div></div>
+      <div class="card stat-card" role="button" tabindex="0" onclick="openAdminStudents()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAdminStudents()}" style="cursor:pointer" title="Ver estudiantes del filtro seleccionado"><div class="stat-label">👥 Estudiantes</div><div class="stat" id="statStudents">0</div><div class="small muted" style="margin-top:4px">Ver detalle →</div></div>
       <div class="card stat-card"><div class="stat-label">🗂️ Ocurrencias</div><div class="stat" id="statOcc">0</div></div>
       <div class="card stat-card"><div class="stat-label">📅 Hoy</div><div class="stat" id="statToday">0</div></div>
       <div class="card stat-card" role="button" tabindex="0" onclick="openFollowups()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFollowups()}" style="cursor:pointer" title="Abrir seguimientos pendientes"><div class="stat-label">🔔 Seguimiento</div><div class="stat" id="statFollow">0</div><div class="small muted" style="margin-top:4px">Pendientes · tocar para revisar</div></div>
@@ -378,6 +379,7 @@
     </div>
   </section>
 
+<dialog id="adminStudentsDialog"><div class="modal modal-wide"><div class="split-head"><div><h3 id="adminStudentsTitle" style="margin-bottom:4px">👥 Estudiantes</h3><p id="adminStudentsHint" class="small muted" style="margin:0">Consulta directa desde Supabase · solo lectura.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('adminStudentsDialog').close()">Cerrar</button></div><div id="adminStudentsList" style="margin-top:12px"><div class="muted small">Cargando estudiantes…</div></div></div></dialog>
 <dialog id="studentEditDialog"><div class="modal"><h3>Editar estudiante</h3><input type="hidden" id="studentEditId"><label>Salón</label><select id="studentEditClassroom" onchange="applyClassroomToStudentEdit()"></select><label>Apellidos y nombres</label><input id="studentEditName"><div class="row"><div><label>Grado</label><input id="studentEditGrade"></div><div><label>Sección</label><input id="studentEditSection"></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveStudentEdit()">Guardar cambios</button><button type="button" class="btn secondary" onclick="closeStudentEdit()">Cancelar</button></div></div></dialog>
 <dialog id="editDialog"><div class="modal"><h3>Editar ocurrencia</h3><input type="hidden" id="editId"><label>Descripción</label><textarea id="editDesc"></textarea><label>Intervenciones realizadas por el docente</label><textarea id="editActions"></textarea><label>Acuerdos y compromisos</label><textarea id="editFollow"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()">Guardar cambios</button><button class="btn secondary" onclick="document.getElementById('editDialog').close()">Cancelar</button></div></div></dialog>
 <dialog id="followupsDialog"><div class="modal" style="max-width:760px"><div class="split-head"><div><h3 style="margin-bottom:4px">🔔 Seguimiento de casos</h3><p class="small muted" style="margin:0">Revisa las ocurrencias marcadas para seguimiento y registra su avance.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('followupsDialog').close()">Cerrar</button></div><div class="follow-summary"><div class="follow-count" id="followCountPending" onclick="setFollowFilter('pending')"><strong id="followPendingNum">0</strong><span>Pendientes</span></div><div class="follow-count" id="followCountProgress" onclick="setFollowFilter('in_progress')"><strong id="followProgressNum">0</strong><span>En proceso</span></div><div class="follow-count" id="followCountClosed" onclick="setFollowFilter('closed')"><strong id="followClosedNum">0</strong><span>Cerrados</span></div></div><label>Mostrar</label><select id="followFilter" onchange="renderFollowups()"><option value="open">Pendientes y en proceso</option><option value="pending">Pendientes</option><option value="in_progress">En proceso</option><option value="closed">Cerrados</option><option value="all">Todos</option></select><div id="followupsList" style="margin-top:12px"></div></div></dialog>
@@ -403,9 +405,10 @@ const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHA
 let cloudUser=null;
 let adminHomeStatsCache={students:0,occurrences:0,today:0,follow:0,loaded:false,updatedAt:0,institutionId:''};
 let adminHomeStatsLoading=false;
+let adminHomeStatsRequestSeq=0;
 let adminHomeInstitutions=[];
 let adminFollowRows=[];
-function selectedAdminInstitutionId(){return $('adminHomeInstitutionFilter')?.value||localStorage.getItem('sage_admin_home_institution')||''}
+function selectedAdminInstitutionId(){const sel=$('adminHomeInstitutionFilter');return sel?sel.value:(localStorage.getItem('sage_admin_home_institution')||'')}
 function adminInstitutionName(id){return adminHomeInstitutions.find(i=>i.id===id)?.name||'Institución'}
 async function loadAdminHomeInstitutions(){
   if(activeRole()!=='admin_general'||!cloudUser||!supabaseClient)return;
@@ -426,6 +429,8 @@ function onAdminHomeInstitutionChange(){
   localStorage.setItem('sage_admin_home_institution',selected);
   adminHomeStatsCache.loaded=false;
   adminHomeStatsCache.updatedAt=0;
+  // Invalida cualquier consulta anterior: la selección nueva siempre tiene prioridad.
+  adminHomeStatsRequestSeq++;
   refreshAdminHomeStats(true);
   const dlg=$('followupsDialog');
   if(dlg?.open)loadAdminFollowups();
@@ -433,17 +438,21 @@ function onAdminHomeInstitutionChange(){
 async function refreshAdminHomeStats(force=false){
   if(activeRole()!=='admin_general'||!cloudUser||!supabaseClient)return;
   const card=$('adminHomeInstitutionCard');if(card)card.style.display='block';
-  // Conserva los últimos valores mientras se actualizan; nunca vuelve a 0 por una recarga temporal.
+  const status=$('adminHomeStatsStatus');
   if(adminHomeStatsCache.loaded)applyAdminHomeStats();
   if(!adminHomeInstitutions.length)await loadAdminHomeInstitutions();
   const institutionId=selectedAdminInstitutionId();
   const now=Date.now();
-  if(adminHomeStatsLoading)return;
   if(!force&&adminHomeStatsCache.loaded&&adminHomeStatsCache.institutionId===institutionId&&(now-adminHomeStatsCache.updatedAt)<15000){applyAdminHomeStats();return;}
+  // Cada consulta recibe un número. Solo la más reciente puede actualizar la pantalla.
+  const requestId=++adminHomeStatsRequestSeq;
   adminHomeStatsLoading=true;
   if(card)card.setAttribute('aria-busy','true');
+  if(status)status.textContent=institutionId?'Actualizando datos de '+adminInstitutionName(institutionId)+'…':'Actualizando datos de todas las instituciones…';
   try{
-    const today=new Date().toISOString().slice(0,10);
+    // Usa fecha local del dispositivo (no UTC) para el indicador Hoy.
+    const d=new Date();
+    const today=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
     let studentsQ=supabaseClient.from('students').select('id',{count:'exact',head:true});
     let occQ=supabaseClient.from('occurrences').select('id',{count:'exact',head:true});
     let todayQ=supabaseClient.from('occurrences').select('id',{count:'exact',head:true}).eq('occurrence_date',today);
@@ -451,15 +460,19 @@ async function refreshAdminHomeStats(force=false){
     if(institutionId){studentsQ=studentsQ.eq('institution_id',institutionId);occQ=occQ.eq('institution_id',institutionId);todayQ=todayQ.eq('institution_id',institutionId);followQ=followQ.eq('institution_id',institutionId)}
     const [studentsRes,occRes,todayRes,followRes]=await Promise.all([studentsQ,occQ,todayQ,followQ]);
     const firstError=[studentsRes,occRes,todayRes,followRes].find(r=>r&&r.error)?.error;if(firstError)throw firstError;
-    adminHomeStatsCache={students:studentsRes.count||0,occurrences:occRes.count||0,today:todayRes.count||0,follow:followRes.count||0,loaded:true,updatedAt:Date.now(),institutionId};
+    // Si el usuario cambió de institución mientras llegaba la respuesta, ignora esta respuesta antigua.
+    if(requestId!==adminHomeStatsRequestSeq||selectedAdminInstitutionId()!==institutionId)return;
+    adminHomeStatsCache={students:studentsRes.count??0,occurrences:occRes.count??0,today:todayRes.count??0,follow:followRes.count??0,loaded:true,updatedAt:Date.now(),institutionId};
     applyAdminHomeStats();
+    if(status)status.textContent=(institutionId?adminInstitutionName(institutionId):'Todas las instituciones')+' · actualizado';
   }catch(err){
     console.error('No se pudieron cargar los indicadores administrativos',err);
-    // No borres los últimos indicadores válidos si una consulta temporal falla.
-    if(adminHomeStatsCache.loaded)applyAdminHomeStats();
+    if(requestId===adminHomeStatsRequestSeq){
+      if(adminHomeStatsCache.loaded)applyAdminHomeStats();
+      if(status)status.textContent='No se pudieron actualizar los indicadores. Se conservan los últimos datos válidos.';
+    }
   }finally{
-    adminHomeStatsLoading=false;
-    if(card)card.removeAttribute('aria-busy');
+    if(requestId===adminHomeStatsRequestSeq){adminHomeStatsLoading=false;if(card)card.removeAttribute('aria-busy');}
   }
 }
 function applyAdminHomeStats(){
@@ -482,7 +495,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.27';
+const APP_VERSION='2.2.28';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -2045,6 +2058,69 @@ async function openFollowups(){
   db.occurrences.forEach(ensureFollowFields);renderFollowups();$('followupsDialog').showModal()
 }
 function setFollowFilter(v){if($('followFilter'))$('followFilter').value=v;renderFollowups()}
+
+async function fetchAdminStudents(institutionId=''){
+  const pageSize=800;
+  let from=0, rows=[];
+  while(true){
+    let q=supabaseClient.from('students').select('id,name,institution_id,classroom_id,created_at').order('name').range(from,from+pageSize-1);
+    if(institutionId)q=q.eq('institution_id',institutionId);
+    const {data,error}=await q;if(error)throw error;
+    const part=data||[];rows.push(...part);
+    if(part.length<pageSize)break;
+    from+=pageSize;
+  }
+  return rows;
+}
+async function openAdminStudents(){
+  if(activeRole()!=='admin_general'||!cloudUser)return;
+  const dlg=$('adminStudentsDialog'),box=$('adminStudentsList'),title=$('adminStudentsTitle'),hint=$('adminStudentsHint');
+  if(!dlg||!box)return;
+  const institutionId=selectedAdminInstitutionId();
+  const instLabel=institutionId?adminInstitutionName(institutionId):'Todas las instituciones';
+  title.textContent='👥 Estudiantes · '+instLabel;
+  hint.textContent='Consulta directa desde Supabase · solo lectura.';
+  box.innerHTML='<div class="muted small">Cargando estudiantes…</div>';
+  dlg.showModal();
+  try{
+    if(!adminHomeInstitutions.length)await loadAdminHomeInstitutions();
+    let classQ=supabaseClient.from('classrooms').select('id,name,grade,section,level,institution_id').order('name');
+    if(institutionId)classQ=classQ.eq('institution_id',institutionId);
+    const [students,classRes]=await Promise.all([fetchAdminStudents(institutionId),classQ]);
+    if(classRes.error)throw classRes.error;
+    const classrooms=classRes.data||[];
+    const classMap=new Map(classrooms.map(c=>[c.id,c]));
+    const grouped=new Map();
+    students.forEach(st=>{
+      const c=classMap.get(st.classroom_id)||null;
+      const instId=st.institution_id||c?.institution_id||'';
+      const key=(instId||'sin-inst')+'|'+(st.classroom_id||'sin-salon');
+      if(!grouped.has(key))grouped.set(key,{instId,classroom:c,students:[]});
+      grouped.get(key).students.push(st);
+    });
+    const groups=[...grouped.values()].sort((a,b)=>{
+      const ia=adminInstitutionName(a.instId),ib=adminInstitutionName(b.instId);
+      if(ia!==ib)return ia.localeCompare(ib);
+      const ca=[a.classroom?.grade,a.classroom?.section,a.classroom?.name].filter(Boolean).join(' ');
+      const cb=[b.classroom?.grade,b.classroom?.section,b.classroom?.name].filter(Boolean).join(' ');
+      return ca.localeCompare(cb);
+    });
+    const total=students.length;
+    if(hint)hint.textContent=`${total} estudiante${total===1?'':'s'} · consulta directa desde Supabase · solo lectura.`;
+    if(!total){box.innerHTML='<div class="empty">No hay estudiantes registrados para este filtro.</div>';return;}
+    box.innerHTML=groups.map(g=>{
+      const c=g.classroom;
+      const instName=adminInstitutionName(g.instId);
+      const className=c?[c.grade,c.section,c.name].filter(Boolean).join(' · '):'Sin salón identificado';
+      const level=c?.level?` · ${esc(c.level)}`:'';
+      return `<div class="admin-card" style="margin-bottom:10px"><div class="split-head"><div><strong>${esc(className)}</strong><div class="small muted">${esc(instName)}${level}</div></div><span class="pill">${g.students.length}</span></div><div style="margin-top:8px">${g.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(st=>`<div style="padding:7px 0;border-top:1px solid var(--line)">${esc(st.name)}</div>`).join('')}</div></div>`;
+    }).join('');
+  }catch(err){
+    console.error('No se pudieron cargar estudiantes administrativos',err);
+    box.innerHTML='<div class="empty">No se pudieron cargar los estudiantes. Verifica la conexión y vuelve a intentar.</div>';
+  }
+}
+
 async function loadAdminFollowups(){
   const box=$('followupsList');if(box)box.innerHTML='<div class="card empty">Cargando seguimientos…</div>';
   try{

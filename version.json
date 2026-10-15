@@ -1,4 +1,4 @@
 {
-  "version": "2.2.27",
-  "notes": "Panel del Administrador estable durante recargas y sincronización; conserva filtros y últimos indicadores válidos."
+  "version": "2.2.28",
+  "notes": "Corrige la carrera de consultas del filtro por institución en el panel Administrador y agrega detalle de estudiantes consultado directamente desde Supabase."
 }

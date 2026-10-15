@@ -1,0 +1,11 @@
+SAGE v2.2.28
+
+Correcciones principales:
+- El filtro de institución del Administrador ya no pierde solicitudes cuando otra consulta está en curso.
+- Las respuestas antiguas de contadores no pueden sobrescribir la institución seleccionada actualmente.
+- Los contadores conservan el último valor válido y muestran estado de actualización.
+- El indicador Hoy usa la fecha local del dispositivo.
+- El contador Estudiantes abre un detalle de solo lectura consultado directamente desde Supabase, agrupado por institución y salón.
+- Mantiene sincronización automática y filtros de usuarios de versiones anteriores.
+
+No requiere SQL adicional.
