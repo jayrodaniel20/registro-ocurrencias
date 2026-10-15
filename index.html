@@ -87,7 +87,7 @@
 <header>
   <div class="headwrap">
     <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.28 · Contadores administrativos estables</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.29 · Panel administrador corregido</div></div>
   </div>
 </header>
 <nav>
@@ -444,32 +444,26 @@ async function refreshAdminHomeStats(force=false){
   const institutionId=selectedAdminInstitutionId();
   const now=Date.now();
   if(!force&&adminHomeStatsCache.loaded&&adminHomeStatsCache.institutionId===institutionId&&(now-adminHomeStatsCache.updatedAt)<15000){applyAdminHomeStats();return;}
-  // Cada consulta recibe un número. Solo la más reciente puede actualizar la pantalla.
   const requestId=++adminHomeStatsRequestSeq;
   adminHomeStatsLoading=true;
   if(card)card.setAttribute('aria-busy','true');
   if(status)status.textContent=institutionId?'Actualizando datos de '+adminInstitutionName(institutionId)+'…':'Actualizando datos de todas las instituciones…';
   try{
-    // Usa fecha local del dispositivo (no UTC) para el indicador Hoy.
-    const d=new Date();
-    const today=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
-    let studentsQ=supabaseClient.from('students').select('id',{count:'exact',head:true});
-    let occQ=supabaseClient.from('occurrences').select('id',{count:'exact',head:true});
-    let todayQ=supabaseClient.from('occurrences').select('id',{count:'exact',head:true}).eq('occurrence_date',today);
-    let followQ=supabaseClient.from('occurrences').select('id',{count:'exact',head:true}).eq('requires_follow',true).or('follow_status.is.null,follow_status.neq.closed');
-    if(institutionId){studentsQ=studentsQ.eq('institution_id',institutionId);occQ=occQ.eq('institution_id',institutionId);todayQ=todayQ.eq('institution_id',institutionId);followQ=followQ.eq('institution_id',institutionId)}
-    const [studentsRes,occRes,todayRes,followRes]=await Promise.all([studentsQ,occQ,todayQ,followQ]);
-    const firstError=[studentsRes,occRes,todayRes,followRes].find(r=>r&&r.error)?.error;if(firstError)throw firstError;
-    // Si el usuario cambió de institución mientras llegaba la respuesta, ignora esta respuesta antigua.
+    // Función SECURITY DEFINER de solo lectura. Evita que políticas RLS de docente
+    // recorten el total del Administrador cuando la misma cuenta también tiene otro rol.
+    const {data,error}=await supabaseClient.rpc('sage_admin_dashboard_stats',{target_institution:institutionId||null});
+    if(error)throw error;
+    const row=Array.isArray(data)?data[0]:data;
+    if(!row)throw new Error('Supabase no devolvió indicadores administrativos.');
     if(requestId!==adminHomeStatsRequestSeq||selectedAdminInstitutionId()!==institutionId)return;
-    adminHomeStatsCache={students:studentsRes.count??0,occurrences:occRes.count??0,today:todayRes.count??0,follow:followRes.count??0,loaded:true,updatedAt:Date.now(),institutionId};
+    adminHomeStatsCache={students:Number(row.students||0),occurrences:Number(row.occurrences||0),today:Number(row.today||0),follow:Number(row.follow||0),loaded:true,updatedAt:Date.now(),institutionId};
     applyAdminHomeStats();
     if(status)status.textContent=(institutionId?adminInstitutionName(institutionId):'Todas las instituciones')+' · actualizado';
   }catch(err){
     console.error('No se pudieron cargar los indicadores administrativos',err);
     if(requestId===adminHomeStatsRequestSeq){
       if(adminHomeStatsCache.loaded)applyAdminHomeStats();
-      if(status)status.textContent='No se pudieron actualizar los indicadores. Se conservan los últimos datos válidos.';
+      if(status)status.textContent='No se pudieron actualizar los indicadores. Ejecuta el SQL v2.2.29 si aún no está instalado.';
     }
   }finally{
     if(requestId===adminHomeStatsRequestSeq){adminHomeStatsLoading=false;if(card)card.removeAttribute('aria-busy');}
@@ -495,7 +489,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.28';
+const APP_VERSION='2.2.29';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -589,6 +583,16 @@ async function switchActiveMembership(id){
 function updateRoleUi(){
   const current=activeMembership();
   const role=current?.role||null;
+  const adminCard=$('adminHomeInstitutionCard');
+  if(adminCard)adminCard.style.display=role==='admin_general'?'block':'none';
+  if(role==='admin_general'&&cloudUser){
+    // El panel administrativo es parte permanente del modo Administrador.
+    // No depende de refreshAll() ni de la copia local operativa.
+    Promise.resolve().then(async()=>{
+      if(!adminHomeInstitutions.length)await loadAdminHomeInstitutions();
+      refreshAdminHomeStats();
+    });
+  }
   const chip=$('headerRoleChip');
   if(chip){
     if(cloudUser&&role){
@@ -2060,17 +2064,9 @@ async function openFollowups(){
 function setFollowFilter(v){if($('followFilter'))$('followFilter').value=v;renderFollowups()}
 
 async function fetchAdminStudents(institutionId=''){
-  const pageSize=800;
-  let from=0, rows=[];
-  while(true){
-    let q=supabaseClient.from('students').select('id,name,institution_id,classroom_id,created_at').order('name').range(from,from+pageSize-1);
-    if(institutionId)q=q.eq('institution_id',institutionId);
-    const {data,error}=await q;if(error)throw error;
-    const part=data||[];rows.push(...part);
-    if(part.length<pageSize)break;
-    from+=pageSize;
-  }
-  return rows;
+  const {data,error}=await supabaseClient.rpc('sage_admin_students',{target_institution:institutionId||null});
+  if(error)throw error;
+  return data||[];
 }
 async function openAdminStudents(){
   if(activeRole()!=='admin_general'||!cloudUser)return;
@@ -2084,16 +2080,11 @@ async function openAdminStudents(){
   dlg.showModal();
   try{
     if(!adminHomeInstitutions.length)await loadAdminHomeInstitutions();
-    let classQ=supabaseClient.from('classrooms').select('id,name,grade,section,level,institution_id').order('name');
-    if(institutionId)classQ=classQ.eq('institution_id',institutionId);
-    const [students,classRes]=await Promise.all([fetchAdminStudents(institutionId),classQ]);
-    if(classRes.error)throw classRes.error;
-    const classrooms=classRes.data||[];
-    const classMap=new Map(classrooms.map(c=>[c.id,c]));
+    const students=await fetchAdminStudents(institutionId);
     const grouped=new Map();
     students.forEach(st=>{
-      const c=classMap.get(st.classroom_id)||null;
-      const instId=st.institution_id||c?.institution_id||'';
+      const c={id:st.classroom_id,name:st.classroom_name||'',grade:st.grade||'',section:st.section||'',level:st.level||'',institution_id:st.institution_id};
+      const instId=st.institution_id||'';
       const key=(instId||'sin-inst')+'|'+(st.classroom_id||'sin-salon');
       if(!grouped.has(key))grouped.set(key,{instId,classroom:c,students:[]});
       grouped.get(key).students.push(st);

@@ -1,0 +1,18 @@
+SAGE v2.2.29
+
+CORRECCIÓN URGENTE DEL PANEL ADMINISTRADOR
+- El selector de institución permanece visible siempre que el rol activo sea Administrador general.
+- Los contadores ya no dependen de la copia local ni de políticas RLS de roles secundarios de la misma cuenta.
+- Los totales y el detalle de estudiantes se consultan mediante funciones seguras SECURITY DEFINER.
+- Todas las instituciones debe sumar todos los estudiantes visibles en la base central.
+
+PASO OBLIGATORIO
+1. Ejecutar una sola vez en Supabase SQL Editor el archivo supabase_v2_2_29_admin_dashboard.sql.
+2. Después publicar los archivos de esta versión en GitHub Pages.
+
+Referencia de prueba al 15/10/2026:
+- 226: 0 estudiantes
+- 38490 SAN MARTIN DE PORRES: 27
+- 38490 SAN MARTÍN DE PORRES - INICIAL: 6
+- 38491 NUESTRA SEÑORA DE FATIMA: 0
+- Todas las instituciones: 33
