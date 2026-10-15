@@ -1,5 +1,5 @@
 {
-  "version": "2.2.23",
+  "version": "2.2.24",
   "published_at": "2026-10-15",
-  "notes": "Corrección del aviso de actualización: solo aparece cuando existe una versión publicada realmente superior a la instalada. Si SAGE ya está actualizado, el aviso permanece oculto."
+  "notes": "Panel del Administrador General con filtro por institución. Los contadores consultan Supabase según la institución seleccionada y el detalle de Seguimiento carga los casos directamente desde la nube, evitando el contador con detalle vacío."
 }

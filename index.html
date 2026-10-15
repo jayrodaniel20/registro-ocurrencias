@@ -87,7 +87,7 @@
 <header>
   <div class="headwrap">
     <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.21 · Seguimiento por voz</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.24 · Panel administrativo por institución</div></div>
   </div>
 </header>
 <nav>
@@ -146,6 +146,19 @@
         <button id="installHelpBtn" type="button" class="btn secondary" onclick="showInstallHelp()">Cómo instalar</button>
       </div>
       <div id="installFallback" class="subtle small" style="margin-top:10px;display:none"></div>
+    </div>
+    <div id="adminHomeInstitutionCard" class="card" style="margin-top:12px;display:none">
+      <div class="split-head">
+        <div>
+          <h3 style="margin-bottom:4px">🏫 Resumen administrativo</h3>
+          <div class="muted small">Consulta los indicadores generales o filtra una institución educativa.</div>
+        </div>
+        <span class="pill">Administrador</span>
+      </div>
+      <label for="adminHomeInstitutionFilter">Institución</label>
+      <select id="adminHomeInstitutionFilter" onchange="onAdminHomeInstitutionChange()">
+        <option value="">Todas las instituciones</option>
+      </select>
     </div>
     <div class="grid" style="margin-top:12px">
       <div class="card stat-card"><div class="stat-label">👥 Estudiantes</div><div class="stat" id="statStudents">0</div></div>
@@ -387,41 +400,53 @@ const SUPABASE_PUBLISHABLE_KEY='sb_publishable_XkAyinrprmor3xfbFfRkpA_b6Yug7Nh';
 const APP_PUBLIC_URL='https://jayrodaniel20.github.io/registro-ocurrencias/';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 let cloudUser=null;
-let adminHomeStatsCache={students:0,occurrences:0,today:0,follow:0,loaded:false,updatedAt:0};
+let adminHomeStatsCache={students:0,occurrences:0,today:0,follow:0,loaded:false,updatedAt:0,institutionId:''};
 let adminHomeStatsLoading=false;
+let adminHomeInstitutions=[];
+let adminFollowRows=[];
+function selectedAdminInstitutionId(){return $('adminHomeInstitutionFilter')?.value||''}
+function adminInstitutionName(id){return adminHomeInstitutions.find(i=>i.id===id)?.name||'Institución'}
+async function loadAdminHomeInstitutions(){
+  if(activeRole()!=='admin_general'||!cloudUser||!supabaseClient)return;
+  const card=$('adminHomeInstitutionCard');if(card)card.style.display='block';
+  try{
+    const {data,error}=await supabaseClient.from('institutions').select('id,name,modular_code').order('name');
+    if(error)throw error;
+    adminHomeInstitutions=data||[];
+    const sel=$('adminHomeInstitutionFilter');if(!sel)return;
+    const old=sel.value;
+    sel.innerHTML='<option value="">Todas las instituciones</option>'+adminHomeInstitutions.map(i=>`<option value="${esc(i.id)}">${esc(i.name||'Institución')}</option>`).join('');
+    if(old&&adminHomeInstitutions.some(i=>i.id===old))sel.value=old;
+  }catch(err){console.error('No se pudo cargar el filtro de instituciones',err)}
+}
+function onAdminHomeInstitutionChange(){
+  adminHomeStatsCache.loaded=false;
+  adminHomeStatsCache.updatedAt=0;
+  refreshAdminHomeStats(true);
+  const dlg=$('followupsDialog');
+  if(dlg?.open)loadAdminFollowups();
+}
 async function refreshAdminHomeStats(force=false){
   if(activeRole()!=='admin_general'||!cloudUser||!supabaseClient)return;
+  const card=$('adminHomeInstitutionCard');if(card)card.style.display='block';
+  if(!adminHomeInstitutions.length)await loadAdminHomeInstitutions();
+  const institutionId=selectedAdminInstitutionId();
   const now=Date.now();
   if(adminHomeStatsLoading)return;
-  if(!force&&adminHomeStatsCache.loaded&&(now-adminHomeStatsCache.updatedAt)<15000){
-    applyAdminHomeStats();
-    return;
-  }
+  if(!force&&adminHomeStatsCache.loaded&&adminHomeStatsCache.institutionId===institutionId&&(now-adminHomeStatsCache.updatedAt)<15000){applyAdminHomeStats();return;}
   adminHomeStatsLoading=true;
   try{
     const today=new Date().toISOString().slice(0,10);
-    const [studentsRes,occRes,todayRes,followRes]=await Promise.all([
-      supabaseClient.from('students').select('id',{count:'exact',head:true}),
-      supabaseClient.from('occurrences').select('id',{count:'exact',head:true}),
-      supabaseClient.from('occurrences').select('id',{count:'exact',head:true}).eq('occurrence_date',today),
-      supabaseClient.from('occurrences').select('id',{count:'exact',head:true}).eq('requires_follow',true).or('follow_status.is.null,follow_status.neq.closed')
-    ]);
-    const firstError=[studentsRes,occRes,todayRes,followRes].find(r=>r&&r.error)?.error;
-    if(firstError)throw firstError;
-    adminHomeStatsCache={
-      students:studentsRes.count||0,
-      occurrences:occRes.count||0,
-      today:todayRes.count||0,
-      follow:followRes.count||0,
-      loaded:true,
-      updatedAt:Date.now()
-    };
+    let studentsQ=supabaseClient.from('students').select('id',{count:'exact',head:true});
+    let occQ=supabaseClient.from('occurrences').select('id',{count:'exact',head:true});
+    let todayQ=supabaseClient.from('occurrences').select('id',{count:'exact',head:true}).eq('occurrence_date',today);
+    let followQ=supabaseClient.from('occurrences').select('id',{count:'exact',head:true}).eq('requires_follow',true).or('follow_status.is.null,follow_status.neq.closed');
+    if(institutionId){studentsQ=studentsQ.eq('institution_id',institutionId);occQ=occQ.eq('institution_id',institutionId);todayQ=todayQ.eq('institution_id',institutionId);followQ=followQ.eq('institution_id',institutionId)}
+    const [studentsRes,occRes,todayRes,followRes]=await Promise.all([studentsQ,occQ,todayQ,followQ]);
+    const firstError=[studentsRes,occRes,todayRes,followRes].find(r=>r&&r.error)?.error;if(firstError)throw firstError;
+    adminHomeStatsCache={students:studentsRes.count||0,occurrences:occRes.count||0,today:todayRes.count||0,follow:followRes.count||0,loaded:true,updatedAt:Date.now(),institutionId};
     applyAdminHomeStats();
-  }catch(err){
-    console.error('No se pudieron cargar los indicadores administrativos',err);
-  }finally{
-    adminHomeStatsLoading=false;
-  }
+  }catch(err){console.error('No se pudieron cargar los indicadores administrativos',err)}finally{adminHomeStatsLoading=false}
 }
 function applyAdminHomeStats(){
   if(activeRole()!=='admin_general'||!adminHomeStatsCache.loaded)return;
@@ -443,7 +468,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.23';
+const APP_VERSION='2.2.24';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -1926,13 +1951,45 @@ function getFiltered(prefix){let sid=$(prefix+'Student').value,cid=$(prefix+'Cla
 function followStatusLabel(v){return v==='closed'?'Cerrado':v==='in_progress'?'En proceso':'Pendiente'}
 function followStatusClass(v){return v==='closed'?'success':v==='in_progress'?'warning':'pending'}
 function ensureFollowFields(o){if(!o)return o;if(o.requiresFollow&&!o.followStatus)o.followStatus='pending';if(!o.followDate)o.followDate='';if(!o.followNote)o.followNote='';return o}
-function openFollowups(){db.occurrences.forEach(ensureFollowFields);renderFollowups();$('followupsDialog').showModal()}
+async function openFollowups(){
+  if(activeRole()==='admin_general'){
+    await loadAdminFollowups();
+    $('followupsDialog').showModal();
+    return;
+  }
+  db.occurrences.forEach(ensureFollowFields);renderFollowups();$('followupsDialog').showModal()
+}
 function setFollowFilter(v){if($('followFilter'))$('followFilter').value=v;renderFollowups()}
-function updateFollowSummary(){const all=db.occurrences.filter(o=>o.requiresFollow).map(ensureFollowFields);const counts={pending:0,in_progress:0,closed:0};all.forEach(o=>counts[o.followStatus||'pending']=(counts[o.followStatus||'pending']||0)+1);if($('followPendingNum'))$('followPendingNum').textContent=counts.pending||0;if($('followProgressNum'))$('followProgressNum').textContent=counts.in_progress||0;if($('followClosedNum'))$('followClosedNum').textContent=counts.closed||0;const f=$('followFilter')?.value||'open';[['followCountPending','pending'],['followCountProgress','in_progress'],['followCountClosed','closed']].forEach(([id,v])=>$(id)?.classList.toggle('active',f===v));}
+async function loadAdminFollowups(){
+  const box=$('followupsList');if(box)box.innerHTML='<div class="card empty">Cargando seguimientos…</div>';
+  try{
+    if(!adminHomeInstitutions.length)await loadAdminHomeInstitutions();
+    const institutionId=selectedAdminInstitutionId();
+    let q=supabaseClient.from('occurrences').select('id,user_id,institution_id,classroom_id,student_id,student_name,grade,section,occurrence_date,occurrence_time,place,type,subtype,description,actions,follow_text,requires_follow,follow_status,follow_date,follow_note,created_at,updated_at').eq('requires_follow',true).order('occurrence_date',{ascending:false}).order('occurrence_time',{ascending:false});
+    if(institutionId)q=q.eq('institution_id',institutionId);
+    const {data,error}=await q;if(error)throw error;
+    adminFollowRows=data||[];
+    renderFollowups();
+  }catch(err){console.error('No se pudieron cargar los seguimientos administrativos',err);if(box)box.innerHTML='<div class="card empty">No se pudieron cargar los seguimientos. Verifica la conexión y vuelve a intentar.</div>'}
+}
+function updateFollowSummary(){
+  if(activeRole()==='admin_general'){
+    const counts={pending:0,in_progress:0,closed:0};adminFollowRows.forEach(o=>{const st=o.follow_status||'pending';counts[st]=(counts[st]||0)+1});
+    if($('followPendingNum'))$('followPendingNum').textContent=counts.pending||0;if($('followProgressNum'))$('followProgressNum').textContent=counts.in_progress||0;if($('followClosedNum'))$('followClosedNum').textContent=counts.closed||0;
+    const f=$('followFilter')?.value||'open';[['followCountPending','pending'],['followCountProgress','in_progress'],['followCountClosed','closed']].forEach(([id,v])=>$(id)?.classList.toggle('active',f===v));return;
+  }
+  const all=db.occurrences.filter(o=>o.requiresFollow).map(ensureFollowFields);const counts={pending:0,in_progress:0,closed:0};all.forEach(o=>counts[o.followStatus||'pending']=(counts[o.followStatus||'pending']||0)+1);if($('followPendingNum'))$('followPendingNum').textContent=counts.pending||0;if($('followProgressNum'))$('followProgressNum').textContent=counts.in_progress||0;if($('followClosedNum'))$('followClosedNum').textContent=counts.closed||0;const f=$('followFilter')?.value||'open';[['followCountPending','pending'],['followCountProgress','in_progress'],['followCountClosed','closed']].forEach(([id,v])=>$(id)?.classList.toggle('active',f===v));
+}
 function renderFollowups(){
   const box=$('followupsList'); if(!box)return;
   updateFollowSummary();
   const filter=$('followFilter')?.value||'open';
+  if(activeRole()==='admin_general'){
+    let arr=adminFollowRows.slice();
+    if(filter==='open')arr=arr.filter(o=>(o.follow_status||'pending')!=='closed');else if(filter!=='all')arr=arr.filter(o=>(o.follow_status||'pending')===filter);
+    box.innerHTML=arr.length?arr.map(o=>`<div class="item"><div class="split-head"><div><strong>${esc(o.student_name||'Estudiante')}</strong> <span class="pill">${esc(o.type||'Sin tipo')}</span>${o.subtype?`<span class="subtype-badge">${esc(o.subtype)}</span>`:''}</div><span class="pill">${followStatusLabel(o.follow_status||'pending')}</span></div><div class="small muted">${esc(adminInstitutionName(o.institution_id))} · ${esc(o.occurrence_date||'')} ${esc(o.occurrence_time||'')} · ${esc(o.grade||'')} ${esc(o.section||'')}</div><div class="detail-section"><h4>Descripción de la ocurrencia</h4><div>${nl(o.description||'—')}</div></div>${o.actions?`<div class="detail-section"><h4>Intervenciones realizadas por el docente</h4>${bulletHtml(o.actions)}</div>`:''}${o.follow_text?`<div class="detail-section"><h4>Acuerdos y compromisos</h4>${bulletHtml(o.follow_text)}</div>`:''}<div class="detail-section"><h4>Seguimiento</h4><div class="detail-grid"><div class="detail-box"><b>Estado</b><br>${followStatusLabel(o.follow_status||'pending')}</div><div class="detail-box"><b>Fecha de seguimiento</b><br>${esc(o.follow_date||'—')}</div></div>${o.follow_note?`<p><b>Nota de seguimiento:</b><br>${nl(o.follow_note)}</p>`:'<div class="small muted" style="margin-top:8px">Aún no hay nota de seguimiento.</div>'}</div><div class="readonly-banner" style="margin-top:10px">🔒 Consulta administrativa de solo lectura.</div></div>`).join(''):'<div class="card empty">No hay casos en esta categoría.</div>';
+    return;
+  }
   let arr=db.occurrences.filter(o=>o.requiresFollow).map(ensureFollowFields);
   if(filter==='open')arr=arr.filter(o=>o.followStatus!=='closed');
   else if(filter!=='all')arr=arr.filter(o=>o.followStatus===filter);
@@ -1961,9 +2018,11 @@ function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.cr
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')} function bulletHtml(text){const items=String(text||'').split(/\n+/).map(x=>x.replace(/^\s*[•\-–—]\s*/, '').trim()).filter(Boolean);return items.length?`<ul class="bullet-list">${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<span class="muted small">—</span>'}
 function refreshAll(){let cfg=db.config||{};const assignedInst=activeInstitution();const assignedSchool=assignedInst?.name||'';if(assignedSchool&&cfg.school!==assignedSchool){cfg.school=assignedSchool;db.config=cfg;localStorage.setItem(DBKEY,JSON.stringify(db));}updateProfileSummary();$('schoolHeader').textContent=(assignedSchool?assignedSchool+' · ':'')+'SAGE · Versión '+APP_VERSION;if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';if(activeRole()==='admin_general'){
+  if($('adminHomeInstitutionCard'))$('adminHomeInstitutionCard').style.display='block';
   applyAdminHomeStats();
   refreshAdminHomeStats();
 }else{
+  if($('adminHomeInstitutionCard'))$('adminHomeInstitutionCard').style.display='none';
   $('statStudents').textContent=db.students.length;
   $('statOcc').textContent=db.occurrences.length;
   let today=new Date().toISOString().slice(0,10);
@@ -2096,7 +2155,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.23',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.24',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;if(!nw)return;

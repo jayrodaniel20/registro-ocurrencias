@@ -1,0 +1,9 @@
+SAGE v2.2.24
+
+Cambios:
+- El Administrador General puede filtrar los contadores de Inicio por institución o ver todas.
+- Estudiantes, Ocurrencias, Hoy y Seguimiento se consultan directamente en Supabase.
+- Al tocar Seguimiento como Administrador, los casos se cargan desde Supabase y se muestran en detalle en modo solo lectura.
+- Se evita la discrepancia anterior: contador con valor pero lista vacía.
+
+No requiere SQL adicional respecto a los permisos ya aplicados durante la estabilización.
