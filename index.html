@@ -387,6 +387,50 @@ const SUPABASE_PUBLISHABLE_KEY='sb_publishable_XkAyinrprmor3xfbFfRkpA_b6Yug7Nh';
 const APP_PUBLIC_URL='https://jayrodaniel20.github.io/registro-ocurrencias/';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 let cloudUser=null;
+let adminHomeStatsCache={students:0,occurrences:0,today:0,follow:0,loaded:false,updatedAt:0};
+let adminHomeStatsLoading=false;
+async function refreshAdminHomeStats(force=false){
+  if(activeRole()!=='admin_general'||!cloudUser||!supabaseClient)return;
+  const now=Date.now();
+  if(adminHomeStatsLoading)return;
+  if(!force&&adminHomeStatsCache.loaded&&(now-adminHomeStatsCache.updatedAt)<15000){
+    applyAdminHomeStats();
+    return;
+  }
+  adminHomeStatsLoading=true;
+  try{
+    const today=new Date().toISOString().slice(0,10);
+    const [studentsRes,occRes,todayRes,followRes]=await Promise.all([
+      supabaseClient.from('students').select('id',{count:'exact',head:true}),
+      supabaseClient.from('occurrences').select('id',{count:'exact',head:true}),
+      supabaseClient.from('occurrences').select('id',{count:'exact',head:true}).eq('occurrence_date',today),
+      supabaseClient.from('occurrences').select('id',{count:'exact',head:true}).eq('requires_follow',true).or('follow_status.is.null,follow_status.neq.closed')
+    ]);
+    const firstError=[studentsRes,occRes,todayRes,followRes].find(r=>r&&r.error)?.error;
+    if(firstError)throw firstError;
+    adminHomeStatsCache={
+      students:studentsRes.count||0,
+      occurrences:occRes.count||0,
+      today:todayRes.count||0,
+      follow:followRes.count||0,
+      loaded:true,
+      updatedAt:Date.now()
+    };
+    applyAdminHomeStats();
+  }catch(err){
+    console.error('No se pudieron cargar los indicadores administrativos',err);
+  }finally{
+    adminHomeStatsLoading=false;
+  }
+}
+function applyAdminHomeStats(){
+  if(activeRole()!=='admin_general'||!adminHomeStatsCache.loaded)return;
+  if($('statStudents'))$('statStudents').textContent=adminHomeStatsCache.students;
+  if($('statOcc'))$('statOcc').textContent=adminHomeStatsCache.occurrences;
+  if($('statToday'))$('statToday').textContent=adminHomeStatsCache.today;
+  if($('statFollow'))$('statFollow').textContent=adminHomeStatsCache.follow;
+}
+
 let localBypass=false;
 let activeMembershipId=localStorage.getItem('sage_active_membership')||'';
 let swRegistration=null;
@@ -399,7 +443,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.21';
+const APP_VERSION='2.2.23';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -1916,7 +1960,17 @@ function restoreData(e){let f=e.target.files[0];if(!f)return;let r=new FileReade
 function downloadBlob(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function setNow(){let n=new Date();$('ocDate').value=n.toISOString().slice(0,10);$('ocTime').value=n.toTimeString().slice(0,5)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))} function nl(s){return esc(s).replace(/\n/g,'<br>')} function bulletHtml(text){const items=String(text||'').split(/\n+/).map(x=>x.replace(/^\s*[•\-–—]\s*/, '').trim()).filter(Boolean);return items.length?`<ul class="bullet-list">${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<span class="muted small">—</span>'}
-function refreshAll(){let cfg=db.config||{};const assignedInst=activeInstitution();const assignedSchool=assignedInst?.name||'';if(assignedSchool&&cfg.school!==assignedSchool){cfg.school=assignedSchool;db.config=cfg;localStorage.setItem(DBKEY,JSON.stringify(db));}updateProfileSummary();$('schoolHeader').textContent=(assignedSchool?assignedSchool+' · ':'')+'SAGE · Versión '+APP_VERSION;if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';$('statStudents').textContent=db.students.length;$('statOcc').textContent=db.occurrences.length;let today=new Date().toISOString().slice(0,10);$('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;db.occurrences.forEach(ensureFollowFields);$('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow&&o.followStatus!=='closed').length;let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Seleccionar salón...</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistorySubtypeFilter();renderOccurrenceSubtypes(true);renderHistory();updateSyncUi()}
+function refreshAll(){let cfg=db.config||{};const assignedInst=activeInstitution();const assignedSchool=assignedInst?.name||'';if(assignedSchool&&cfg.school!==assignedSchool){cfg.school=assignedSchool;db.config=cfg;localStorage.setItem(DBKEY,JSON.stringify(db));}updateProfileSummary();$('schoolHeader').textContent=(assignedSchool?assignedSchool+' · ':'')+'SAGE · Versión '+APP_VERSION;if($('cloudPrepStatus'))$('cloudPrepStatus').textContent=cloudUser?'Cuenta conectada · sincronización disponible':'Estructura lista · cuenta no conectada';if($('schemaVersionLabel'))$('schemaVersionLabel').textContent='v'+(db.meta?.schemaVersion||SCHEMA_VERSION);if($('installIdLabel'))$('installIdLabel').textContent=(db.meta?.installId||'—').slice(0,8)+'…';if(activeRole()==='admin_general'){
+  applyAdminHomeStats();
+  refreshAdminHomeStats();
+}else{
+  $('statStudents').textContent=db.students.length;
+  $('statOcc').textContent=db.occurrences.length;
+  let today=new Date().toISOString().slice(0,10);
+  $('statToday').textContent=db.occurrences.filter(o=>o.date===today).length;
+  db.occurrences.forEach(ensureFollowFields);
+  $('statFollow').textContent=db.occurrences.filter(o=>o.requiresFollow&&o.followStatus!=='closed').length;
+}let allOpts=classroomOptions(true),selectOpts=classroomOptions(false);['ocClassroom','filterClassroom','repClassroom','studentClassFilter'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=allOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});['stClassroom','bulkClassroom'].forEach(id=>{let el=$(id);if(el){let old=el.value;el.innerHTML=id==='bulkClassroom'?'<option value="">Seleccionar salón...</option>'+db.classrooms.slice().sort((a,b)=>classroomLabel(a).localeCompare(classroomLabel(b))).map(c=>`<option value="${c.id}">${esc(classroomLabel(c))}</option>`).join(''):selectOpts;if(db.classrooms.some(c=>c.id===old))el.value=old}});renderClassrooms();renderStudents();renderOccurrenceStudents();renderFilterStudentOptions();renderReportStudentOptions();renderHistorySubtypeFilter();renderOccurrenceSubtypes(true);renderHistory();updateSyncUi()}
 
 let deferredInstallPrompt=null;
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;}
@@ -1979,26 +2033,44 @@ function showInstallHelp(){
   }
 }
 let latestAvailableVersion=null;
+function compareVersions(a,b){
+  const pa=String(a||'').split('.').map(x=>parseInt(x,10)||0);
+  const pb=String(b||'').split('.').map(x=>parseInt(x,10)||0);
+  const n=Math.max(pa.length,pb.length);
+  for(let i=0;i<n;i++){
+    const da=pa[i]||0, db=pb[i]||0;
+    if(da>db)return 1;
+    if(da<db)return -1;
+  }
+  return 0;
+}
+function hideUpdateNotice(){
+  latestAvailableVersion=null;
+  const card=$('updateCard');if(card)card.style.display='none';
+  const txt=$('updateVersionText');if(txt)txt.textContent='';
+}
 function showUpdateNotice(reg,version){
   swRegistration=reg||swRegistration;
-  latestAvailableVersion=version||latestAvailableVersion;
+  if(!version || compareVersions(version,APP_VERSION)<=0){hideUpdateNotice();return;}
+  latestAvailableVersion=version;
   const card=$('updateCard');if(card)card.style.display='block';
   const txt=$('updateVersionText');
-  if(txt)txt.textContent=latestAvailableVersion?` Versión disponible: ${latestAvailableVersion}.`:'';
+  if(txt)txt.textContent=` Versión disponible: ${latestAvailableVersion}.`;
 }
 function dismissUpdateNotice(){const card=$('updateCard');if(card)card.style.display='none';}
 async function checkPublishedVersion(){
   try{
     const r=await fetch(`version.json?t=${Date.now()}`,{cache:'no-store'});
-    if(!r.ok)return;
+    if(!r.ok){hideUpdateNotice();return;}
     const data=await r.json();
     const published=String(data.version||'').trim();
-    if(published && published!==APP_VERSION){
-      latestAvailableVersion=published;
+    if(published && compareVersions(published,APP_VERSION)>0){
       showUpdateNotice(swRegistration,published);
       if(swRegistration)swRegistration.update().catch(()=>{});
+    }else{
+      hideUpdateNotice();
     }
-  }catch(e){}
+  }catch(e){hideUpdateNotice();}
 }
 async function updateAppNow(){
   toast('Preparando actualización…');
@@ -2024,14 +2096,13 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.15',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.23',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
-    if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg,latestAvailableVersion);
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;if(!nw)return;
       nw.addEventListener('statechange',()=>{
         if(nw.state==='installed'&&navigator.serviceWorker.controller){
-          showUpdateNotice(reg,latestAvailableVersion);
+          checkPublishedVersion();
         }
       });
     });

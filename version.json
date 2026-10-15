@@ -1,4 +1,5 @@
 {
-  "version": "2.2.21",
-  "notes": "Sección independiente en la creación y edición de salones de Inicial, Primaria y Secundaria."
+  "version": "2.2.23",
+  "published_at": "2026-10-15",
+  "notes": "Corrección del aviso de actualización: solo aparece cuando existe una versión publicada realmente superior a la instalada. Si SAGE ya está actualizado, el aviso permanece oculto."
 }

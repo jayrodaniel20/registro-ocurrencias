@@ -1,0 +1,5 @@
+SAGE v2.2.22
+
+Cambio principal: los indicadores de Inicio del Administrador General (Estudiantes, Ocurrencias, Hoy y Seguimiento) consultan los totales directamente en Supabase. Se mantiene la protección que evita cargar datos institucionales dentro de la vista operativa local del administrador.
+
+Requisito aplicado en Supabase: política sage_students_admin_select.
