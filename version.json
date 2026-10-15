@@ -1,5 +1,5 @@
 {
-  "version": "2.2.24",
+  "version": "2.2.25",
   "published_at": "2026-10-15",
-  "notes": "Panel del Administrador General con filtro por institución. Los contadores consultan Supabase según la institución seleccionada y el detalle de Seguimiento carga los casos directamente desde la nube, evitando el contador con detalle vacío."
+  "notes": "Sincronización automática y segura: al abrir/iniciar sesión, recuperar internet, volver a la app, cambiar de rol y guardar cambios. Mantiene copia local offline, reintenta pendientes y evita sincronizaciones simultáneas. El botón manual queda como respaldo."
 }

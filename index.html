@@ -87,7 +87,7 @@
 <header>
   <div class="headwrap">
     <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.24 · Panel administrativo por institución</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.25 · Sincronización automática</div></div>
   </div>
 </header>
 <nav>
@@ -208,7 +208,7 @@
             <div style="margin-top:8px"><b>Estado:</b> <span id="syncStatusLabel" class="cloud-state">Pendiente</span></div>
             <div style="margin-top:5px"><b>Última sincronización:</b> <span id="lastSyncLabel">Nunca</span></div>
             <div style="margin-top:5px"><b>Cambios pendientes:</b> <span id="pendingSyncLabel">0</span></div>
-            <p class="muted small" style="margin:8px 0 0">La app conserva una copia local y sincroniza con tu cuenta cuando tú lo indicas.</p>
+            <p class="muted small" style="margin:8px 0 0">SAGE sincroniza automáticamente tus cambios cuando hay conexión. Si estás sin internet, los guarda en este equipo y los enviará al recuperar la conexión.</p>
             <div class="actions">
               <button id="syncNowBtn" type="button" class="btn primary" onclick="syncNow()" style="display:none">Sincronizar ahora</button>
             </div>
@@ -468,7 +468,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.24';
+const APP_VERSION='2.2.25';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -505,7 +505,7 @@ function updateAccountUi(){
   if($('loginBtn'))$('loginBtn').style.display=cloudUser?'none':'inline-block';
   if($('storageModeLabel'))$('storageModeLabel').textContent=cloudUser?'Nube + local':'Local';
   if(db&&db.profile){db.profile.cloudUserId=cloudUser?.id||null;db.profile.email=email||null;db.profile.mode=cloudUser?'authenticated':'local';localStorage.setItem(DBKEY,JSON.stringify(db));}
-  if($('syncNowBtn'))$('syncNowBtn').style.display=cloudUser?'inline-block':'none';
+  if($('syncNowBtn'))$('syncNowBtn').style.display=roleUsesOperationalSync()?'inline-block':'none';
   if($('accountRoleLabel'))$('accountRoleLabel').textContent=roleSummary();
   if($('accountInstitutionLabel'))$('accountInstitutionLabel').textContent=institutionSummary();
   updateRoleUi();
@@ -552,16 +552,12 @@ async function switchActiveMembership(id){
   accessContext.institution=activeInstitution();
   accessContext.institutionId=activeMembership()?.institution_id||null;
   await refreshCurrentClassroomAccess();
-  // Al cambiar de rol/institución, reemplaza la vista local con el alcance permitido.
-  // No sube datos del contexto anterior, evitando contaminación entre instituciones.
-  if(cloudUser&&['docente','auxiliar'].includes(activeRole())){
-    try{const remote=await fetchCloudRows();replaceLocalWithCloud(remote);localStorage.setItem(DBKEY,JSON.stringify(db));refreshAll();}catch(e){console.warn('No se pudo refrescar el contexto activo:',e);}
-  }
   updateRoleUi();
   const target=defaultViewForActiveRole();go(target);
   if(activeRole()==='admin_general')loadAdminPanel();
   if(activeRole()==='director')loadDirectorDashboard();
   toast(`Modo ${roleLabel(activeRole())} activado`);
+  scheduleAutoSync('cambio de rol o institución',120);
 }
 function updateRoleUi(){
   const current=activeMembership();
@@ -730,6 +726,32 @@ async function uploadLocalDataToCloud(){
 }
 
 
+let syncInProgress=false;
+let syncQueued=false;
+let autoSyncTimer=null;
+let lastSyncError='';
+const AUTO_SYNC_INTERVAL_MS=120000;
+const AUTO_SYNC_DEBOUNCE_MS=900;
+
+function roleUsesOperationalSync(){
+  const role=activeRole();
+  return !!cloudUser&&(role==='docente'||role==='auxiliar');
+}
+function scheduleAutoSync(reason='cambio local',delay=AUTO_SYNC_DEBOUNCE_MS){
+  if(!cloudUser)return;
+  if(!navigator.onLine){updateSyncUi();return;}
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer=setTimeout(()=>runSync({silent:true,refreshAccess:true,reason}),Math.max(0,delay||0));
+}
+function startAutoSyncMonitor(){
+  window.setInterval(()=>{
+    if(cloudUser&&navigator.onLine)scheduleAutoSync('revisión automática',100);
+  },AUTO_SYNC_INTERVAL_MS);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'&&cloudUser&&navigator.onLine)scheduleAutoSync('aplicación activa',250);
+  });
+}
+
 function ensureDeletionQueue(){
   db.meta=db.meta||{};
   db.meta.deleted=db.meta.deleted||{classrooms:[],students:[],occurrences:[]};
@@ -749,12 +771,20 @@ function pendingSyncCount(){
 }
 function updateSyncUi(){
   const status=$('syncStatusLabel'),last=$('lastSyncLabel'),pending=$('pendingSyncLabel');
-  const count=pendingSyncCount();
+  const operational=roleUsesOperationalSync();
+  const count=operational?pendingSyncCount():0;
   if(pending)pending.textContent=count;
   if(last)last.textContent=db.meta?.lastSyncAt?new Date(db.meta.lastSyncAt).toLocaleString():'Nunca';
   if(status){
-    let txt='Sin conexión',bg='#fff5df',fg='#8b5a00';
-    if(cloudUser){txt=count?'Pendiente':'Sincronizado';bg=count?'#fff5df':'#eaf8ef';fg=count?'#8b5a00':'#17653a'}
+    let txt='Modo local',bg='#edf3ff',fg='#0e4ea7';
+    if(cloudUser&&!operational){txt='Conectado';bg='#eaf8ef';fg='#17653a';}
+    if(operational){
+      if(!navigator.onLine){txt='Sin conexión';bg='#fff5df';fg='#8b5a00';}
+      else if(syncInProgress){txt='Sincronizando…';bg='#edf3ff';fg='#0e4ea7';}
+      else if(lastSyncError&&count){txt='Error · reintentará';bg='#fff0f0';fg='#9d1d1d';}
+      else if(count){txt=`${count} pendiente${count===1?'':'s'}`;bg='#fff5df';fg='#8b5a00';}
+      else {txt='Sincronizado';bg='#eaf8ef';fg='#17653a';}
+    }
     status.textContent=txt;status.style.background=bg;status.style.color=fg;
   }
 }
@@ -996,25 +1026,39 @@ function replaceLocalWithCloud(remote){
   db.students=(remote.students||[]).map(r=>{const x=cloudToLocal('students',r);cm.students[x.id]=r.id;return x});
   db.occurrences=(remote.occurrences||[]).map(r=>{const x=cloudToLocal('occurrences',r);cm.occurrences[x.id]=r.id;return x});
 }
-async function syncNow(){
-  if(!cloudUser)return alert('Primero inicia sesión.');
-  if(!navigator.onLine){updateSyncUi();return alert('No hay conexión a internet. Tus cambios siguen guardados en este dispositivo.');}
-  const btn=$('syncNowBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='Sincronizando…';
+async function runSync(options={}){
+  const silent=!!options.silent;
+  const refreshAccess=options.refreshAccess!==false;
+  const reason=options.reason||'manual';
+  if(!cloudUser){if(!silent)alert('Primero inicia sesión.');return false;}
+  if(!navigator.onLine){updateSyncUi();if(!silent)alert('No hay conexión a internet. Tus cambios siguen guardados en este dispositivo y se enviarán automáticamente cuando vuelva la conexión.');return false;}
+  if(syncInProgress){syncQueued=true;return false;}
+  syncInProgress=true;syncQueued=false;lastSyncError='';updateSyncUi();
+  const btn=$('syncNowBtn');const old=btn?.textContent||'Sincronizar ahora';
+  if(btn){btn.disabled=true;btn.textContent='Sincronizando…';}
   try{
+    // Renueva membresías y accesos para que los cambios hechos por el administrador
+    // aparezcan sin que el usuario tenga que pulsar Sincronizar.
+    if(refreshAccess)await loadAccessContext();
+
+    // Administrador y Director consultan directamente la nube en sus paneles.
+    // No mezclamos sus datos institucionales con la copia operativa local.
+    if(!roleUsesOperationalSync()){
+      lastSyncError='';updateSyncUi();return true;
+    }
+
     await refreshCurrentClassroomAccess();
     // 1) Elimina en la nube lo que fue eliminado localmente.
     await applyPendingDeletes();
 
-    // 2) Lee la nube antes de subir cambios. Si existe una versión remota más reciente,
-    //    esa versión prevalece para evitar que una copia antigua de otro equipo la sobrescriba.
+    // 2) Lee primero la nube. Si allí existe una versión más reciente, prevalece.
     let remote=await fetchCloudRows();
     let localDupes=collapseLocalStudentDuplicates();
 
-    // 3) Sube SOLO cambios locales pendientes, nunca toda la copia del dispositivo.
+    // 3) Sube solamente los cambios locales pendientes.
     await uploadDirtyLocal(remote);
 
-    // 4) Descarga de nuevo la nube y la convierte en la única copia visible del dispositivo.
-    //    Así laptop y celular muestran exactamente lo mismo después de sincronizar.
+    // 4) Descarga nuevamente la nube y reconstruye la copia local autorizada.
     remote=await fetchCloudRows();
     replaceLocalWithCloud(remote);
     localDupes+=collapseLocalStudentDuplicates();
@@ -1022,22 +1066,33 @@ async function syncNow(){
     db.profile.cloudUserId=cloudUser.id;
     db.profile.email=cloudUser.email||null;
     db.profile.mode='authenticated';
-
     db.classrooms.forEach(x=>x.syncState='synced');
     db.students.forEach(x=>x.syncState='synced');
     db.occurrences.forEach(x=>x.syncState='synced');
     db.meta.lastSyncAt=nowISO();
     db.meta.cloudMigratedAt=db.meta.cloudMigratedAt||db.meta.lastSyncAt;
     localStorage.setItem(DBKEY,JSON.stringify(db));
+    lastSyncError='';
     refreshAll();updateSyncUi();
-    toast(`Sincronización completada · ${db.students.length} estudiante(s)${localDupes?' · duplicados locales corregidos':''}`);
+    if(!silent)toast(`Sincronización completada · ${db.students.length} estudiante(s)${localDupes?' · duplicados locales corregidos':''}`);
+    return true;
   }catch(e){
+    lastSyncError=String(e?.message||e||'Error de sincronización');
     updateSyncUi();
-    alert('No se pudo completar la sincronización. Tus datos locales siguen guardados.\n\nDetalle: '+(e.message||e));
-  }finally{btn.disabled=false;btn.textContent=old}
+    console.warn('Sincronización automática falló:',reason,e);
+    if(silent)toast('Sincronización pendiente · SAGE volverá a intentarlo');
+    else alert('No se pudo completar la sincronización. Tus datos locales siguen guardados y SAGE volverá a intentarlo.\n\nDetalle: '+lastSyncError);
+    return false;
+  }finally{
+    syncInProgress=false;
+    if(btn){btn.disabled=false;btn.textContent=old;}
+    updateSyncUi();
+    if(syncQueued){syncQueued=false;scheduleAutoSync('cambios acumulados',350);}
+  }
 }
-window.addEventListener('online',()=>{updateSyncUi();toast('Conexión recuperada')});
-window.addEventListener('offline',()=>{updateSyncUi();toast('Sin conexión · trabajando en local')});
+async function syncNow(){return runSync({silent:false,refreshAccess:true,reason:'manual'});}
+window.addEventListener('online',()=>{updateSyncUi();toast('Conexión recuperada · sincronizando…');scheduleAutoSync('conexión recuperada',250);});
+window.addEventListener('offline',()=>{updateSyncUi();toast('Sin conexión · tus cambios quedan guardados en este equipo');});
 
 async function createAccount(){
   clearAuthMessage();
@@ -1061,7 +1116,7 @@ async function loginAccount(){
     if(/email not confirmed/i.test(msg))return showAuthMessage('Este correo todavía no está confirmado en Supabase. Comunícalo al administrador para habilitar la cuenta.','err');
     return showAuthMessage(msg,'err');
   }
-  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await ensureProfileIdentity(true);await loadAccessContext();refreshAll();go(defaultViewForActiveRole());toast('Sesión iniciada');
+  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await ensureProfileIdentity(true);await loadAccessContext();refreshAll();go(defaultViewForActiveRole());toast('Sesión iniciada');scheduleAutoSync('inicio de sesión',150);
 }
 async function logoutAccount(){
   if(!confirm('¿Cerrar sesión en este dispositivo? Tus datos locales no se borrarán.'))return;
@@ -1093,11 +1148,11 @@ async function initAuth(){
     else cloudUser=userData.user;
   }
   updateAccountUi();
-  if(cloudUser){setAuthGate(false);await ensureProfileIdentity(true);await loadAccessContext();go(defaultViewForActiveRole())}else if(!localBypass){setAuthGate(true)}
+  if(cloudUser){setAuthGate(false);await ensureProfileIdentity(true);await loadAccessContext();go(defaultViewForActiveRole());scheduleAutoSync('apertura de SAGE',180)}else if(!localBypass){setAuthGate(true)}
   supabaseClient.auth.onAuthStateChange((event,session)=>{
     cloudUser=session?.user||null;updateAccountUi();
     if(event==='PASSWORD_RECOVERY'){$('passwordDialog').showModal();setAuthGate(false)}
-    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(async()=>{await ensureProfileIdentity(true);await loadAccessContext();go(defaultViewForActiveRole())},0)}
+    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(async()=>{await ensureProfileIdentity(true);await loadAccessContext();go(defaultViewForActiveRole());scheduleAutoSync('sesión restaurada',180)},0)}
     else if(event==='SIGNED_OUT'){accessContext={role:null,institutionId:null,institution:null,membership:null};updateRoleUi();if(!localBypass)setAuthGate(true)}
   });
 }
@@ -1530,7 +1585,7 @@ function migrateDatabase(raw){
 }
 let db;
 try{db=migrateDatabase(JSON.parse(localStorage.getItem(DBKEY)||'{}'))}catch(e){db=migrateDatabase({})}
-function persist(){db.meta=db.meta||{};db.meta.updatedAt=nowISO();db.meta.appVersion=APP_VERSION;db.meta.schemaVersion=SCHEMA_VERSION;localStorage.setItem(DBKEY,JSON.stringify(db));refreshAll()}
+function persist(){db.meta=db.meta||{};db.meta.updatedAt=nowISO();db.meta.appVersion=APP_VERSION;db.meta.schemaVersion=SCHEMA_VERSION;localStorage.setItem(DBKEY,JSON.stringify(db));refreshAll();if(cloudUser)scheduleAutoSync('cambio guardado')}
 // Guarda la migración inmediatamente sin borrar ni reemplazar los datos existentes.
 localStorage.setItem(DBKEY,JSON.stringify(db));
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1800)}
@@ -2155,7 +2210,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.24',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.25',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;if(!nw)return;
@@ -2187,6 +2242,6 @@ function initInstallExperience(){
   },1800);
 }
 
-setNow();refreshAll();initAuth();initInstallExperience();initServiceWorkerUpdates();
+setNow();refreshAll();initAuth();startAutoSyncMonitor();initInstallExperience();initServiceWorkerUpdates();
 </script>
 </body></html>

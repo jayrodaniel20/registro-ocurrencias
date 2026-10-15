@@ -1,0 +1,14 @@
+SAGE v2.2.25 — SINCRONIZACIÓN AUTOMÁTICA
+
+Cambios principales:
+- Sincroniza automáticamente al abrir SAGE/iniciar sesión.
+- Renueva roles y accesos de salón desde Supabase.
+- Sincroniza después de guardar cambios.
+- Al recuperar internet, reintenta automáticamente.
+- Al volver a la app y periódicamente, revisa cambios pendientes y accesos nuevos.
+- Mantiene los datos locales si falla internet o Supabase.
+- Evita ejecutar varias sincronizaciones al mismo tiempo.
+- El botón «Sincronizar ahora» queda como respaldo para Docente/Auxiliar.
+- Administrador y Director siguen consultando la nube sin mezclar información institucional en la copia operativa local.
+
+No requiere SQL adicional.
