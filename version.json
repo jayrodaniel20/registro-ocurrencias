@@ -1,4 +1,5 @@
 {
-  "version": "2.2.32",
-  "notes": "Corrige la sesión tras reemplazar una contraseña temporal: SAGE inicia una nueva sesión con la contraseña personal o solicita un nuevo inicio de sesión sin mostrar Auth session missing."
+  "version": "2.2.33",
+  "name": "SAGE",
+  "description": "Protección contra doble envío al crear o cambiar contraseña."
 }

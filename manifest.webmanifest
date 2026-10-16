@@ -1,7 +1,9 @@
 {
-  "name": "SAGE - Sistema de Acompañamiento y Gestión Escolar",
+  "name": "SAGE · Sistema de Acompañamiento y Gestión Escolar",
   "short_name": "SAGE",
+  "description": "Sistema de Acompañamiento y Gestión Escolar",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#1769e0",

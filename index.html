@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <title>SAGE · Sistema de Acompañamiento y Gestión Escolar</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2.2.21" />
+  <link rel="manifest" href="manifest.webmanifest?v=2.2.33" />
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--pri:#1769e0;--pri2:#0e4ea7;--text:#172033;--muted:#6d7789;--ok:#198754;--warn:#b7791f;--danger:#c62828;--line:#e4eaf2;--shadow:0 8px 28px rgba(30,55,90,.09)}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 220px,#f4f7fb 100%);color:var(--text)}
@@ -64,7 +64,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.33</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -86,8 +86,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.32 · Sesión segura tras cambio de contraseña</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.33</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.33 · Protección contra doble envío de contraseña</div></div>
   </div>
 </header>
 <nav>
@@ -391,7 +391,7 @@
 
 <dialog id="redactionDialog"><div class="modal"><h3 id="redactionTitle">Mejorar redacción</h3><p class="small muted">Compara ambas versiones. La app no agrega hechos nuevos; tú decides si reemplazas el texto.</p><label>Texto original</label><textarea id="redactionOriginal" readonly style="background:#f4f6f9"></textarea><label>Versión mejorada</label><textarea id="redactionImproved"></textarea><div class="actions"><button type="button" class="btn primary" onclick="applyImprovedRedaction()">Usar esta redacción</button><button type="button" class="btn secondary" onclick="document.getElementById('redactionDialog').close()">Conservar original</button></div></div></dialog>
 
-<dialog id="passwordDialog"><div class="modal"><h3 id="passwordDialogTitle">Crear nueva contraseña</h3><p class="small muted" id="passwordDialogText">Escribe una nueva contraseña para tu cuenta.</p><div id="passwordForcedNotice" class="readonly-banner" style="display:none;margin-bottom:12px;border-color:#f0c36d;background:#fff8e7;color:#6f4b00"><b>Contraseña temporal.</b> Por seguridad debes crear una contraseña personal antes de continuar usando SAGE.</div><label>Nueva contraseña</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><label>Repetir contraseña</label><input id="newPassword2" type="password" autocomplete="new-password"><div class="actions"><button class="btn primary" type="button" onclick="saveNewPassword()">Guardar contraseña</button><button id="passwordCancelBtn" class="btn secondary" type="button" onclick="document.getElementById('passwordDialog').close()">Cancelar</button><button id="passwordLogoutBtn" class="btn secondary" type="button" style="display:none" onclick="logoutFromForcedPasswordDialog()">Cerrar sesión</button></div></div></dialog>
+<dialog id="passwordDialog"><div class="modal"><h3 id="passwordDialogTitle">Crear nueva contraseña</h3><p class="small muted" id="passwordDialogText">Escribe una nueva contraseña para tu cuenta.</p><div id="passwordForcedNotice" class="readonly-banner" style="display:none;margin-bottom:12px;border-color:#f0c36d;background:#fff8e7;color:#6f4b00"><b>Contraseña temporal.</b> Por seguridad debes crear una contraseña personal antes de continuar usando SAGE.</div><label>Nueva contraseña</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><label>Repetir contraseña</label><input id="newPassword2" type="password" autocomplete="new-password"><div class="actions"><button id="passwordSaveBtn" class="btn primary" type="button" onclick="saveNewPassword()">Guardar contraseña</button><button id="passwordCancelBtn" class="btn secondary" type="button" onclick="document.getElementById('passwordDialog').close()">Cancelar</button><button id="passwordLogoutBtn" class="btn secondary" type="button" style="display:none" onclick="logoutFromForcedPasswordDialog()">Cerrar sesión</button></div></div></dialog>
 <dialog id="institutionEditDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">Editar institución</h3><p class="small muted" style="margin:0">Actualiza los datos institucionales.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('institutionEditDialog').close()">Cerrar</button></div><input type="hidden" id="editInstId"><label>Nombre de la institución</label><input id="editInstName"><div class="row"><div><label>Código modular</label><input id="editInstCode"></div><div><label>Nivel educativo</label><select id="editInstLevel"><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select></div></div><div class="row"><div><label>UGEL</label><input id="editInstUGEL"></div><div><label>Región</label><input id="editInstRegion"></div></div><label>Estado</label><select id="editInstActive"><option value="true">Activa</option><option value="false">Inactiva</option></select><div class="actions"><button type="button" class="btn primary" onclick="saveInstitutionEdit()">Guardar cambios</button></div></div></dialog>
 <dialog id="adminClassroomResetDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">⚠️ Reiniciar salón de prueba</h3><p class="small muted" style="margin:0">Esta herramienta es solo para limpiar datos de prueba. No elimina cuentas de docentes, auxiliares ni directivos.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomResetDialog').close()">Cerrar</button></div><input type="hidden" id="adminResetClassId"><div id="adminResetClassSummary" class="subtle" style="margin:12px 0"></div><div class="readonly-banner" style="border-color:#f3c2c2;background:#fff4f4;color:#7a1f1f">Se eliminarán estudiantes, ocurrencias y seguimientos asociados al salón seleccionado. Las cuentas de usuarios y sus roles institucionales se conservarán.</div><label style="margin-top:12px">Acción</label><select id="adminResetMode"><option value="keep">Vaciar datos y conservar el salón</option><option value="delete">Vaciar datos y eliminar también el salón</option></select><label>Para confirmar, escribe REINICIAR</label><input id="adminResetConfirm" autocomplete="off" placeholder="REINICIAR"><div class="actions"><button type="button" class="btn danger" onclick="confirmAdminClassroomReset()">Confirmar reinicio</button><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomResetDialog').close()">Cancelar</button></div></div></dialog>
 <dialog id="adminClassroomEditDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">Editar salón oficial</h3><p class="small muted" style="margin:0">Los cambios también se reflejarán en estudiantes y ocurrencias vinculadas.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomEditDialog').close()">Cerrar</button></div><input type="hidden" id="adminEditClassId"><input type="hidden" id="adminEditClassInstitution"><label>Nivel educativo</label><select id="adminEditClassLevel" onchange="renderAdminEditClassroomFields()"><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select><div id="adminEditInitialFields"><div class="row"><div><label>Edad</label><select id="adminEditClassAge"><option>0 a 2 años</option><option>3 años</option><option>4 años</option><option>5 años</option></select></div><div><label>Sección</label><input id="adminEditInitialSection" placeholder="Ej.: A, B, Única"></div></div><label>Nombre del aula</label><input id="adminEditClassName"></div><div id="adminEditRegularFields"><div class="row"><div><label id="adminEditClassGradeLabel">Grado</label><select id="adminEditClassGrade"></select></div><div><label>Sección</label><input id="adminEditClassSection"></div></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveAdminClassroomEdit()">Guardar cambios</button></div></div></dialog>
@@ -405,6 +405,7 @@ const APP_PUBLIC_URL='https://jayrodaniel20.github.io/registro-ocurrencias/';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 let cloudUser=null;
 let forcedPasswordChange=false;
+let passwordChangeInProgress=false;
 let adminHomeStatsCache={students:0,occurrences:0,today:0,follow:0,loaded:false,updatedAt:0,institutionId:''};
 let adminHomeStatsLoading=false;
 let adminHomeStatsRequestSeq=0;
@@ -491,7 +492,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.32';
+const APP_VERSION='2.2.33';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -1200,49 +1201,69 @@ function showForcedPasswordChangeIfNeeded(){
   return true;
 }
 async function saveNewPassword(){
+  if(passwordChangeInProgress)return;
+
   const p1=$('newPassword').value,p2=$('newPassword2').value;
   if(p1.length<8)return alert('La contraseña debe tener al menos 8 caracteres.');
   if(p1!==p2)return alert('Las contraseñas no coinciden.');
-  if(forcedPasswordChange||userMustChangePassword()){
-    const email=String(cloudUser?.email||'').trim().toLowerCase();
-    const {data,error}=await supabaseClient.functions.invoke('admin-reset-password',{body:{action:'complete_temp_password',new_password:p1}});
-    if(error)return alert('No se pudo cambiar la contraseña. '+(error.message||error));
-    if(data?.error)return alert('No se pudo cambiar la contraseña. '+data.error);
 
-    // Supabase puede invalidar la sesión anterior al cambiar la contraseña.
-    // Cerramos solo la sesión local (si todavía existe) e iniciamos una nueva
-    // con la contraseña personal recién creada.
-    try{await supabaseClient.auth.signOut({scope:'local'});}catch(_e){}
-    let loginData=null,loginError=null;
-    if(email){
-      const relogin=await supabaseClient.auth.signInWithPassword({email,password:p1});
-      loginData=relogin.data;loginError=relogin.error;
-    }
+  const saveBtn=$('passwordSaveBtn');
+  passwordChangeInProgress=true;
+  if(saveBtn){
+    saveBtn.disabled=true;
+    saveBtn.dataset.originalText=saveBtn.textContent||'Guardar contraseña';
+    saveBtn.textContent='Guardando…';
+  }
 
-    if(loginError||!loginData?.user){
-      cloudUser=null;forcedPasswordChange=false;
+  try{
+    if(forcedPasswordChange||userMustChangePassword()){
+      const email=String(cloudUser?.email||'').trim().toLowerCase();
+      const {data,error}=await supabaseClient.functions.invoke('admin-reset-password',{body:{action:'complete_temp_password',new_password:p1}});
+      if(error)return alert('No se pudo cambiar la contraseña. '+(error.message||error));
+      if(data?.error)return alert('No se pudo cambiar la contraseña. '+data.error);
+
+      // Supabase puede invalidar la sesión anterior al cambiar la contraseña.
+      // Cerramos solo la sesión local (si todavía existe) e iniciamos una nueva
+      // con la contraseña personal recién creada.
+      try{await supabaseClient.auth.signOut({scope:'local'});}catch(_e){}
+      let loginData=null,loginError=null;
+      if(email){
+        const relogin=await supabaseClient.auth.signInWithPassword({email,password:p1});
+        loginData=relogin.data;loginError=relogin.error;
+      }
+
+      if(loginError||!loginData?.user){
+        cloudUser=null;forcedPasswordChange=false;
+        configurePasswordDialog(false,'own');
+        if($('passwordDialog').open)$('passwordDialog').close();
+        accessContext={role:null,institutionId:null,institution:null,membership:null};
+        updateAccountUi();setAuthGate(true);showAuthTab('login');
+        if(email)$('loginEmail').value=email;
+        showAuthMessage('Tu contraseña personal fue creada correctamente. Por seguridad, inicia sesión nuevamente con tu nueva contraseña.');
+        return;
+      }
+
+      cloudUser=loginData.user;forcedPasswordChange=false;
       configurePasswordDialog(false,'own');
       if($('passwordDialog').open)$('passwordDialog').close();
-      accessContext={role:null,institutionId:null,institution:null,membership:null};
-      updateAccountUi();setAuthGate(true);showAuthTab('login');
-      if(email)$('loginEmail').value=email;
-      showAuthMessage('Tu contraseña personal fue creada correctamente. Por seguridad, inicia sesión nuevamente con tu nueva contraseña.');
+      updateAccountUi();
+      await ensureProfileIdentity(true);await loadAccessContext();refreshAll();
+      go(defaultViewForActiveRole());
+      toast('Contraseña personal creada');
+      scheduleAutoSync('contraseña personal creada',150);
       return;
     }
 
-    cloudUser=loginData.user;forcedPasswordChange=false;
-    configurePasswordDialog(false,'own');
-    if($('passwordDialog').open)$('passwordDialog').close();
-    updateAccountUi();
-    await ensureProfileIdentity(true);await loadAccessContext();refreshAll();
-    go(defaultViewForActiveRole());
-    toast('Contraseña personal creada');
-    scheduleAutoSync('contraseña personal creada',150);
-    return;
+    const {error}=await supabaseClient.auth.updateUser({password:p1});
+    if(error)return alert(error.message);
+    forcedPasswordChange=false;$('passwordDialog').close();toast('Contraseña actualizada');
+  }finally{
+    passwordChangeInProgress=false;
+    if(saveBtn){
+      saveBtn.disabled=false;
+      saveBtn.textContent=saveBtn.dataset.originalText||'Guardar contraseña';
+    }
   }
-  const {error}=await supabaseClient.auth.updateUser({password:p1});
-  if(error)return alert(error.message);
-  forcedPasswordChange=false;$('passwordDialog').close();toast('Contraseña actualizada');
 }
 async function logoutFromForcedPasswordDialog(){
   forcedPasswordChange=false;
@@ -2407,7 +2428,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.27',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.33',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;if(!nw)return;
