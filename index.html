@@ -87,7 +87,7 @@
 <header>
   <div class="headwrap">
     <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.29 · Panel administrador corregido</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.30 · Restablecimiento de contraseña</div></div>
   </div>
 </header>
 <nav>
@@ -380,6 +380,7 @@
   </section>
 
 <dialog id="adminStudentsDialog"><div class="modal modal-wide"><div class="split-head"><div><h3 id="adminStudentsTitle" style="margin-bottom:4px">👥 Estudiantes</h3><p id="adminStudentsHint" class="small muted" style="margin:0">Consulta directa desde Supabase · solo lectura.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('adminStudentsDialog').close()">Cerrar</button></div><div id="adminStudentsList" style="margin-top:12px"><div class="muted small">Cargando estudiantes…</div></div></div></dialog>
+<dialog id="adminPasswordResetDialog"><div class="modal"><h3>Restablecer contraseña</h3><p class="small muted" id="adminPasswordResetUser">Usuario seleccionado</p><input type="hidden" id="adminPasswordResetUserId"><label>Contraseña temporal</label><input id="adminPasswordResetPassword" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><label>Repetir contraseña temporal</label><input id="adminPasswordResetPassword2" type="password" autocomplete="new-password"><div class="footer-note">El Administrador no puede ver la contraseña anterior. Solo reemplaza la contraseña por una temporal. Después del ingreso, pide al usuario cambiarla por una personal.</div><div class="actions"><button type="button" class="btn primary" onclick="submitAdminPasswordReset()">Restablecer contraseña</button><button type="button" class="btn secondary" onclick="document.getElementById('adminPasswordResetDialog').close()">Cancelar</button></div></div></dialog>
 <dialog id="studentEditDialog"><div class="modal"><h3>Editar estudiante</h3><input type="hidden" id="studentEditId"><label>Salón</label><select id="studentEditClassroom" onchange="applyClassroomToStudentEdit()"></select><label>Apellidos y nombres</label><input id="studentEditName"><div class="row"><div><label>Grado</label><input id="studentEditGrade"></div><div><label>Sección</label><input id="studentEditSection"></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveStudentEdit()">Guardar cambios</button><button type="button" class="btn secondary" onclick="closeStudentEdit()">Cancelar</button></div></div></dialog>
 <dialog id="editDialog"><div class="modal"><h3>Editar ocurrencia</h3><input type="hidden" id="editId"><label>Descripción</label><textarea id="editDesc"></textarea><label>Intervenciones realizadas por el docente</label><textarea id="editActions"></textarea><label>Acuerdos y compromisos</label><textarea id="editFollow"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()">Guardar cambios</button><button class="btn secondary" onclick="document.getElementById('editDialog').close()">Cancelar</button></div></div></dialog>
 <dialog id="followupsDialog"><div class="modal" style="max-width:760px"><div class="split-head"><div><h3 style="margin-bottom:4px">🔔 Seguimiento de casos</h3><p class="small muted" style="margin:0">Revisa las ocurrencias marcadas para seguimiento y registra su avance.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('followupsDialog').close()">Cerrar</button></div><div class="follow-summary"><div class="follow-count" id="followCountPending" onclick="setFollowFilter('pending')"><strong id="followPendingNum">0</strong><span>Pendientes</span></div><div class="follow-count" id="followCountProgress" onclick="setFollowFilter('in_progress')"><strong id="followProgressNum">0</strong><span>En proceso</span></div><div class="follow-count" id="followCountClosed" onclick="setFollowFilter('closed')"><strong id="followClosedNum">0</strong><span>Cerrados</span></div></div><label>Mostrar</label><select id="followFilter" onchange="renderFollowups()"><option value="open">Pendientes y en proceso</option><option value="pending">Pendientes</option><option value="in_progress">En proceso</option><option value="closed">Cerrados</option><option value="all">Todos</option></select><div id="followupsList" style="margin-top:12px"></div></div></dialog>
@@ -489,7 +490,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.29';
+const APP_VERSION='2.2.30';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -1198,6 +1199,35 @@ async function initAuth(){
 }
 
 function escAttr(v){return esc(v).replace(/"/g,'&quot;')}
+function openOwnPasswordChange(){
+  if(!cloudUser)return alert('Primero inicia sesión.');
+  $('newPassword').value='';$('newPassword2').value='';
+  $('passwordDialog').showModal();
+}
+function openAdminPasswordReset(userId,name,email){
+  if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
+  $('adminPasswordResetUserId').value=userId||'';
+  $('adminPasswordResetPassword').value='';
+  $('adminPasswordResetPassword2').value='';
+  $('adminPasswordResetUser').textContent=[name,email].filter(Boolean).join(' · ');
+  $('adminPasswordResetDialog').showModal();
+}
+async function submitAdminPasswordReset(){
+  if(!hasRole('admin_general'))return alert('Acceso no autorizado.');
+  const userId=$('adminPasswordResetUserId').value;
+  const p1=$('adminPasswordResetPassword').value;
+  const p2=$('adminPasswordResetPassword2').value;
+  if(!userId)return alert('No se identificó al usuario.');
+  if(p1.length<8)return alert('La contraseña temporal debe tener al menos 8 caracteres.');
+  if(p1!==p2)return alert('Las contraseñas no coinciden.');
+  if(!confirm('¿Restablecer la contraseña de este usuario? La contraseña anterior dejará de funcionar.'))return;
+  const {data,error}=await supabaseClient.functions.invoke('admin-reset-password',{body:{user_id:userId,new_password:p1}});
+  if(error)return alert('No se pudo restablecer la contraseña. '+(error.message||error));
+  if(data?.error)return alert('No se pudo restablecer la contraseña. '+data.error);
+  $('adminPasswordResetDialog').close();
+  toast('Contraseña temporal creada');
+  alert('Contraseña restablecida correctamente. Comunica la contraseña temporal al usuario y pídele cambiarla después de ingresar.');
+}
 async function loadAdminPanel(){
   if(!hasRole('admin_general')||!cloudUser)return;
   const usersBox=$('adminUsers'),instBox=$('adminInstitutions'),summary=$('adminSummary');
@@ -1268,7 +1298,7 @@ function renderAdminUsers(){
     const ms=activeMembershipsFor(p.id);const isSelf=p.id===cloudUser.id;
     const membershipsHtml=ms.length?ms.map(m=>`<div class="role-line"><span class="pill">${esc(roleLabel(m.role))}</span>${m?.institutions?.name?`<span class="pill">${esc(m.institutions.name)}</span>`:''}${['docente','auxiliar'].includes(m.role)&&m.institution_id?`<button class="btn secondary" style="padding:6px 10px;min-height:auto" type="button" onclick="openClassroomAccessManager('${p.id}','${m.institution_id}','${escAttr(p.display_name||p.email||'Usuario')}','${m.role}')">Asignar salones</button>`:''}${m.role==='admin_general'?`<span class="small muted">Rol protegido</span>`:`<button class="btn danger" style="padding:6px 10px;min-height:auto" type="button" onclick="deactivateMembership('${m.id}')">Desactivar</button>`}</div>`).join(''):'<div class="role-line"><span class="pill">Sin asignar</span></div>';
     const assignForm=`<div class="row" style="margin-top:10px"><div><label>Agregar rol</label><select id="role_${p.id}"><option value="">Seleccionar…</option><option value="docente">Docente</option><option value="auxiliar">Auxiliar de educación</option><option value="director">Director</option><option value="especialista_ugel">Especialista UGEL</option></select></div><div><label>Institución</label><select id="inst_${p.id}"><option value="">Seleccionar…</option>${instOpts}</select></div></div><div class="actions assign-actions"><button class="btn primary" type="button" onclick="assignUserRole('${p.id}')">${adminUserGroup==='assigned'?'Agregar otra asignación':'Asignar usuario'}</button></div>`;
-    return `<div class="admin-user"><strong>${esc(p.display_name||'Perfil pendiente')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente o Auxiliar para registrar información de una institución.</div>':''}${assignForm}</div>`;
+    return `<div class="admin-user"><strong>${esc(p.display_name||'Perfil pendiente')}</strong><div class="small muted">${esc(p.email||'Sin correo visible')}</div>${membershipsHtml}<div class="actions"><button class="btn secondary" type="button" onclick="openAdminPasswordReset('${p.id}','${escAttr(p.display_name||p.email||'Usuario')}','${escAttr(p.email||'')}')">🔑 Restablecer contraseña</button></div>${isSelf&&ms.some(m=>m.role==='admin_general')?'<div class="footer-note">Tu rol de Administrador general está protegido. Puedes agregar además un rol Docente o Auxiliar para registrar información de una institución.</div>':''}${assignForm}</div>`;
   }).join('');
 }
 

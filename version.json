@@ -1,4 +1,4 @@
 {
-  "version": "2.2.29",
-  "notes": "Corrige de forma robusta los contadores del Administrador por institución, mantiene visible el selector institucional y consulta los totales mediante funciones seguras de Supabase."
+  "version": "2.2.30",
+  "notes": "Agrega restablecimiento seguro de contraseña desde Administrador general mediante Edge Function y cambio de contraseña del usuario dentro de SAGE."
 }
