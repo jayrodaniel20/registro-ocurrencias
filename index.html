@@ -87,7 +87,7 @@
 <header>
   <div class="headwrap">
     <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.31 · Contraseña temporal segura</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.32 · Sesión segura tras cambio de contraseña</div></div>
   </div>
 </header>
 <nav>
@@ -491,7 +491,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.31';
+const APP_VERSION='2.2.32';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -1204,16 +1204,40 @@ async function saveNewPassword(){
   if(p1.length<8)return alert('La contraseña debe tener al menos 8 caracteres.');
   if(p1!==p2)return alert('Las contraseñas no coinciden.');
   if(forcedPasswordChange||userMustChangePassword()){
+    const email=String(cloudUser?.email||'').trim().toLowerCase();
     const {data,error}=await supabaseClient.functions.invoke('admin-reset-password',{body:{action:'complete_temp_password',new_password:p1}});
     if(error)return alert('No se pudo cambiar la contraseña. '+(error.message||error));
     if(data?.error)return alert('No se pudo cambiar la contraseña. '+data.error);
-    const {data:userData,error:userError}=await supabaseClient.auth.getUser();
-    if(userError||!userData?.user)return alert('La contraseña cambió, pero no se pudo actualizar la sesión. Cierra sesión e ingresa nuevamente.');
-    cloudUser=userData.user;forcedPasswordChange=false;
+
+    // Supabase puede invalidar la sesión anterior al cambiar la contraseña.
+    // Cerramos solo la sesión local (si todavía existe) e iniciamos una nueva
+    // con la contraseña personal recién creada.
+    try{await supabaseClient.auth.signOut({scope:'local'});}catch(_e){}
+    let loginData=null,loginError=null;
+    if(email){
+      const relogin=await supabaseClient.auth.signInWithPassword({email,password:p1});
+      loginData=relogin.data;loginError=relogin.error;
+    }
+
+    if(loginError||!loginData?.user){
+      cloudUser=null;forcedPasswordChange=false;
+      configurePasswordDialog(false,'own');
+      if($('passwordDialog').open)$('passwordDialog').close();
+      accessContext={role:null,institutionId:null,institution:null,membership:null};
+      updateAccountUi();setAuthGate(true);showAuthTab('login');
+      if(email)$('loginEmail').value=email;
+      showAuthMessage('Tu contraseña personal fue creada correctamente. Por seguridad, inicia sesión nuevamente con tu nueva contraseña.');
+      return;
+    }
+
+    cloudUser=loginData.user;forcedPasswordChange=false;
     configurePasswordDialog(false,'own');
-    $('passwordDialog').close();
+    if($('passwordDialog').open)$('passwordDialog').close();
+    updateAccountUi();
+    await ensureProfileIdentity(true);await loadAccessContext();refreshAll();
+    go(defaultViewForActiveRole());
     toast('Contraseña personal creada');
-    await ensureProfileIdentity(true);await loadAccessContext();refreshAll();go(defaultViewForActiveRole());scheduleAutoSync('contraseña personal creada',150);
+    scheduleAutoSync('contraseña personal creada',150);
     return;
   }
   const {error}=await supabaseClient.auth.updateUser({password:p1});

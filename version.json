@@ -1,4 +1,4 @@
 {
-  "version": "2.2.31",
-  "notes": "Obliga a reemplazar la contraseña temporal por una contraseña personal antes de continuar usando SAGE."
+  "version": "2.2.32",
+  "notes": "Corrige la sesión tras reemplazar una contraseña temporal: SAGE inicia una nueva sesión con la contraseña personal o solicita un nuevo inicio de sesión sin mostrar Auth session missing."
 }
