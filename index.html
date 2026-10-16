@@ -87,7 +87,7 @@
 <header>
   <div class="headwrap">
     <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.21</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.30 · Restablecimiento de contraseña</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.31 · Contraseña temporal segura</div></div>
   </div>
 </header>
 <nav>
@@ -391,7 +391,7 @@
 
 <dialog id="redactionDialog"><div class="modal"><h3 id="redactionTitle">Mejorar redacción</h3><p class="small muted">Compara ambas versiones. La app no agrega hechos nuevos; tú decides si reemplazas el texto.</p><label>Texto original</label><textarea id="redactionOriginal" readonly style="background:#f4f6f9"></textarea><label>Versión mejorada</label><textarea id="redactionImproved"></textarea><div class="actions"><button type="button" class="btn primary" onclick="applyImprovedRedaction()">Usar esta redacción</button><button type="button" class="btn secondary" onclick="document.getElementById('redactionDialog').close()">Conservar original</button></div></div></dialog>
 
-<dialog id="passwordDialog"><div class="modal"><h3>Crear nueva contraseña</h3><p class="small muted">Escribe una nueva contraseña para tu cuenta.</p><label>Nueva contraseña</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><label>Repetir contraseña</label><input id="newPassword2" type="password" autocomplete="new-password"><div class="actions"><button class="btn primary" type="button" onclick="saveNewPassword()">Guardar contraseña</button><button class="btn secondary" type="button" onclick="document.getElementById('passwordDialog').close()">Cancelar</button></div></div></dialog>
+<dialog id="passwordDialog"><div class="modal"><h3 id="passwordDialogTitle">Crear nueva contraseña</h3><p class="small muted" id="passwordDialogText">Escribe una nueva contraseña para tu cuenta.</p><div id="passwordForcedNotice" class="readonly-banner" style="display:none;margin-bottom:12px;border-color:#f0c36d;background:#fff8e7;color:#6f4b00"><b>Contraseña temporal.</b> Por seguridad debes crear una contraseña personal antes de continuar usando SAGE.</div><label>Nueva contraseña</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><label>Repetir contraseña</label><input id="newPassword2" type="password" autocomplete="new-password"><div class="actions"><button class="btn primary" type="button" onclick="saveNewPassword()">Guardar contraseña</button><button id="passwordCancelBtn" class="btn secondary" type="button" onclick="document.getElementById('passwordDialog').close()">Cancelar</button><button id="passwordLogoutBtn" class="btn secondary" type="button" style="display:none" onclick="logoutFromForcedPasswordDialog()">Cerrar sesión</button></div></div></dialog>
 <dialog id="institutionEditDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">Editar institución</h3><p class="small muted" style="margin:0">Actualiza los datos institucionales.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('institutionEditDialog').close()">Cerrar</button></div><input type="hidden" id="editInstId"><label>Nombre de la institución</label><input id="editInstName"><div class="row"><div><label>Código modular</label><input id="editInstCode"></div><div><label>Nivel educativo</label><select id="editInstLevel"><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select></div></div><div class="row"><div><label>UGEL</label><input id="editInstUGEL"></div><div><label>Región</label><input id="editInstRegion"></div></div><label>Estado</label><select id="editInstActive"><option value="true">Activa</option><option value="false">Inactiva</option></select><div class="actions"><button type="button" class="btn primary" onclick="saveInstitutionEdit()">Guardar cambios</button></div></div></dialog>
 <dialog id="adminClassroomResetDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">⚠️ Reiniciar salón de prueba</h3><p class="small muted" style="margin:0">Esta herramienta es solo para limpiar datos de prueba. No elimina cuentas de docentes, auxiliares ni directivos.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomResetDialog').close()">Cerrar</button></div><input type="hidden" id="adminResetClassId"><div id="adminResetClassSummary" class="subtle" style="margin:12px 0"></div><div class="readonly-banner" style="border-color:#f3c2c2;background:#fff4f4;color:#7a1f1f">Se eliminarán estudiantes, ocurrencias y seguimientos asociados al salón seleccionado. Las cuentas de usuarios y sus roles institucionales se conservarán.</div><label style="margin-top:12px">Acción</label><select id="adminResetMode"><option value="keep">Vaciar datos y conservar el salón</option><option value="delete">Vaciar datos y eliminar también el salón</option></select><label>Para confirmar, escribe REINICIAR</label><input id="adminResetConfirm" autocomplete="off" placeholder="REINICIAR"><div class="actions"><button type="button" class="btn danger" onclick="confirmAdminClassroomReset()">Confirmar reinicio</button><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomResetDialog').close()">Cancelar</button></div></div></dialog>
 <dialog id="adminClassroomEditDialog"><div class="modal"><div class="split-head"><div><h3 style="margin-bottom:4px">Editar salón oficial</h3><p class="small muted" style="margin:0">Los cambios también se reflejarán en estudiantes y ocurrencias vinculadas.</p></div><button type="button" class="btn secondary" onclick="document.getElementById('adminClassroomEditDialog').close()">Cerrar</button></div><input type="hidden" id="adminEditClassId"><input type="hidden" id="adminEditClassInstitution"><label>Nivel educativo</label><select id="adminEditClassLevel" onchange="renderAdminEditClassroomFields()"><option>Inicial</option><option>Primaria</option><option>Secundaria</option></select><div id="adminEditInitialFields"><div class="row"><div><label>Edad</label><select id="adminEditClassAge"><option>0 a 2 años</option><option>3 años</option><option>4 años</option><option>5 años</option></select></div><div><label>Sección</label><input id="adminEditInitialSection" placeholder="Ej.: A, B, Única"></div></div><label>Nombre del aula</label><input id="adminEditClassName"></div><div id="adminEditRegularFields"><div class="row"><div><label id="adminEditClassGradeLabel">Grado</label><select id="adminEditClassGrade"></select></div><div><label>Sección</label><input id="adminEditClassSection"></div></div></div><div class="actions"><button type="button" class="btn primary" onclick="saveAdminClassroomEdit()">Guardar cambios</button></div></div></dialog>
@@ -404,6 +404,7 @@ const SUPABASE_PUBLISHABLE_KEY='sb_publishable_XkAyinrprmor3xfbFfRkpA_b6Yug7Nh';
 const APP_PUBLIC_URL='https://jayrodaniel20.github.io/registro-ocurrencias/';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 let cloudUser=null;
+let forcedPasswordChange=false;
 let adminHomeStatsCache={students:0,occurrences:0,today:0,follow:0,loaded:false,updatedAt:0,institutionId:''};
 let adminHomeStatsLoading=false;
 let adminHomeStatsRequestSeq=0;
@@ -490,7 +491,7 @@ let classroomAccessState={userId:null,institutionId:null,userName:'',role:null,c
 let currentClassroomAccess=new Map();
 let directorCache={profiles:[],classrooms:[],students:[],occurrences:[]};
 const DBKEY='registro_ocurrencias_v1';
-const APP_VERSION='2.2.30';
+const APP_VERSION='2.2.31';
 const SCHEMA_VERSION=3;
 const OCCURRENCE_SUBTYPES={
   'Convivencia':['Desacuerdo entre compañeros','Dificultad para respetar turnos','Conflicto por materiales o espacios','Incumplimiento de acuerdos de convivencia','Dificultad para integrarse al grupo','Situación que requiere revisión por Dirección','Otro'],
@@ -1157,7 +1158,7 @@ async function loginAccount(){
     if(/email not confirmed/i.test(msg))return showAuthMessage('Este correo todavía no está confirmado en Supabase. Comunícalo al administrador para habilitar la cuenta.','err');
     return showAuthMessage(msg,'err');
   }
-  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await ensureProfileIdentity(true);await loadAccessContext();refreshAll();go(defaultViewForActiveRole());toast('Sesión iniciada');scheduleAutoSync('inicio de sesión',150);
+  cloudUser=data.user;localBypass=false;setAuthGate(false);updateAccountUi();await ensureProfileIdentity(true);await loadAccessContext();refreshAll();if(showForcedPasswordChangeIfNeeded()){toast('Debes crear una contraseña personal para continuar');return;}go(defaultViewForActiveRole());toast('Sesión iniciada');scheduleAutoSync('inicio de sesión',150);
 }
 async function logoutAccount(){
   if(!confirm('¿Cerrar sesión en este dispositivo? Tus datos locales no se borrarán.'))return;
@@ -1171,13 +1172,58 @@ async function requestPasswordReset(){
   if(error)return showAuthMessage(error.message,'err');
   showAuthMessage('Te enviamos un enlace para cambiar tu contraseña. Revisa también la carpeta de spam.');
 }
+function userMustChangePassword(){
+  return cloudUser?.app_metadata?.must_change_password===true;
+}
+function configurePasswordDialog(forced=false,source='own'){
+  forcedPasswordChange=!!forced;
+  const title=$('passwordDialogTitle'),text=$('passwordDialogText'),notice=$('passwordForcedNotice'),cancel=$('passwordCancelBtn'),logout=$('passwordLogoutBtn');
+  if(forcedPasswordChange){
+    if(title)title.textContent='Crea tu contraseña personal';
+    if(text)text.textContent='Ingresaste con una contraseña temporal asignada por el Administrador general.';
+    if(notice)notice.style.display='block';
+    if(cancel)cancel.style.display='none';
+    if(logout)logout.style.display='inline-flex';
+  }else{
+    if(title)title.textContent=source==='recovery'?'Crear nueva contraseña':'Cambiar mi contraseña';
+    if(text)text.textContent=source==='recovery'?'Escribe una nueva contraseña para recuperar tu cuenta.':'Escribe una nueva contraseña para tu cuenta.';
+    if(notice)notice.style.display='none';
+    if(cancel)cancel.style.display='inline-flex';
+    if(logout)logout.style.display='none';
+  }
+  $('newPassword').value='';$('newPassword2').value='';
+}
+function showForcedPasswordChangeIfNeeded(){
+  if(!cloudUser||!userMustChangePassword())return false;
+  configurePasswordDialog(true,'temporary');
+  if(!$('passwordDialog').open)$('passwordDialog').showModal();
+  return true;
+}
 async function saveNewPassword(){
   const p1=$('newPassword').value,p2=$('newPassword2').value;
-  if(p1.length<6)return alert('La contraseña debe tener al menos 6 caracteres.');
+  if(p1.length<8)return alert('La contraseña debe tener al menos 8 caracteres.');
   if(p1!==p2)return alert('Las contraseñas no coinciden.');
+  if(forcedPasswordChange||userMustChangePassword()){
+    const {data,error}=await supabaseClient.functions.invoke('admin-reset-password',{body:{action:'complete_temp_password',new_password:p1}});
+    if(error)return alert('No se pudo cambiar la contraseña. '+(error.message||error));
+    if(data?.error)return alert('No se pudo cambiar la contraseña. '+data.error);
+    const {data:userData,error:userError}=await supabaseClient.auth.getUser();
+    if(userError||!userData?.user)return alert('La contraseña cambió, pero no se pudo actualizar la sesión. Cierra sesión e ingresa nuevamente.');
+    cloudUser=userData.user;forcedPasswordChange=false;
+    configurePasswordDialog(false,'own');
+    $('passwordDialog').close();
+    toast('Contraseña personal creada');
+    await ensureProfileIdentity(true);await loadAccessContext();refreshAll();go(defaultViewForActiveRole());scheduleAutoSync('contraseña personal creada',150);
+    return;
+  }
   const {error}=await supabaseClient.auth.updateUser({password:p1});
   if(error)return alert(error.message);
-  $('passwordDialog').close();toast('Contraseña actualizada');
+  forcedPasswordChange=false;$('passwordDialog').close();toast('Contraseña actualizada');
+}
+async function logoutFromForcedPasswordDialog(){
+  forcedPasswordChange=false;
+  if($('passwordDialog').open)$('passwordDialog').close();
+  await logoutAccount();
 }
 function continueLocalMode(){localBypass=true;setAuthGate(false);updateAccountUi();refreshAll();toast('Modo local activo');}
 async function initAuth(){
@@ -1189,19 +1235,19 @@ async function initAuth(){
     else cloudUser=userData.user;
   }
   updateAccountUi();
-  if(cloudUser){setAuthGate(false);await ensureProfileIdentity(true);await loadAccessContext();go(defaultViewForActiveRole());scheduleAutoSync('apertura de SAGE',180)}else if(!localBypass){setAuthGate(true)}
+  if(cloudUser){setAuthGate(false);await ensureProfileIdentity(true);await loadAccessContext();if(!showForcedPasswordChangeIfNeeded()){go(defaultViewForActiveRole());scheduleAutoSync('apertura de SAGE',180)}}else if(!localBypass){setAuthGate(true)}
   supabaseClient.auth.onAuthStateChange((event,session)=>{
     cloudUser=session?.user||null;updateAccountUi();
-    if(event==='PASSWORD_RECOVERY'){$('passwordDialog').showModal();setAuthGate(false)}
-    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(async()=>{await ensureProfileIdentity(true);await loadAccessContext();go(defaultViewForActiveRole());scheduleAutoSync('sesión restaurada',180)},0)}
-    else if(event==='SIGNED_OUT'){accessContext={role:null,institutionId:null,institution:null,membership:null};updateRoleUi();if(!localBypass)setAuthGate(true)}
+    if(event==='PASSWORD_RECOVERY'){configurePasswordDialog(false,'recovery');$('passwordDialog').showModal();setAuthGate(false)}
+    else if(event==='SIGNED_IN'){setAuthGate(false);setTimeout(async()=>{const {data:userData}=await supabaseClient.auth.getUser();if(userData?.user)cloudUser=userData.user;await ensureProfileIdentity(true);await loadAccessContext();if(!showForcedPasswordChangeIfNeeded()){go(defaultViewForActiveRole());scheduleAutoSync('sesión restaurada',180)}},0)}
+    else if(event==='SIGNED_OUT'){forcedPasswordChange=false;accessContext={role:null,institutionId:null,institution:null,membership:null};updateRoleUi();if(!localBypass)setAuthGate(true)}
   });
 }
 
 function escAttr(v){return esc(v).replace(/"/g,'&quot;')}
 function openOwnPasswordChange(){
   if(!cloudUser)return alert('Primero inicia sesión.');
-  $('newPassword').value='';$('newPassword2').value='';
+  configurePasswordDialog(false,'own');
   $('passwordDialog').showModal();
 }
 function openAdminPasswordReset(userId,name,email){
@@ -1221,12 +1267,12 @@ async function submitAdminPasswordReset(){
   if(p1.length<8)return alert('La contraseña temporal debe tener al menos 8 caracteres.');
   if(p1!==p2)return alert('Las contraseñas no coinciden.');
   if(!confirm('¿Restablecer la contraseña de este usuario? La contraseña anterior dejará de funcionar.'))return;
-  const {data,error}=await supabaseClient.functions.invoke('admin-reset-password',{body:{user_id:userId,new_password:p1}});
+  const {data,error}=await supabaseClient.functions.invoke('admin-reset-password',{body:{action:'admin_reset',user_id:userId,new_password:p1}});
   if(error)return alert('No se pudo restablecer la contraseña. '+(error.message||error));
   if(data?.error)return alert('No se pudo restablecer la contraseña. '+data.error);
   $('adminPasswordResetDialog').close();
   toast('Contraseña temporal creada');
-  alert('Contraseña restablecida correctamente. Comunica la contraseña temporal al usuario y pídele cambiarla después de ingresar.');
+  alert('Contraseña temporal creada. Al iniciar sesión, SAGE obligará al usuario a crear una contraseña personal antes de continuar.');
 }
 async function loadAdminPanel(){
   if(!hasRole('admin_general')||!cloudUser)return;
@@ -2369,6 +2415,7 @@ function initInstallExperience(){
   },1800);
 }
 
+document.getElementById('passwordDialog')?.addEventListener('cancel',(e)=>{if(forcedPasswordChange)e.preventDefault();});
 setNow();refreshAll();initAuth();startAutoSyncMonitor();initInstallExperience();initServiceWorkerUpdates();
 </script>
 </body></html>

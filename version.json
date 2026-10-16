@@ -1,4 +1,4 @@
 {
-  "version": "2.2.30",
-  "notes": "Agrega restablecimiento seguro de contraseña desde Administrador general mediante Edge Function y cambio de contraseña del usuario dentro de SAGE."
+  "version": "2.2.31",
+  "notes": "Obliga a reemplazar la contraseña temporal por una contraseña personal antes de continuar usando SAGE."
 }
