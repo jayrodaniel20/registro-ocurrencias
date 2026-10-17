@@ -1,0 +1,32 @@
+SAGE v2.2.30 — Restablecimiento seguro de contraseña
+
+NOVEDAD
+- El Administrador general tiene un botón "Restablecer contraseña" en Usuarios registrados.
+- El administrador crea una contraseña temporal; no puede ver la contraseña anterior.
+- El usuario puede cambiar su propia contraseña desde Mi cuenta > Cambiar mi contraseña.
+- No depende de correo ni SMTP.
+
+PASO OBLIGATORIO EN SUPABASE
+Esta función necesita una Edge Function llamada exactamente: admin-reset-password
+
+Opción Dashboard:
+1. Supabase > Edge Functions > Deploy a new function.
+2. Nombre: admin-reset-password
+3. Copiar el contenido de: supabase/functions/admin-reset-password/index.ts
+4. Deploy.
+5. No coloques la service_role key en index.html ni en GitHub. La Edge Function usa el secreto del entorno de Supabase.
+
+Después de desplegar la función, sube los archivos de SAGE v2.2.30 a GitHub Pages.
+
+PRUEBA
+1. Administrador general > Usuarios registrados.
+2. Busca a la docente.
+3. Pulsa Restablecer contraseña.
+4. Coloca una contraseña temporal de 8+ caracteres y confírmala.
+5. La docente inicia sesión con esa contraseña.
+6. Mi cuenta > Cambiar mi contraseña para crear la definitiva.
+
+
+ACTUALIZACIÓN 2.2.33
+- Se protege el botón Guardar contraseña contra doble envío.
+- Se conservan los iconos y recursos gráficos originales de SAGE.

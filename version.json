@@ -1,5 +1,6 @@
 {
   "version": "2.2.33",
+  "notes": "Agrega restablecimiento seguro de contraseña desde Administrador general mediante Edge Function y cambio de contraseña del usuario dentro de SAGE.",
   "name": "SAGE",
   "description": "Protección contra doble envío al crear o cambiar contraseña."
 }

@@ -2428,7 +2428,7 @@ function initServiceWorkerUpdates(){
     checkPublishedVersion();
     return;
   }
-  navigator.serviceWorker.register('sw.js?v=2.2.33',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=2.2.27',{updateViaCache:'none'}).then(reg=>{
     swRegistration=reg;
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;if(!nw)return;
