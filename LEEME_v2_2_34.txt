@@ -1,0 +1,20 @@
+SAGE v2.2.34 — Dictado por voz continuo
+
+NOVEDAD
+- El dictado por voz permanece activo hasta que el docente pulse “Detener”.
+- Si Chrome/Android finaliza automáticamente una sesión de reconocimiento por una pausa o por su propio límite, SAGE reinicia la escucha.
+- El texto ya reconocido se conserva y continúa acumulándose.
+- El botón permanece en “Detener” durante las reconexiones automáticas.
+- Los errores reales de micrófono o permisos se informan claramente.
+
+SE CONSERVA
+- Usuarios, roles, instituciones, aulas, estudiantes, ocurrencias y sincronización.
+- Restablecimiento y cambio de contraseña de v2.2.33.
+- Iconos, manifest y recursos gráficos originales.
+
+PRUEBA RECOMENDADA
+1. Abre Registrar ocurrencia.
+2. Pulsa Dictar.
+3. Habla durante más de 30 segundos y realiza una pausa de varios segundos.
+4. Comprueba que el botón siga en Detener y que el texto continúe acumulándose.
+5. Pulsa Detener para finalizar.

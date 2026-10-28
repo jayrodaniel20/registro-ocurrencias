@@ -64,7 +64,7 @@
 <body>
 <div id="authGate" class="auth-gate">
   <div class="auth-card">
-    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.33</div></div></div>
+    <div class="auth-brand"><img src="icon-192.png" alt="Ícono"><div><h2>SAGE</h2><div class="small muted">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.34</div></div></div>
     <div class="auth-tabs"><button id="tabLogin" class="active" type="button" onclick="showAuthTab('login')">Iniciar sesión</button><button id="tabSignup" type="button" onclick="showAuthTab('signup')">Crear cuenta</button></div>
     <div id="authLogin" class="auth-panel active">
       <label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="email" placeholder="docente@correo.com">
@@ -86,8 +86,8 @@
 </div>
 <header>
   <div class="headwrap">
-    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.33</small></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.33 · Protección contra doble envío de contraseña</div></div>
+    <div class="brand"><div class="logo"><img src="icon-192.png" alt="Ícono de la app" style="width:100%;height:100%;object-fit:cover;border-radius:14px"></div><div class="headtxt"><h1>SAGE</h1><small id="schoolHeader">Sistema de Acompañamiento y Gestión Escolar · Versión 2.2.34</small></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span id="headerRoleChip" class="role-chip" style="display:none">Rol</span><div class="head-badge">V2.2.34 · Dictado por voz continuo</div></div>
   </div>
 </header>
 <nav>
@@ -2049,6 +2049,8 @@ function applyImprovedRedaction(){
 let voiceRecognition=null;
 let voiceButton=null;
 let voiceTargetId=null;
+let voiceShouldListen=false;
+let voiceRestartTimer=null;
 
 function normalizeSpeech(text){
   return String(text||'')
@@ -2077,7 +2079,7 @@ function mergeSpeechText(current,newChunk){
   if(a.startsWith(b)) return current;
 
   const aw=a.split(' '), bw=b.split(' ');
-  const curWords=current.split(/\s+/), newWords=newChunk.split(/\s+/);
+  const newWords=newChunk.split(/\s+/);
   const max=Math.min(aw.length,bw.length,20);
   let overlap=0;
   for(let k=max;k>=1;k--){
@@ -2095,28 +2097,62 @@ function mergeSpeechText(current,newChunk){
   return (current+' '+newChunk).replace(/\s+/g,' ').trim();
 }
 
+function finishVoiceDictation(message='Dictado finalizado'){
+  if(voiceRestartTimer){clearTimeout(voiceRestartTimer);voiceRestartTimer=null;}
+  if(voiceButton){
+    voiceButton.classList.remove('listening');
+    voiceButton.textContent=voiceButton.dataset.label||'🎙️ Dictar';
+  }
+  if(voiceTargetId){
+    const s=$('voiceStatus-'+voiceTargetId);
+    if(s)s.textContent=message;
+  }
+  voiceRecognition=null;
+  voiceButton=null;
+  voiceTargetId=null;
+  voiceShouldListen=false;
+}
+
 function toggleDictation(targetId,btn){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){alert('El dictado por voz no está disponible en este navegador. Prueba con Google Chrome en Android.');return;}
-  if(voiceRecognition){voiceRecognition.stop();return;}
+
+  // Si ya está dictando, este toque es la orden explícita del docente para detener.
+  if(voiceRecognition){
+    voiceShouldListen=false;
+    if(voiceRestartTimer){clearTimeout(voiceRestartTimer);voiceRestartTimer=null;}
+    try{voiceRecognition.stop()}catch(e){finishVoiceDictation();}
+    return;
+  }
 
   const target=$(targetId);
   const status=$('voiceStatus-'+targetId);
   const base=target.value.trim();
   const rec=new SR();
   let sessionText='';
+  let fatalError='';
 
-  voiceRecognition=rec; voiceButton=btn; voiceTargetId=targetId;
+  voiceRecognition=rec;
+  voiceButton=btn;
+  voiceTargetId=targetId;
+  voiceShouldListen=true;
+
   rec.lang='es-PE';
-  // Solo usamos resultados definitivos. Los provisionales son la principal causa
-  // de duplicados en algunos Chrome/Android.
+  // Solo usamos resultados definitivos para evitar duplicados en Chrome/Android.
   rec.interimResults=false;
   rec.continuous=true;
   rec.maxAlternatives=1;
+
   btn.dataset.label=btn.textContent;
   btn.classList.add('listening');
   btn.textContent='⏹️ Detener';
   status.textContent='Escuchando… habla con naturalidad';
+
+  rec.onstart=()=>{
+    if(voiceShouldListen&&voiceTargetId===targetId){
+      status.textContent='Escuchando… habla con naturalidad';
+    }
+  };
 
   rec.onresult=(event)=>{
     for(let i=event.resultIndex;i<event.results.length;i++){
@@ -2129,30 +2165,55 @@ function toggleDictation(targetId,btn){
   };
 
   rec.onerror=(event)=>{
-    if(event.error==='not-allowed'||event.error==='service-not-allowed') alert('No se pudo usar el micrófono. Revisa que hayas permitido el acceso al micrófono para esta app.');
-    else if(event.error!=='aborted'&&event.error!=='no-speech') toast('Error de dictado: '+event.error);
+    // "no-speech" es una pausa normal: onend reanudará la escucha automáticamente.
+    if(event.error==='no-speech'||event.error==='aborted') return;
+
+    if(event.error==='not-allowed'||event.error==='service-not-allowed'){
+      fatalError='Permiso de micrófono bloqueado';
+      voiceShouldListen=false;
+      alert('No se pudo usar el micrófono. Revisa que hayas permitido el acceso al micrófono para esta app.');
+      return;
+    }
+    if(event.error==='audio-capture'){
+      fatalError='Micrófono no disponible';
+      voiceShouldListen=false;
+      toast('No se encontró un micrófono disponible.');
+      return;
+    }
+
+    // Otros errores reales se informan y detienen para evitar ciclos infinitos.
+    fatalError='Error de dictado: '+event.error;
+    voiceShouldListen=false;
+    toast(fatalError);
   };
 
   rec.onend=()=>{
-    if(voiceButton){
-      voiceButton.classList.remove('listening');
-      voiceButton.textContent=voiceButton.dataset.label||'🎙️ Dictar';
+    // Chrome/Android puede cerrar una sesión tras pocos segundos o por una pausa.
+    // Mientras el docente no pulse Detener, SAGE la inicia otra vez automáticamente.
+    if(voiceShouldListen&&voiceRecognition===rec&&voiceTargetId===targetId){
+      status.textContent='Reconectando micrófono…';
+      voiceRestartTimer=setTimeout(()=>{
+        voiceRestartTimer=null;
+        if(!voiceShouldListen||voiceRecognition!==rec||voiceTargetId!==targetId)return;
+        try{rec.start()}
+        catch(e){
+          // Un reinicio demasiado rápido puede lanzar InvalidStateError; reintenta una vez.
+          voiceRestartTimer=setTimeout(()=>{
+            voiceRestartTimer=null;
+            if(!voiceShouldListen||voiceRecognition!==rec||voiceTargetId!==targetId)return;
+            try{rec.start()}
+            catch(err){finishVoiceDictation('No se pudo reanudar el dictado');}
+          },500);
+        }
+      },250);
+      return;
     }
-    if(voiceTargetId){
-      const s=$('voiceStatus-'+voiceTargetId);
-      if(s)s.textContent='Dictado finalizado';
-    }
-    voiceRecognition=null; voiceButton=null; voiceTargetId=null;
+    finishVoiceDictation(fatalError||'Dictado finalizado');
   };
 
-  try{rec.start()}catch(e){
-    voiceRecognition=null;
-    btn.classList.remove('listening');
-    btn.textContent=btn.dataset.label||'🎙️ Dictar';
-    status.textContent='No se pudo iniciar';
-  }
+  try{rec.start()}
+  catch(e){finishVoiceDictation('No se pudo iniciar el dictado');}
 }
-
 function subtypeOptions(type){return OCCURRENCE_SUBTYPES[type]||['Otro']}
 function renderOccurrenceSubtypes(preserve=false){const el=$('ocSubtype');if(!el)return;const type=$('ocType')?.value||'Otro';const old=preserve?el.value:'';const vals=subtypeOptions(type);el.innerHTML=vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');if(old&&vals.includes(old))el.value=old;updateSensitiveAlert();}
 function updateSensitiveAlert(){const box=$('sensitiveAlert');if(!box)return;box.style.display=SENSITIVE_SUBTYPES.has($('ocSubtype')?.value||'')?'block':'none';}

@@ -1,6 +1,6 @@
 {
-  "version": "2.2.33",
-  "notes": "Agrega restablecimiento seguro de contraseña desde Administrador general mediante Edge Function y cambio de contraseña del usuario dentro de SAGE.",
+  "version": "2.2.34",
+  "notes": "Mejora el dictado por voz: si Chrome finaliza una sesión automáticamente, SAGE reanuda la escucha sin intervención del docente y conserva el texto acumulado hasta pulsar Detener.",
   "name": "SAGE",
-  "description": "Protección contra doble envío al crear o cambiar contraseña."
+  "description": "Dictado por voz continuo y reconexión automática del micrófono."
 }
