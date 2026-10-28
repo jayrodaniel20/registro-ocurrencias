@@ -18,3 +18,9 @@ PRUEBA RECOMENDADA
 3. Habla durante más de 30 segundos y realiza una pausa de varios segundos.
 4. Comprueba que el botón siga en Detener y que el texto continúe acumulándose.
 5. Pulsa Detener para finalizar.
+
+CORRECCIÓN DE ACTUALIZACIÓN
+- Se unificó toda la interfaz en versión 2.2.34.
+- El aviso de actualización deja de reaparecer cuando la app ya está actualizada.
+- El botón Actualizar fuerza la renovación de la caché de SAGE sin borrar los datos locales del docente.
+- Se actualizó el registro del Service Worker a v2.2.34.
